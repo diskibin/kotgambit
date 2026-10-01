@@ -103,7 +103,7 @@ describe('login', () => {
     await user.click(submit('Войти'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Пароль не подошёл. Проверь раскладку и Caps Lock.',
+      'Пароль не подошёл. Проверь раскладку и Caps Lock или восстанови пароль.',
     );
     expect(password()).toHaveAttribute('aria-invalid', 'true');
     expect(catMood()).toBe('oops');

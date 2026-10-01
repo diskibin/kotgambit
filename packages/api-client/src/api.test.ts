@@ -1,0 +1,178 @@
+import { configureStore } from '@reduxjs/toolkit';
+import { createApi } from '@reduxjs/toolkit/query';
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  createBaseQuery,
+  endpoints,
+  REDUCER_PATH,
+  TAG_TYPES,
+  type SessionAdapter,
+} from './index.js';
+
+const BASE_URL = 'http://api.test';
+const USER = {
+  id: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+  email: 'cat@example.com',
+  displayName: null,
+};
+const AUTH = { accessToken: 'fresh-token', expiresIn: 900, user: USER };
+
+const server = setupServer();
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+function setup(overrides: Partial<SessionAdapter> = {}) {
+  let accessToken: string | null = 'stale-token';
+  const session: SessionAdapter = {
+    getAccessToken: () => accessToken,
+    setAccessToken: vi.fn((token: string) => {
+      accessToken = token;
+    }),
+    onSessionExpired: vi.fn(),
+    ...overrides,
+  };
+  const api = createApi({
+    reducerPath: REDUCER_PATH,
+    baseQuery: createBaseQuery({ baseUrl: BASE_URL, session }),
+    tagTypes: TAG_TYPES,
+    endpoints,
+  });
+  const store = configureStore({
+    reducer: { [api.reducerPath]: api.reducer },
+    middleware: (getDefault) => getDefault().concat(api.middleware),
+  });
+  return { api, store, session };
+}
+
+describe('shared endpoints', () => {
+  it('fetches and validates the health response', async () => {
+    server.use(http.get(`${BASE_URL}/health`, () => HttpResponse.json({ status: 'ok' })));
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.health.initiate());
+    expect(result.data).toEqual({ status: 'ok' });
+  });
+
+  it('turns a response that breaks the contract into an error', async () => {
+    server.use(http.get(`${BASE_URL}/health`, () => HttpResponse.json({ status: 'down' })));
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.health.initiate());
+    expect(result.error).toBeDefined();
+    expect(result.data).toBeUndefined();
+  });
+
+  it('sends the access token', async () => {
+    let header: string | null = null;
+    server.use(
+      http.get(`${BASE_URL}/users/me`, ({ request }) => {
+        header = request.headers.get('Authorization');
+        return HttpResponse.json(USER);
+      }),
+    );
+    const { api, store } = setup();
+    await store.dispatch(api.endpoints.me.initiate());
+    expect(header).toBe('Bearer stale-token');
+  });
+
+  it('posts credentials on login', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/auth/login`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(AUTH);
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.login.initiate({ email: 'cat@example.com', password: 'secret' }),
+    );
+    expect(body).toEqual({ email: 'cat@example.com', password: 'secret' });
+    expect(result).toMatchObject({ data: { accessToken: 'fresh-token' } });
+  });
+});
+
+describe('token refresh', () => {
+  let refreshCalls: number;
+  beforeEach(() => {
+    refreshCalls = 0;
+  });
+
+  function meHandler() {
+    return http.get(`${BASE_URL}/users/me`, ({ request }) =>
+      request.headers.get('Authorization') === 'Bearer fresh-token'
+        ? HttpResponse.json(USER)
+        : new HttpResponse(null, { status: 401 }),
+    );
+  }
+
+  function refreshHandler(status = 200) {
+    return http.post(`${BASE_URL}/auth/refresh`, async () => {
+      refreshCalls += 1;
+      // The delay lets parallel requests pile up behind the first refresh
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return status === 200 ? HttpResponse.json(AUTH) : new HttpResponse(null, { status });
+    });
+  }
+
+  it('refreshes on 401 and repeats the request with the new token', async () => {
+    server.use(meHandler(), refreshHandler());
+    const { api, store, session } = setup();
+    const result = await store.dispatch(api.endpoints.me.initiate());
+    expect(result.data).toEqual(USER);
+    expect(session.setAccessToken).toHaveBeenCalledWith('fresh-token');
+    expect(refreshCalls).toBe(1);
+  });
+
+  it('refreshes once for parallel requests', async () => {
+    server.use(meHandler(), refreshHandler());
+    const { api, store } = setup();
+    const results = await Promise.all([
+      store.dispatch(api.endpoints.me.initiate(undefined, { forceRefetch: true })),
+      store.dispatch(
+        api.endpoints.me.initiate(undefined, { forceRefetch: true, subscribe: false }),
+      ),
+    ]);
+    expect(results.every((r) => r.data !== undefined)).toBe(true);
+    expect(refreshCalls).toBe(1);
+  });
+
+  it('ends the session when the refresh fails', async () => {
+    server.use(meHandler(), refreshHandler(401));
+    const { api, store, session } = setup();
+    const result = await store.dispatch(api.endpoints.me.initiate());
+    expect(result.error).toMatchObject({ status: 401 });
+    expect(session.onSessionExpired).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not refresh when the credentials are wrong', async () => {
+    server.use(
+      http.post(`${BASE_URL}/auth/login`, () => new HttpResponse(null, { status: 401 })),
+      refreshHandler(),
+    );
+    const { api, store, session } = setup();
+    const result = await store.dispatch(
+      api.endpoints.login.initiate({ email: 'cat@example.com', password: 'wrong' }),
+    );
+    expect(result.error).toMatchObject({ status: 401 });
+    expect(refreshCalls).toBe(0);
+    expect(session.onSessionExpired).not.toHaveBeenCalled();
+  });
+
+  it('sends the stored refresh token in the body and keeps the rotated one', async () => {
+    let body: unknown;
+    server.use(
+      meHandler(),
+      http.post(`${BASE_URL}/auth/refresh`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ ...AUTH, refreshToken: 'rotated-refresh' });
+      }),
+    );
+    const setRefreshToken = vi.fn();
+    const { api, store } = setup({ getRefreshToken: () => 'stored-refresh', setRefreshToken });
+    await store.dispatch(api.endpoints.me.initiate());
+    expect(body).toEqual({ refreshToken: 'stored-refresh' });
+    expect(setRefreshToken).toHaveBeenCalledWith('rotated-refresh');
+  });
+});

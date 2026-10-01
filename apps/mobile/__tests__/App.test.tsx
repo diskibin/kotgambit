@@ -82,7 +82,7 @@ test('shows a calm banner when the password is wrong', async () => {
   await fillAndSubmit('cat@example.com', 'wrong-password');
 
   expect(await screen.findByRole('alert')).toHaveTextContent(
-    'Пароль не подошёл. Проверь раскладку и Caps Lock.',
+    'Пароль не подошёл. Проверь раскладку и Caps Lock или восстанови пароль.',
   );
   expect(screen.getByText('Пароль что-то не подошёл.')).toBeOnTheScreen();
 });
@@ -148,4 +148,39 @@ test('signing out revokes the session and clears the Keystore', async () => {
   expect(await screen.findByRole('tab', { name: 'Вход', selected: true })).toBeOnTheScreen();
   await waitFor(() => expect(logoutBody).toEqual({ refreshToken: 'refresh-1' }));
   expect(await Keychain.getGenericPassword()).toBe(false);
+});
+
+test('sends a reset link from the recovery screen', async () => {
+  let body: unknown;
+  mockApi({
+    ...ANONYMOUS,
+    'POST /auth/password/forgot': async (request) => {
+      body = await request.json();
+      return empty(204);
+    },
+  });
+  renderApp();
+  fireEvent.press(await screen.findByRole('link', { name: 'Забыли пароль?' }));
+
+  fireEvent.changeText(await screen.findByLabelText('Email'), 'dima@mail.ru');
+  fireEvent.press(screen.getByRole('button', { name: 'Отправить ссылку' }));
+
+  expect(await screen.findByText('Письмо отправлено')).toBeOnTheScreen();
+  expect(
+    screen.getByText('Проверь почту dima@mail.ru и перейди по ссылке из письма.'),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole('button', { name: 'Отправить ещё раз через 0:45' })).toBeOnTheScreen();
+  expect(body).toEqual({ email: 'dima@mail.ru' });
+
+  fireEvent.press(screen.getByRole('button', { name: 'Вернуться ко входу' }));
+  expect(await screen.findByRole('tab', { name: 'Вход', selected: true })).toBeOnTheScreen();
+});
+
+test('explains a missing @ on the recovery screen', async () => {
+  mockApi(ANONYMOUS);
+  renderApp();
+  fireEvent.press(await screen.findByRole('link', { name: 'Забыли пароль?' }));
+  fireEvent.changeText(await screen.findByLabelText('Email'), 'dima.mail.ru');
+  fireEvent.press(screen.getByRole('button', { name: 'Отправить ссылку' }));
+  expect(await screen.findByText('Кажется, в адресе не хватает «@».')).toBeOnTheScreen();
 });

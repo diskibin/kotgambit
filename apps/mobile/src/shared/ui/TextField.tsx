@@ -24,6 +24,8 @@ interface TextFieldProps extends Pick<
   /** Marks the field coral without a message of its own, for an error explained elsewhere. */
   invalid?: boolean;
   disabled?: boolean;
+  /** Something next to the label on the right, such as a link. */
+  labelAside?: ReactNode;
   /** A control inside the right edge of the field, such as the eye of a password field. */
   endAdornment?: ReactNode;
 }
@@ -35,6 +37,7 @@ export function TextField({
   invalid = false,
   disabled = false,
   endAdornment,
+  labelAside,
   ...input
 }: TextFieldProps) {
   const { colors } = useTheme();
@@ -47,9 +50,12 @@ export function TextField({
 
   return (
     <View style={{ gap: space[2] }}>
-      <Text style={[typography.small, { fontFamily: LABEL_FONT, color: colors.text }]}>
-        {label}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Text style={[typography.small, { fontFamily: LABEL_FONT, color: colors.text }]}>
+          {label}
+        </Text>
+        {labelAside}
+      </View>
       <View>
         <TextInput
           {...input}

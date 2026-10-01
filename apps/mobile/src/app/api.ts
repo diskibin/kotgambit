@@ -47,9 +47,13 @@ export const api = createApi({
 });
 
 export const {
+  useForgotPasswordMutation,
   useHealthQuery,
   useLoginMutation,
   useLogoutMutation,
   useMeQuery,
   useRegisterMutation,
+  useResendVerificationMutation,
+  useResetPasswordMutation,
+  useVerifyEmailMutation,
 } = api;

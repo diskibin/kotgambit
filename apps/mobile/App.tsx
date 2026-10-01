@@ -1,14 +1,15 @@
 import { boardReducer, createBoardState } from '@kotgambit/board-controller';
 import { MOODS } from '@kotgambit/mascot';
-import { useReducer, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Provider } from 'react-redux';
-import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMeQuery } from './src/app/api';
 import { useAppSelector } from './src/app/hooks';
 import { store as appStore, type AppStore } from './src/app/store';
 import { AuthScreen } from './src/features/auth/AuthScreen';
+import { RecoverScreen } from './src/features/auth/RecoverScreen';
 import { SplashScreen } from './src/features/auth/SplashScreen';
 import { useSignOut } from './src/features/auth/useSignOut';
 import { Board } from './src/features/board/Board';
@@ -92,6 +93,26 @@ function Sandbox({ onToggleTheme }: { onToggleTheme: () => void }) {
   );
 }
 
+/** Sign-in with the way to password recovery; the system Back button leaves recovery first. */
+function SignedOut() {
+  const [recovering, setRecovering] = useState(false);
+
+  useEffect(() => {
+    if (!recovering) return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      setRecovering(false);
+      return true;
+    });
+    return () => subscription.remove();
+  }, [recovering]);
+
+  return recovering ? (
+    <RecoverScreen onBack={() => setRecovering(false)} />
+  ) : (
+    <AuthScreen onForgot={() => setRecovering(true)} />
+  );
+}
+
 /** Checks the stored session first, then shows either the sign-in screen or the app. */
 function Root({ onToggleTheme }: { onToggleTheme: () => void }) {
   // A 401 makes the base query try the refresh token from the Keystore before giving up
@@ -99,7 +120,7 @@ function Root({ onToggleTheme }: { onToggleTheme: () => void }) {
   const status = useAppSelector((state) => state.auth.status);
 
   if (status === 'unknown' && isLoading) return <SplashScreen />;
-  return status === 'authenticated' ? <Sandbox onToggleTheme={onToggleTheme} /> : <AuthScreen />;
+  return status === 'authenticated' ? <Sandbox onToggleTheme={onToggleTheme} /> : <SignedOut />;
 }
 
 /** `store` is only passed by tests, each of which needs a fresh one. */

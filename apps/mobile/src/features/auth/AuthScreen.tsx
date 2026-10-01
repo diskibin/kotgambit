@@ -50,7 +50,7 @@ function bubbleKey({ loading, mode, email, password }: Status): string {
   return mode === 'register' ? 'register' : 'empty';
 }
 
-export function AuthScreen() {
+export function AuthScreen({ onForgot }: { onForgot: () => void }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -138,7 +138,19 @@ export function AuthScreen() {
         onChange={switchTo}
       />
 
-      {passwordProblem === 'wrong' && <Banner>{t('auth.wrong')}</Banner>}
+      {passwordProblem === 'wrong' && (
+        <Banner>
+          {t('auth.wrong.before')}
+          <Text
+            accessibilityRole="link"
+            onPress={onForgot}
+            style={{ fontFamily: 'Onest-ExtraBold', textDecorationLine: 'underline' }}
+          >
+            {t('auth.wrong.link')}
+          </Text>
+          {t('auth.wrong.after')}
+        </Banner>
+      )}
       {serverMessage && <Banner>{serverMessage}</Banner>}
 
       <TextField
@@ -171,6 +183,22 @@ export function AuthScreen() {
             : undefined
         }
         hint={isLogin ? undefined : t('auth.password.hint')}
+        labelAside={
+          isLogin ? (
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={t('auth.forgot')}
+              onPress={onForgot}
+              style={{ minHeight: size.tapMin, justifyContent: 'center' }}
+            >
+              <Text
+                style={{ fontFamily: 'Onest-ExtraBold', fontSize: 14, color: colors.brandText }}
+              >
+                {t('auth.forgot')}
+              </Text>
+            </Pressable>
+          ) : undefined
+        }
         endAdornment={
           <Pressable
             accessibilityRole="button"

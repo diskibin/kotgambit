@@ -101,7 +101,8 @@ describe('lessons and progress', () => {
           title: 'Секретная глава',
           summary: 'Только для подписчиков',
           minutes: 5,
-          steps: [],
+          // The catalog only counts the steps of a premium lesson, it never reads them
+          steps: [{}, {}, {}],
           contentHash: 'x',
         },
       });

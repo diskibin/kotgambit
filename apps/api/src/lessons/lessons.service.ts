@@ -62,6 +62,7 @@ export class LessonsService {
         title: lesson.title,
         summary: lesson.summary,
         minutes: lesson.minutes,
+        stepCount: (lesson.steps as unknown[]).length,
         status,
         stars: result?.stars ?? 0,
       };

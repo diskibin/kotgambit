@@ -150,6 +150,7 @@ describe('lesson endpoints', () => {
     title: 'Доска и фигуры',
     summary: 'Знакомимся с доской.',
     minutes: 5,
+    stepCount: 5,
     status: 'available',
     stars: 0,
   };

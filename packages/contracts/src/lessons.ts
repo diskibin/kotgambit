@@ -16,6 +16,8 @@ export const LessonSummarySchema = z.object({
   title: z.string(),
   summary: z.string(),
   minutes: z.number().int().positive(),
+  /** How many steps the lesson has, for "6 шагов · около 5 минут". */
+  stepCount: z.number().int().positive(),
   status: z.enum(LESSON_STATUSES),
   /** Best result so far: 0 when never finished, 1 to 3 otherwise. */
   stars: z.number().int().min(0).max(3),
@@ -26,6 +28,7 @@ export const CatalogResponseSchema = z.object({ lessons: z.array(LessonSummarySc
 export type CatalogResponse = z.infer<typeof CatalogResponseSchema>;
 
 export const LessonDetailSchema = LessonSummarySchema.extend({ steps: z.array(StepSchema) });
+
 export type LessonDetail = z.infer<typeof LessonDetailSchema>;
 
 const MAX_STEPS = 12;

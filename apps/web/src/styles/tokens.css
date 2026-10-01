@@ -1,0 +1,209 @@
+/* Кот Гамбит — CSS-переменные, редакция 2. Сгенерировано из tokens.json. */
+:root {
+  --color-bg: #f7f5ff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0edff;
+  --color-line: #e4e0f5;
+  --color-line-strong: #d3cee8;
+  --color-text: #1e1a2f;
+  --color-text-2: #5c5875;
+  --color-text-muted: #8c87a6;
+  --color-brand: #5b4bff;
+  --color-brand-depth: #4335d6;
+  --color-brand-tint: #edeaff;
+  --color-brand-tint-depth: #c9c1ff;
+  --color-brand-text: #4335d6;
+  --color-on-brand: #ffffff;
+  --color-sun: #ffc83d;
+  --color-sun-depth: #e0a800;
+  --color-sun-tint: #fff4d4;
+  --color-sun-text: #8a5e00;
+  --color-sun-border: #ffe08a;
+  --color-mint: #2ed47a;
+  --color-mint-depth: #1fa85f;
+  --color-mint-tint: #e3faee;
+  --color-mint-text: #137a43;
+  --color-mint-border: #9be8be;
+  --color-coral: #ff8f6b;
+  --color-coral-depth: #e56f4a;
+  --color-coral-tint: #fff0ea;
+  --color-coral-text: #b2471f;
+  --color-coral-border: #ffd0bf;
+  --color-flame: #ff7a1a;
+  --color-flame-depth: #d95f00;
+  --color-flame-tint: #ffebdd;
+  --color-flame-text: #a54a00;
+  --color-sky: #38b6ff;
+  --color-sky-depth: #1a93db;
+  --color-sky-tint: #e4f5ff;
+  --color-sky-text: #0b6fa8;
+  --color-sky-border: #a9ddfb;
+  --color-on-accent: #1e1a2f;
+  --color-disabled-bg: #e4e0f5;
+  --color-disabled-text: #8c87a6;
+  --color-disabled-depth: #d3cee8;
+  --color-focus-ring: #5b4bff;
+  --color-scrim: rgba(20, 17, 31, 0.55);
+  --color-coral-tint-2: #ffd9ca;
+  --color-coral-text-2: #8f3312;
+  --color-edge: #1e1a2f;
+  --color-board-a: #9c8cf0;
+  --color-board-b: #efe9ff;
+  --color-dashed: #d3cee8;
+  --font-heading: 'Unbounded', 'Trebuchet MS', sans-serif;
+  --font-body: 'Onest', 'Trebuchet MS', sans-serif;
+  --shashka: 4px 4px 0 var(--color-edge);
+  --shashka-lg: 6px 6px 0 var(--color-edge);
+}
+[data-theme='dark'] {
+  --color-bg: #14111f;
+  --color-surface: #1f1b2e;
+  --color-surface-2: #2a2540;
+  --color-line: #3a3456;
+  --color-line-strong: #221e36;
+  --color-text: #f4f2ff;
+  --color-text-2: #b7b2d6;
+  --color-text-muted: #6f6a8c;
+  --color-brand: #8577ff;
+  --color-brand-depth: #5b4bff;
+  --color-brand-tint: #2e2857;
+  --color-brand-tint-depth: #221e45;
+  --color-brand-text: #c9c1ff;
+  --color-on-brand: #14111f;
+  --color-sun: #ffd25e;
+  --color-sun-depth: #e0a800;
+  --color-sun-tint: #3a3018;
+  --color-sun-text: #ffd25e;
+  --color-sun-border: #6b5520;
+  --color-mint: #3be08a;
+  --color-mint-depth: #22b366;
+  --color-mint-tint: #173a2a;
+  --color-mint-text: #5be89e;
+  --color-mint-border: #245c40;
+  --color-coral: #ff9e7f;
+  --color-coral-depth: #e57a58;
+  --color-coral-tint: #3d2620;
+  --color-coral-text: #ffb39a;
+  --color-coral-border: #6b3a2c;
+  --color-flame: #ff8a33;
+  --color-flame-depth: #e06a10;
+  --color-flame-tint: #3a2616;
+  --color-flame-text: #ffb27a;
+  --color-sky: #5cc4ff;
+  --color-sky-depth: #2a9fe0;
+  --color-sky-tint: #15334a;
+  --color-sky-text: #8ad6ff;
+  --color-sky-border: #245a7e;
+  --color-on-accent: #14111f;
+  --color-disabled-bg: #2a2540;
+  --color-disabled-text: #6f6a8c;
+  --color-disabled-depth: #221e36;
+  --color-focus-ring: #f4f2ff;
+  --color-scrim: rgba(0, 0, 0, 0.6);
+  --color-coral-tint-2: #4a2a22;
+  --color-coral-text-2: #ffb39a;
+  --color-edge: #8c84b8;
+  --color-board-a: #5b4bff;
+  --color-board-b: #8577ff;
+  --color-dashed: #3a3456;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #14111f;
+    --color-surface: #1f1b2e;
+    --color-surface-2: #2a2540;
+    --color-line: #3a3456;
+    --color-line-strong: #221e36;
+    --color-text: #f4f2ff;
+    --color-text-2: #b7b2d6;
+    --color-text-muted: #6f6a8c;
+    --color-brand: #8577ff;
+    --color-brand-depth: #5b4bff;
+    --color-brand-tint: #2e2857;
+    --color-brand-tint-depth: #221e45;
+    --color-brand-text: #c9c1ff;
+    --color-on-brand: #14111f;
+    --color-sun: #ffd25e;
+    --color-sun-depth: #e0a800;
+    --color-sun-tint: #3a3018;
+    --color-sun-text: #ffd25e;
+    --color-sun-border: #6b5520;
+    --color-mint: #3be08a;
+    --color-mint-depth: #22b366;
+    --color-mint-tint: #173a2a;
+    --color-mint-text: #5be89e;
+    --color-mint-border: #245c40;
+    --color-coral: #ff9e7f;
+    --color-coral-depth: #e57a58;
+    --color-coral-tint: #3d2620;
+    --color-coral-text: #ffb39a;
+    --color-coral-border: #6b3a2c;
+    --color-flame: #ff8a33;
+    --color-flame-depth: #e06a10;
+    --color-flame-tint: #3a2616;
+    --color-flame-text: #ffb27a;
+    --color-sky: #5cc4ff;
+    --color-sky-depth: #2a9fe0;
+    --color-sky-tint: #15334a;
+    --color-sky-text: #8ad6ff;
+    --color-sky-border: #245a7e;
+    --color-on-accent: #14111f;
+    --color-disabled-bg: #2a2540;
+    --color-disabled-text: #6f6a8c;
+    --color-disabled-depth: #221e36;
+    --color-focus-ring: #f4f2ff;
+    --color-scrim: rgba(0, 0, 0, 0.6);
+    --color-coral-tint-2: #4a2a22;
+    --color-coral-text-2: #ffb39a;
+    --color-edge: #8c84b8;
+    --color-board-a: #5b4bff;
+    --color-board-b: #8577ff;
+    --color-dashed: #3a3456;
+  }
+}
+/* «Шашка» */
+.shashka {
+  border: 2px solid var(--color-edge);
+  box-shadow: var(--shashka);
+  transition:
+    transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 120ms;
+}
+.shashka-lg {
+  border: 3px solid var(--color-edge);
+  box-shadow: var(--shashka-lg);
+}
+.shashka:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shashka {
+    transition: none;
+  }
+  .shashka:active {
+    transform: none;
+  }
+}
+
+/* Board tokens from tokens.json (board.gambit, board.highlight); tokens.css does not export them.
+   Coordinate colors in the dark theme are not specified by the design, see PR notes. */
+:root {
+  --board-coord-on-light: #6e5fd8;
+  --board-coord-on-dark: #f4f1ff;
+  --board-selected-ring: #5b4bff;
+  --board-selected-fill: rgba(91, 75, 255, 0.14);
+  --board-move-dot: rgba(30, 26, 47, 0.3);
+  --board-capture-corners: rgba(30, 26, 47, 0.32);
+  --board-last-move: rgba(255, 200, 61, 0.5);
+  --board-check-glow: #ff8f6b;
+  --board-hint-dashed: #38b6ff;
+}
+[data-theme='dark'] {
+  --board-coord-on-light: #14111f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --board-coord-on-light: #14111f;
+  }
+}

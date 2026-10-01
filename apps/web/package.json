@@ -11,10 +11,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource/onest": "^5.3.1",
+    "@fontsource/unbounded": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
     "i18next": "^26.4.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-i18next": "^17.0.15"
+    "react-i18next": "^17.0.15",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@kotgambit/config": "workspace:*",

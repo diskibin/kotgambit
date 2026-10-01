@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+@config '../../tailwind.config.cjs';
+@import './tokens.css';
+
+@layer base {
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+}

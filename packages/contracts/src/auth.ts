@@ -36,6 +36,7 @@ export const UserSchema = z.object({
   id: z.uuid(),
   email: z.email(),
   displayName: z.string().nullable(),
+  emailVerified: z.boolean(),
 });
 export type User = z.infer<typeof UserSchema>;
 
@@ -55,3 +56,16 @@ export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 /** Cookie clients send an empty body. */
 export const RefreshRequestSchema = z.object({ refreshToken: z.string().min(1).optional() });
 export type RefreshRequest = z.infer<typeof RefreshRequestSchema>;
+
+export const ForgotPasswordRequestSchema = z.object({ email: EmailSchema });
+export type ForgotPasswordRequest = z.input<typeof ForgotPasswordRequestSchema>;
+
+/** `token` comes from the link in the email. */
+export const ResetPasswordRequestSchema = z.object({
+  token: z.string().min(1),
+  password: PasswordSchema,
+});
+export type ResetPasswordRequest = z.input<typeof ResetPasswordRequestSchema>;
+
+export const VerifyEmailRequestSchema = z.object({ token: z.string().min(1) });
+export type VerifyEmailRequest = z.input<typeof VerifyEmailRequestSchema>;

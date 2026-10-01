@@ -6,11 +6,23 @@ import {
   RegisterRequestSchema,
   type AuthResponse,
 } from '@kotgambit/contracts';
-import { Body, Controller, HttpCode, HttpStatus, Inject, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { CONFIG, type AppConfig } from '../config/config.module.js';
+import { RateLimit, RateLimitGuard } from '../rate-limit/rate-limit.guard.js';
+import { AUTH_LIMITS } from './auth.limits.js';
 import { AuthService, type Session } from './auth.service.js';
 
 export const REFRESH_COOKIE = 'kg_refresh';
@@ -22,6 +34,7 @@ type Login = z.output<typeof LoginRequestSchema>;
 type Refresh = z.output<typeof RefreshRequestSchema>;
 
 @Controller('auth')
+@UseGuards(RateLimitGuard)
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
@@ -29,6 +42,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @RateLimit(AUTH_LIMITS.registerPerIp)
   async register(
     @Body(new ZodValidationPipe(RegisterRequestSchema)) body: Register,
     @Req() request: FastifyRequest,
@@ -38,6 +52,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @RateLimit(AUTH_LIMITS.loginPerIp, AUTH_LIMITS.loginPerEmail)
   @HttpCode(HttpStatus.OK)
   async login(
     @Body(new ZodValidationPipe(LoginRequestSchema)) body: Login,
@@ -48,6 +63,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @RateLimit(AUTH_LIMITS.refreshPerIp)
   @HttpCode(HttpStatus.OK)
   async refresh(
     @Body(new ZodValidationPipe(RefreshRequestSchema.optional())) body: Refresh | undefined,

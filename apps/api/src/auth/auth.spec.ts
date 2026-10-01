@@ -10,6 +10,7 @@ import { SignJWT } from 'jose';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createTestApp } from '../../test/create-app.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
+import type { RedisService } from '../redis/redis.service.js';
 import { REFRESH_COOKIE } from './auth.controller.js';
 
 const CREDENTIALS = { email: 'cat@example.com', password: 'long-enough-password' };
@@ -18,14 +19,17 @@ const MOBILE = { [CLIENT_HEADER]: MOBILE_CLIENT };
 describe('auth', () => {
   let app: NestFastifyApplication;
   let prisma: PrismaService;
+  let redis: RedisService;
 
   beforeAll(async () => {
-    ({ app, prisma } = await createTestApp());
+    ({ app, prisma, redis } = await createTestApp());
   });
 
   afterAll(() => app.close());
 
   beforeEach(async () => {
+    // Rate limit counters would otherwise pile up across the tests
+    await redis.client.flushdb();
     await prisma.user.deleteMany();
   });
 

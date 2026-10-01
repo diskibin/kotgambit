@@ -5,6 +5,8 @@ import { AuthModule } from './auth/auth.module.js';
 import { CONFIG, ConfigModule, type AppConfig } from './config/config.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { RateLimitModule } from './rate-limit/rate-limit.module.js';
+import { RedisModule } from './redis/redis.module.js';
 import { UsersModule } from './users/users.module.js';
 
 // Secrets that must never reach the logs, see PLAN.md 15.5
@@ -20,6 +22,8 @@ const REDACTED_PATHS = [
   imports: [
     ConfigModule,
     PrismaModule,
+    RedisModule,
+    RateLimitModule,
     AuthModule,
     UsersModule,
     LoggerModule.forRootAsync({

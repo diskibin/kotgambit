@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { AuthModule } from './auth/auth.module.js';
 import { CONFIG, ConfigModule, type AppConfig } from './config/config.module.js';
 import { HealthController } from './health/health.controller.js';
+import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { RateLimitModule } from './rate-limit/rate-limit.module.js';
 import { RedisModule } from './redis/redis.module.js';
@@ -23,6 +24,7 @@ const REDACTED_PATHS = [
     ConfigModule,
     PrismaModule,
     RedisModule,
+    MailModule,
     RateLimitModule,
     AuthModule,
     UsersModule,

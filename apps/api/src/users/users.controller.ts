@@ -15,6 +15,11 @@ export class UsersController {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     // A valid token for a deleted account is as good as no token
     if (!user) throw new AppError('auth.unauthorized', HttpStatus.UNAUTHORIZED);
-    return { id: user.id, email: user.email, displayName: user.displayName };
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      emailVerified: user.emailVerifiedAt !== null,
+    };
   }
 }

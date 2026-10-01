@@ -5,6 +5,7 @@ import { AppError } from '../common/app-error.js';
 import { CONFIG, type AppConfig } from '../config/config.module.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AccountService } from './account.service.js';
 import { PasswordService } from './password.service.js';
 import { TokenService } from './token.service.js';
 
@@ -18,7 +19,12 @@ export interface Session {
   refreshExpiresAt: Date;
 }
 
-type UserRecord = { id: string; email: string; displayName: string | null };
+type UserRecord = {
+  id: string;
+  email: string;
+  displayName: string | null;
+  emailVerifiedAt: Date | null;
+};
 
 // The contract normalizes the email on the way in, so these are the parsed values
 type Registration = Omit<RegisterRequest, 'email'> & { email: string };
@@ -30,6 +36,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly passwords: PasswordService,
     private readonly tokens: TokenService,
+    private readonly account: AccountService,
     @Inject(CONFIG) private readonly config: AppConfig,
   ) {}
 
@@ -39,6 +46,8 @@ export class AuthService {
       const user = await this.prisma.user.create({
         data: { email, displayName: displayName ?? null, credential: { create: { passwordHash } } },
       });
+      // Not awaited: a mail outage must not fail the sign-up, the user can ask for the email again
+      void this.account.sendVerification(user);
       return await this.startSession(user, randomUUID());
     } catch (error) {
       if (
@@ -70,7 +79,7 @@ export class AuthService {
     if (!presented) throw expired;
 
     const stored = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash: this.tokens.hashRefreshToken(presented) },
+      where: { tokenHash: this.tokens.hashToken(presented) },
       include: { user: true },
     });
     if (!stored) throw expired;
@@ -92,7 +101,7 @@ export class AuthService {
   async logout(presented: string | undefined): Promise<void> {
     if (!presented) return;
     const stored = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash: this.tokens.hashRefreshToken(presented) },
+      where: { tokenHash: this.tokens.hashToken(presented) },
     });
     if (stored) await this.revokeFamily(stored.familyId);
   }
@@ -105,13 +114,13 @@ export class AuthService {
   }
 
   private async startSession(user: UserRecord, familyId: string): Promise<Session> {
-    const refreshToken = this.tokens.generateRefreshToken();
+    const refreshToken = this.tokens.generateOpaqueToken();
     const refreshExpiresAt = new Date(Date.now() + this.config.refreshTokenTtlDays * MS_IN_DAY);
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
         familyId,
-        tokenHash: this.tokens.hashRefreshToken(refreshToken),
+        tokenHash: this.tokens.hashToken(refreshToken),
         expiresAt: refreshExpiresAt,
       },
     });
@@ -119,7 +128,12 @@ export class AuthService {
       auth: {
         accessToken: await this.tokens.signAccessToken(user.id),
         expiresIn: this.config.accessTokenTtlSeconds,
-        user: { id: user.id, email: user.email, displayName: user.displayName },
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          emailVerified: user.emailVerifiedAt !== null,
+        },
       },
       refreshToken,
       refreshExpiresAt,

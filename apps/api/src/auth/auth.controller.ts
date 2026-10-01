@@ -1,9 +1,12 @@
 import {
   CLIENT_HEADER,
+  ForgotPasswordRequestSchema,
   LoginRequestSchema,
   MOBILE_CLIENT,
   RefreshRequestSchema,
   RegisterRequestSchema,
+  ResetPasswordRequestSchema,
+  VerifyEmailRequestSchema,
   type AuthResponse,
 } from '@kotgambit/contracts';
 import {
@@ -22,7 +25,10 @@ import type { z } from 'zod';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { CONFIG, type AppConfig } from '../config/config.module.js';
 import { RateLimit, RateLimitGuard } from '../rate-limit/rate-limit.guard.js';
+import { AccessTokenGuard } from './access-token.guard.js';
+import { AccountService } from './account.service.js';
 import { AUTH_LIMITS } from './auth.limits.js';
+import { CurrentUserId } from './current-user.decorator.js';
 import { AuthService, type Session } from './auth.service.js';
 
 export const REFRESH_COOKIE = 'kg_refresh';
@@ -32,12 +38,16 @@ const REFRESH_COOKIE_PATH = '/auth';
 type Register = z.output<typeof RegisterRequestSchema>;
 type Login = z.output<typeof LoginRequestSchema>;
 type Refresh = z.output<typeof RefreshRequestSchema>;
+type Forgot = z.output<typeof ForgotPasswordRequestSchema>;
+type Reset = z.output<typeof ResetPasswordRequestSchema>;
+type Verify = z.output<typeof VerifyEmailRequestSchema>;
 
 @Controller('auth')
 @UseGuards(RateLimitGuard)
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
+    private readonly account: AccountService,
     @Inject(CONFIG) private readonly config: AppConfig,
   ) {}
 
@@ -83,6 +93,40 @@ export class AuthController {
   ): Promise<void> {
     await this.auth.logout(body?.refreshToken ?? request.cookies[REFRESH_COOKIE]);
     void reply.clearCookie(REFRESH_COOKIE, { path: REFRESH_COOKIE_PATH });
+  }
+
+  @Post('email/verify')
+  @RateLimit(AUTH_LIMITS.emailLinkPerIp)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async verifyEmail(
+    @Body(new ZodValidationPipe(VerifyEmailRequestSchema)) body: Verify,
+  ): Promise<void> {
+    await this.account.verifyEmail(body.token);
+  }
+
+  @Post('email/resend')
+  @UseGuards(AccessTokenGuard)
+  @RateLimit(AUTH_LIMITS.resendVerificationPerIp)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendVerification(@CurrentUserId() userId: string): Promise<void> {
+    await this.account.resendVerification(userId);
+  }
+
+  @Post('password/forgot')
+  @RateLimit(AUTH_LIMITS.forgotPasswordPerIp, AUTH_LIMITS.forgotPasswordPerEmail)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  forgotPassword(@Body(new ZodValidationPipe(ForgotPasswordRequestSchema)) body: Forgot): void {
+    // Not awaited: the answer must not depend on whether the address has an account
+    void this.account.requestPasswordReset(body.email);
+  }
+
+  @Post('password/reset')
+  @RateLimit(AUTH_LIMITS.emailLinkPerIp)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resetPassword(
+    @Body(new ZodValidationPipe(ResetPasswordRequestSchema)) body: Reset,
+  ): Promise<void> {
+    await this.account.resetPassword(body.token, body.password);
   }
 
   /** Web gets the refresh token as an httpOnly cookie, the mobile app in the body. */

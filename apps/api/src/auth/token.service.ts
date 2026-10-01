@@ -38,12 +38,13 @@ export class TokenService {
     }
   }
 
-  generateRefreshToken(): string {
+  /** A random one-time secret: refresh tokens and the links in emails are made the same way. */
+  generateOpaqueToken(): string {
     return randomBytes(REFRESH_TOKEN_BYTES).toString('base64url');
   }
 
-  /** Only the hash is stored, so a leaked table does not hand out working sessions. */
-  hashRefreshToken(token: string): string {
+  /** Only the hash is stored, so a leaked table does not hand out working sessions or links. */
+  hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }
 }

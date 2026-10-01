@@ -1,8 +1,9 @@
 import { ApiErrorSchema } from '@kotgambit/contracts';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestApp } from '../../test/create-app.js';
 import { AUTH_LIMITS } from '../auth/auth.limits.js';
+import type { MemoryMailTransport } from '../../test/memory-mail.transport.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 import type { RedisService } from '../redis/redis.service.js';
 import { RateLimiterService } from './rate-limiter.service.js';
@@ -11,9 +12,10 @@ describe('rate limiting', () => {
   let app: NestFastifyApplication;
   let prisma: PrismaService;
   let redis: RedisService;
+  let mail: MemoryMailTransport;
 
   beforeAll(async () => {
-    ({ app, prisma, redis } = await createTestApp());
+    ({ app, prisma, redis, mail } = await createTestApp());
   });
 
   afterAll(() => app.close());
@@ -21,6 +23,7 @@ describe('rate limiting', () => {
   beforeEach(async () => {
     await redis.client.flushdb();
     await prisma.user.deleteMany();
+    mail.clear();
   });
 
   const login = (email: string, remoteAddress?: string) =>
@@ -85,6 +88,8 @@ describe('rate limiting', () => {
         });
       for (let n = 0; n < limit; n += 1) expect((await register(n)).statusCode).toBe(201);
       expect((await register(limit)).statusCode).toBe(429);
+      // Let the verification emails finish before the next test removes the users
+      await vi.waitFor(() => expect(mail.outbox).toHaveLength(limit));
     });
   });
 

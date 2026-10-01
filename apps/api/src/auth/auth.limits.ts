@@ -9,5 +9,9 @@ export const AUTH_LIMITS = {
   registerPerIp: { name: 'register-ip', limit: 5, windowSeconds: HOUR, by: 'ip' },
   loginPerIp: { name: 'login-ip', limit: 30, windowSeconds: 15 * MINUTE, by: 'ip' },
   loginPerEmail: { name: 'login-email', limit: 5, windowSeconds: 15 * MINUTE, by: 'email' },
+  forgotPasswordPerIp: { name: 'forgot-ip', limit: 5, windowSeconds: HOUR, by: 'ip' },
+  forgotPasswordPerEmail: { name: 'forgot-email', limit: 3, windowSeconds: HOUR, by: 'email' },
+  emailLinkPerIp: { name: 'email-link-ip', limit: 20, windowSeconds: HOUR, by: 'ip' },
+  resendVerificationPerIp: { name: 'resend-ip', limit: 5, windowSeconds: HOUR, by: 'ip' },
   refreshPerIp: { name: 'refresh-ip', limit: 60, windowSeconds: MINUTE, by: 'ip' },
 } as const satisfies Record<string, RateLimitRule>;

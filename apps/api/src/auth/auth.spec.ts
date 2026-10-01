@@ -7,8 +7,9 @@ import {
 } from '@kotgambit/contracts';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { SignJWT } from 'jose';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestApp } from '../../test/create-app.js';
+import type { MemoryMailTransport } from '../../test/memory-mail.transport.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 import type { RedisService } from '../redis/redis.service.js';
 import { REFRESH_COOKIE } from './auth.controller.js';
@@ -20,9 +21,10 @@ describe('auth', () => {
   let app: NestFastifyApplication;
   let prisma: PrismaService;
   let redis: RedisService;
+  let mail: MemoryMailTransport;
 
   beforeAll(async () => {
-    ({ app, prisma, redis } = await createTestApp());
+    ({ app, prisma, redis, mail } = await createTestApp());
   });
 
   afterAll(() => app.close());
@@ -31,13 +33,18 @@ describe('auth', () => {
     // Rate limit counters would otherwise pile up across the tests
     await redis.client.flushdb();
     await prisma.user.deleteMany();
+    mail.clear();
   });
 
   const post = (url: string, payload?: unknown, headers: Record<string, string> = {}) =>
     app.inject({ method: 'POST', url, payload: payload as object, headers });
 
   async function register(headers: Record<string, string> = {}) {
-    return post('/auth/register', CREDENTIALS, headers);
+    const res = await post('/auth/register', CREDENTIALS, headers);
+    // The verification email goes out after the answer, let it finish before the next test cleans up
+    if (res.statusCode === 201)
+      await vi.waitFor(() => expect(mail.outbox.length).toBeGreaterThan(0));
+    return res;
   }
 
   const refreshCookie = (res: { cookies: { name: string; value: string }[] }) =>

@@ -9,6 +9,7 @@ export const ERROR_MESSAGES = {
   'auth.invalid_credentials': 'Не получилось войти. Проверь почту и пароль.',
   'auth.email_taken': 'Эта почта уже зарегистрирована. Попробуй войти.',
   'auth.unauthorized': 'Нужно войти, чтобы продолжить.',
+  'auth.link_expired': 'Ссылка устарела. Запроси новую — это займёт минуту.',
   'auth.session_expired': 'Сессия закончилась. Войди ещё раз.',
   'http.not_found': 'Такой страницы не нашлось.',
   'http.too_many_requests': 'Слишком много попыток. Подожди немного и попробуй снова.',

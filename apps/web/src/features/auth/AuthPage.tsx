@@ -1,3 +1,10 @@
+import {
+  apiErrorOf,
+  checkEmail,
+  checkPassword,
+  type EmailProblem,
+  type PasswordProblem,
+} from '@kotgambit/contracts';
 import type { Mood } from '@kotgambit/mascot';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,13 +18,6 @@ import { Tabs } from '../../shared/ui/Tabs';
 import { TextField } from '../../shared/ui/TextField';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
-import {
-  apiErrorOf,
-  checkEmail,
-  checkPassword,
-  type EmailProblem,
-  type PasswordProblem,
-} from './authErrors';
 
 export type AuthMode = 'login' | 'register';
 

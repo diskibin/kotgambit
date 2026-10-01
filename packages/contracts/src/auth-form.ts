@@ -1,9 +1,10 @@
-import { ApiErrorSchema, type ApiError } from '@kotgambit/contracts';
 import { z } from 'zod';
+import { ApiErrorSchema, type ApiError } from './errors.js';
 
 export type EmailProblem = 'noAt' | 'invalid' | 'taken';
 export type PasswordProblem = 'required' | 'tooShort' | 'wrong';
 
+// Keep in line with the password rule of RegisterRequestSchema
 const MIN_PASSWORD_LENGTH = 8;
 
 export function checkEmail(email: string): EmailProblem | null {

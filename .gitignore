@@ -1,0 +1,38 @@
+# Project-internal material kept out of the public repository
+/kot-gambit-design/
+/docs/
+/CLAUDE.md
+/PLAN.md
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Secrets and private data (PLAN.md 15.5)
+.env*
+!.env.example
+*.jks
+*.keystore
+keystore.properties
+*.pem
+*.key
+*.p12
+*.sql
+*.sql.gz
+dump*
+backups/
+premium/
+content-private/
+.secrets/
+local.properties
+
+# Editor and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+.claude/

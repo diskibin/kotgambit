@@ -14,14 +14,14 @@ afterAll(() => server.close());
 
 describe('App', () => {
   it('renders the product title from localization', async () => {
-    renderApp('/');
+    renderApp('/sandbox');
     expect(
       await screen.findByRole('heading', { name: 'Кот Гамбит', level: 1 }),
     ).toBeInTheDocument();
   });
 
   it('offers sign-in links to a visitor', async () => {
-    renderApp('/');
+    renderApp('/sandbox');
     expect(await screen.findByRole('link', { name: 'Войти' })).toHaveAttribute('href', '/login');
   });
 });

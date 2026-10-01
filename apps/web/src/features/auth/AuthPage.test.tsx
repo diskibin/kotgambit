@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { homeHandlers } from '../../test/handlers';
 import { API_URL, renderApp, USER } from '../../test/renderApp';
 
 const server = setupServer();
@@ -22,6 +23,7 @@ beforeEach(() => {
       signedIn ? HttpResponse.json(USER) : new HttpResponse(null, { status: 401 }),
     ),
     http.post(`${API_URL}/auth/refresh`, () => new HttpResponse(null, { status: 401 })),
+    ...homeHandlers(),
   );
 });
 afterEach(() => server.resetHandlers());
@@ -70,7 +72,7 @@ describe('login', () => {
     await fill(user, 'cat@example.com', 'gambit2026');
     await user.click(submit('Войти'));
 
-    expect(await screen.findByText('Ты вошёл как cat@example.com')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Мои курсы' })).toBeInTheDocument();
     expect(store.getState().auth.status).toBe('authenticated');
   });
 
@@ -145,7 +147,7 @@ describe('login', () => {
     expect(busy).toBeDisabled();
     expect(email()).toBeDisabled();
     expect(catMood()).toBe('thinking');
-    await screen.findByText('Ты вошёл как cat@example.com');
+    await screen.findByRole('heading', { name: 'Мои курсы' });
   });
 
   it('reveals the password on request', async () => {
@@ -169,7 +171,7 @@ describe('login', () => {
       ),
     );
     renderApp('/login');
-    expect(await screen.findByText('Ты вошёл как cat@example.com')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Мои курсы' })).toBeInTheDocument();
   });
 });
 
@@ -195,7 +197,7 @@ describe('registration', () => {
     expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
     await fill(user, 'cat@example.com', 'gambit2026');
     await user.click(submit('Создать аккаунт'));
-    expect(await screen.findByText('Ты вошёл как cat@example.com')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Мои курсы' })).toBeInTheDocument();
   });
 
   it('offers to sign in when the email is taken and keeps the address', async () => {

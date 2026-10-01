@@ -16,10 +16,10 @@ import {
   type PromotionPiece,
   type Square,
 } from '@kotgambit/chess-core';
-import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PanResponder, Pressable, Text, View } from 'react-native';
-import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Line, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { boardHighlight, coordColors } from '../../theme/board';
 import { useTheme, type Colors, type Scheme } from '../../theme/ThemeProvider';
 import { radius, shashka, size as sizes } from '../../theme/theme';
@@ -58,6 +58,89 @@ interface BoardProps {
   hintSquares?: readonly Square[];
   coords?: boolean;
   disabled?: boolean;
+  arrows?: readonly BoardArrow[];
+  /** Squares marked by the learner, drawn like a selection. */
+  marked?: readonly Square[];
+  /**
+   * When given, squares only report presses to it: no piece is selected, moved or dragged.
+   * Used where the learner marks squares instead of moving.
+   */
+  onSquarePress?: (square: Square) => void;
+  /** Overrides the last move of the state, for the positions of a demo. */
+  lastMove?: { from: Square; to: Square } | null;
+}
+
+export interface BoardArrow {
+  from: Square;
+  to: Square;
+  color: 'sky' | 'sun' | 'mint' | 'brand';
+}
+
+const ARROW_LINE_WIDTH = 0.2;
+const ARROW_HEAD_LENGTH = 0.5;
+const ARROW_HEAD_HALF_WIDTH = 0.3;
+const ARROW_OPACITY = 0.9;
+
+/** Arrows over the board in board units (8 by 8), so they scale with it. */
+function Arrows({
+  arrows,
+  orientation,
+  colors,
+}: {
+  arrows: readonly BoardArrow[];
+  orientation: BoardState['orientation'];
+  colors: Colors;
+}) {
+  if (arrows.length === 0) return null;
+  const palette = {
+    sky: colors.sky,
+    sun: colors.sunDepth,
+    mint: colors.mintDepth,
+    brand: colors.brand,
+  };
+  const squares = displaySquares(orientation);
+  const centre = (square: Square) => {
+    const index = squares.indexOf(square);
+    return { x: (index % BOARD_SIZE) + 0.5, y: Math.floor(index / BOARD_SIZE) + 0.5 };
+  };
+  return (
+    <Svg
+      pointerEvents="none"
+      style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}
+      viewBox={`0 0 ${BOARD_SIZE} ${BOARD_SIZE}`}
+    >
+      {arrows.map((arrow) => {
+        const from = centre(arrow.from);
+        const to = centre(arrow.to);
+        const length = Math.hypot(to.x - from.x, to.y - from.y) || 1;
+        const ux = (to.x - from.x) / length;
+        const uy = (to.y - from.y) / length;
+        const bx = to.x - ux * ARROW_HEAD_LENGTH;
+        const by = to.y - uy * ARROW_HEAD_LENGTH;
+        const head = [
+          `${to.x},${to.y}`,
+          `${bx - uy * ARROW_HEAD_HALF_WIDTH},${by + ux * ARROW_HEAD_HALF_WIDTH}`,
+          `${bx + uy * ARROW_HEAD_HALF_WIDTH},${by - ux * ARROW_HEAD_HALF_WIDTH}`,
+        ].join(' ');
+        const color = palette[arrow.color];
+        return (
+          <React.Fragment key={`${arrow.from}${arrow.to}`}>
+            <Line
+              x1={from.x}
+              y1={from.y}
+              x2={bx}
+              y2={by}
+              stroke={color}
+              strokeWidth={ARROW_LINE_WIDTH}
+              strokeLinecap="round"
+              opacity={ARROW_OPACITY}
+            />
+            <Polygon points={head} fill={color} opacity={ARROW_OPACITY} />
+          </React.Fragment>
+        );
+      })}
+    </Svg>
+  );
 }
 
 interface Drag {
@@ -282,13 +365,19 @@ export function Board({
   hintSquares = [],
   coords = true,
   disabled = false,
+  arrows = [],
+  marked = [],
+  onSquarePress,
+  lastMove: lastMoveOverride,
 }: BoardProps) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const [drag, setDrag] = useState<Drag | null>(null);
   const pending = useRef<PendingDrag | null>(null);
 
-  const { fen, orientation, selected, lastMove, pendingPromotion } = state;
+  const { fen, orientation, selected, pendingPromotion } = state;
+  const lastMove = lastMoveOverride === undefined ? state.lastMove : lastMoveOverride;
+  const markedSet = useMemo(() => new Set(marked), [marked]);
   const inner = size - shashka.border * 2;
   const cell = inner / BOARD_SIZE;
   const squares = useMemo(() => displaySquares(orientation), [orientation]);
@@ -308,6 +397,7 @@ export function Board({
     pendingPromotion,
     dispatch,
     disabled,
+    onSquarePress,
     inner,
     cell,
   });
@@ -320,6 +410,7 @@ export function Board({
       pendingPromotion,
       dispatch,
       disabled,
+      onSquarePress,
       inner,
       cell,
     };
@@ -383,13 +474,17 @@ export function Board({
   }, []);
 
   const handlePress = useCallback((square: Square) => {
-    latest.current.dispatch({ type: 'square/select', square });
+    const press = latest.current.onSquarePress;
+    if (press) press(square);
+    else latest.current.dispatch({ type: 'square/select', square });
   }, []);
 
   const handleTouchStart = useCallback((square: Square, x: number, y: number) => {
     const { disabled: off, pendingPromotion: promoting, movable: canMove } = latest.current;
     pending.current =
-      !off && !promoting && canMove.has(square) ? { from: square, startX: x, startY: y } : null;
+      !off && !promoting && !latest.current.onSquarePress && canMove.has(square)
+        ? { from: square, startX: x, startY: y }
+        : null;
   }, []);
 
   function labelFor(square: Square, piece: PlacedPiece | undefined): string {
@@ -455,7 +550,7 @@ export function Board({
               light={isLightSquare(square)}
               piece={piece}
               label={labelFor(square, piece)}
-              selected={selected === square}
+              selected={selected === square || markedSet.has(square)}
               target={targets.has(square)}
               last={lastMove?.from === square || lastMove?.to === square}
               checked={checked === square}
@@ -471,6 +566,8 @@ export function Board({
             />
           );
         })}
+
+        <Arrows arrows={arrows} orientation={orientation} colors={colors} />
 
         {drag && (
           <View

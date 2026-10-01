@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, shashka, size, typography } from '../../theme/theme';
 
-type Variant = 'primary' | 'secondary' | 'text';
+type Variant = 'primary' | 'success' | 'secondary' | 'text' | 'danger';
 
 interface ButtonProps {
   label: string;
@@ -28,7 +28,7 @@ export function Button({
   const { colors } = useTheme();
   const height = large ? size.buttonHeightL : size.buttonHeight;
 
-  if (variant === 'text') {
+  if (variant === 'text' || variant === 'danger') {
     return (
       <Pressable
         accessibilityRole="button"
@@ -38,13 +38,24 @@ export function Button({
         onPress={onPress}
         style={{ minHeight: size.tapMin, alignItems: 'center', justifyContent: 'center' }}
       >
-        <Text style={[typography.button, { color: colors.brandText }]}>{label}</Text>
+        <Text
+          style={[
+            typography.button,
+            { color: variant === 'danger' ? colors.coralText : colors.brandText },
+          ]}
+        >
+          {label}
+        </Text>
       </Pressable>
     );
   }
 
-  const background = variant === 'primary' ? colors.brand : colors.surface;
-  const foreground = variant === 'primary' ? colors.onBrand : colors.text;
+  const background = { primary: colors.brand, success: colors.mint, secondary: colors.surface }[
+    variant
+  ];
+  const foreground = { primary: colors.onBrand, success: colors.onAccent, secondary: colors.text }[
+    variant
+  ];
 
   // "Shashka": a second view in the outline colour sits under the button, offset to the bottom right.
   // Not elevation or shadow*, which blur and differ between devices.

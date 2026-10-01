@@ -3,10 +3,13 @@ import {
   HealthResponseSchema,
   UserSchema,
   type AuthResponse,
+  type ForgotPasswordRequest,
   type HealthResponse,
   type LoginRequest,
   type RefreshRequest,
   type RegisterRequest,
+  type ResetPasswordRequest,
+  type VerifyEmailRequest,
   type User,
 } from '@kotgambit/contracts';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
@@ -40,6 +43,20 @@ export function endpoints(build: Builder) {
     logout: build.mutation<void, RefreshRequest | void>({
       query: (body) => ({ url: '/auth/logout', method: 'POST', ...(body ? { body } : {}) }),
       invalidatesTags: ['Me'],
+    }),
+    forgotPassword: build.mutation<void, ForgotPasswordRequest>({
+      query: (body) => ({ url: '/auth/password/forgot', method: 'POST', body }),
+    }),
+    resetPassword: build.mutation<void, ResetPasswordRequest>({
+      query: (body) => ({ url: '/auth/password/reset', method: 'POST', body }),
+    }),
+    verifyEmail: build.mutation<void, VerifyEmailRequest>({
+      query: (body) => ({ url: '/auth/email/verify', method: 'POST', body }),
+      // The profile shows whether the address is confirmed
+      invalidatesTags: ['Me'],
+    }),
+    resendVerification: build.mutation<void, void>({
+      query: () => ({ url: '/auth/email/resend', method: 'POST' }),
     }),
     me: build.query<User, void>({
       query: () => '/users/me',

@@ -93,6 +93,53 @@ describe('shared endpoints', () => {
   });
 });
 
+describe('account endpoints', () => {
+  it('posts the address to the forgot-password route', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/auth/password/forgot`, async ({ request }) => {
+        body = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.forgotPassword.initiate({ email: 'cat@example.com' }),
+    );
+    expect(body).toEqual({ email: 'cat@example.com' });
+    expect(result).not.toHaveProperty('error');
+  });
+
+  it('posts the token and the new password to reset', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/auth/password/reset`, async ({ request }) => {
+        body = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { api, store } = setup();
+    await store.dispatch(
+      api.endpoints.resetPassword.initiate({ token: 't', password: 'new-password-1' }),
+    );
+    expect(body).toEqual({ token: 't', password: 'new-password-1' });
+  });
+
+  it('reports an expired link as an error with the status', async () => {
+    server.use(
+      http.post(`${BASE_URL}/auth/email/verify`, () =>
+        HttpResponse.json(
+          { code: 'auth.link_expired', message: 'Ссылка устарела.' },
+          { status: 400 },
+        ),
+      ),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.verifyEmail.initiate({ token: 'old' }));
+    expect(result).toMatchObject({ error: { status: 400 } });
+  });
+});
+
 describe('client options', () => {
   it('sends the extra headers with every request', async () => {
     let client: string | null = null;

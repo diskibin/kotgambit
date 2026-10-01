@@ -12,6 +12,11 @@ const EnvSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
+  /** Where the web app lives, the links in emails point there. */
+  WEB_URL: z.url().default('http://localhost:5173'),
+  MAIL_FROM: z.string().min(1).default('Кот Гамбит <noreply@localhost>'),
+  /** SMTP connection string such as smtp://user:pass@host:587. Without it emails are only written to the log. */
+  SMTP_URL: z.string().min(1).optional(),
   JWT_ACCESS_SECRET: z.string().min(MIN_JWT_SECRET_LENGTH),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce
     .number()
@@ -46,6 +51,9 @@ export interface AppConfig {
   logLevel: string;
   databaseUrl: string;
   redisUrl: string;
+  webUrl: string;
+  mailFrom: string;
+  smtpUrl: string | undefined;
   trustProxy: boolean;
   jwtAccessSecret: string;
   accessTokenTtlSeconds: number;
@@ -67,12 +75,19 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     throw new ConfigError(`Invalid environment configuration:\n${problems.join('\n')}`);
   }
   const values = parsed.data;
+  // A password reset that only reaches the log would leave users locked out in production
+  if (values.NODE_ENV === 'production' && !values.SMTP_URL) {
+    throw new ConfigError('Invalid environment configuration:\nSMTP_URL: required in production');
+  }
   return {
     nodeEnv: values.NODE_ENV,
     port: values.PORT,
     logLevel: values.LOG_LEVEL,
     databaseUrl: values.DATABASE_URL,
     redisUrl: values.REDIS_URL,
+    webUrl: values.WEB_URL.replace(/\/$/, ''),
+    mailFrom: values.MAIL_FROM,
+    smtpUrl: values.SMTP_URL,
     trustProxy: values.TRUST_PROXY,
     jwtAccessSecret: values.JWT_ACCESS_SECRET,
     accessTokenTtlSeconds: values.ACCESS_TOKEN_TTL_SECONDS,

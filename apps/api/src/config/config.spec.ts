@@ -17,6 +17,8 @@ describe('loadConfig', () => {
       refreshTokenTtlDays: 30,
       corsOrigins: [],
       trustProxy: false,
+      webUrl: 'http://localhost:5173',
+      smtpUrl: undefined,
       isProduction: false,
     });
   });
@@ -25,6 +27,7 @@ describe('loadConfig', () => {
     const config = loadConfig({
       ...VALID_ENV,
       NODE_ENV: 'production',
+      SMTP_URL: 'smtp://mail.example.com:587',
       PORT: '8080',
       CORS_ORIGINS: 'https://a.example.com, https://b.example.com,',
     });
@@ -49,6 +52,16 @@ describe('loadConfig', () => {
       expect((error as Error).message).toMatch(/JWT_ACCESS_SECRET/);
       expect((error as Error).message).not.toContain(secret);
     }
+  });
+
+  it('requires a mail server in production', () => {
+    expect(() => loadConfig({ ...VALID_ENV, NODE_ENV: 'production' })).toThrow(/SMTP_URL/);
+  });
+
+  it('strips a trailing slash from the web address', () => {
+    expect(loadConfig({ ...VALID_ENV, WEB_URL: 'https://kotgambit.example.com/' }).webUrl).toBe(
+      'https://kotgambit.example.com',
+    );
   });
 
   it('requires REDIS_URL', () => {

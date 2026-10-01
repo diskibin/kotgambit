@@ -1,3 +1,4 @@
+import { CLIENT_HEADER, MOBILE_CLIENT } from '@kotgambit/contracts';
 import {
   createBaseQuery,
   endpoints,
@@ -6,6 +7,7 @@ import {
   type SessionAdapter,
 } from '@kotgambit/api-client';
 import { createApi } from '@reduxjs/toolkit/query/react';
+import { getRefreshToken, saveRefreshToken } from './refreshTokenStorage';
 
 // 10.0.2.2 is how the Android emulator reaches the host machine; release builds get their URL
 // together with the release configuration.
@@ -24,16 +26,22 @@ export const sessionBridge: Pick<
   onSessionExpired: () => undefined,
 };
 
-// The refresh token adapter (Keychain/Keystore) arrives together with the sign-in screens
 const session: SessionAdapter = {
   getAccessToken: () => sessionBridge.getAccessToken(),
   setAccessToken: (token) => sessionBridge.setAccessToken(token),
+  getRefreshToken,
+  setRefreshToken: saveRefreshToken,
   onSessionExpired: () => sessionBridge.onSessionExpired(),
 };
 
 export const api = createApi({
   reducerPath: REDUCER_PATH,
-  baseQuery: createBaseQuery({ baseUrl: API_URL, session }),
+  // The marker header makes the API return the refresh token in the body, there are no cookies here
+  baseQuery: createBaseQuery({
+    baseUrl: API_URL,
+    session,
+    headers: { [CLIENT_HEADER]: MOBILE_CLIENT },
+  }),
   tagTypes: TAG_TYPES,
   endpoints,
 });

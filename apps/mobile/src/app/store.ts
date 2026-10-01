@@ -1,26 +1,22 @@
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
 import { api, sessionBridge } from './api';
+import { clearRefreshToken, saveRefreshToken } from './refreshTokenStorage';
 
 export function makeStore() {
   const listener = createListenerMiddleware();
 
-  // Sign-in and sign-up both end with a token, sign-out with none
+  // Sign-in and sign-up both end with a token
   for (const endpoint of [api.endpoints.login, api.endpoints.register]) {
     listener.startListening({
       matcher: endpoint.matchFulfilled,
-      effect: (action, { dispatch }) => {
+      effect: async (action, { dispatch }) => {
+        // The access token first: the profile request that the sign-in invalidates must already carry it
         dispatch(tokenReceived(action.payload.accessToken));
+        if (action.payload.refreshToken) await saveRefreshToken(action.payload.refreshToken);
       },
     });
   }
-  listener.startListening({
-    matcher: api.endpoints.logout.matchFulfilled,
-    effect: (_action, { dispatch }) => {
-      dispatch(sessionEnded());
-    },
-  });
-
   const store = configureStore({
     reducer: {
       [api.reducerPath]: api.reducer,
@@ -31,7 +27,10 @@ export function makeStore() {
 
   sessionBridge.getAccessToken = () => store.getState().auth.accessToken;
   sessionBridge.setAccessToken = (token) => store.dispatch(tokenReceived(token));
-  sessionBridge.onSessionExpired = () => store.dispatch(sessionEnded());
+  sessionBridge.onSessionExpired = () => {
+    void clearRefreshToken();
+    store.dispatch(sessionEnded());
+  };
   return store;
 }
 

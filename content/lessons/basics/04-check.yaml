@@ -2,6 +2,7 @@ id: basics-check
 track: basics
 order: 4
 access: free
+piece: q
 title: Шах королю
 summary: Что такое шах и как от него защититься.
 minutes: 5

@@ -11,6 +11,7 @@ function lesson(overrides: Partial<Lesson> = {}): Lesson {
     track: 'basics',
     order: 1,
     access: 'free',
+    piece: 'n',
     title: 'Как ходит конь',
     summary: 'Буква Г',
     minutes: 5,

@@ -2,6 +2,7 @@ id: basics-knight
 track: basics
 order: 3
 access: free
+piece: n
 title: Как ходит конь
 summary: Конь прыгает буквой «Г» и перепрыгивает через фигуры.
 minutes: 6

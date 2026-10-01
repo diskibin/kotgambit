@@ -2,6 +2,7 @@ id: basics-rook
 track: basics
 order: 2
 access: free
+piece: r
 title: Как ходит ладья
 summary: Ладья ездит по прямой, как башня по рельсам.
 minutes: 5

@@ -2,6 +2,7 @@ id: basics-board
 track: basics
 order: 1
 access: free
+piece: k
 title: Доска и фигуры
 summary: Знакомимся с клетками, вертикалями и расстановкой фигур.
 minutes: 5

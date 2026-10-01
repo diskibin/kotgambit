@@ -98,6 +98,9 @@ export const StepSchema = z.discriminatedUnion('type', [
 export type Step = z.infer<typeof StepSchema>;
 export type StepType = Step['type'];
 
+export const PIECES = ['p', 'n', 'b', 'r', 'q', 'k'] as const;
+export type Piece = (typeof PIECES)[number];
+
 export const TRACKS = ['basics', 'openings', 'middlegame', 'endgame'] as const;
 export type Track = (typeof TRACKS)[number];
 
@@ -112,6 +115,8 @@ export const LessonSchema = z.object({
   order: z.number().int().positive(),
   /** The public repository may only hold `free` lessons, content-guard enforces it. */
   access: z.enum(['free', 'premium']),
+  /** The piece of the chapter, shown on its card. */
+  piece: z.enum(PIECES),
   title: text,
   summary: text,
   minutes: z.number().int().min(1).max(MAX_MINUTES),

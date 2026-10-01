@@ -24,7 +24,7 @@ beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-function setup(overrides: Partial<SessionAdapter> = {}) {
+function setup(overrides: Partial<SessionAdapter> = {}, headers?: Record<string, string>) {
   let accessToken: string | null = 'stale-token';
   const session: SessionAdapter = {
     getAccessToken: () => accessToken,
@@ -36,7 +36,7 @@ function setup(overrides: Partial<SessionAdapter> = {}) {
   };
   const api = createApi({
     reducerPath: REDUCER_PATH,
-    baseQuery: createBaseQuery({ baseUrl: BASE_URL, session }),
+    baseQuery: createBaseQuery({ baseUrl: BASE_URL, session, ...(headers ? { headers } : {}) }),
     tagTypes: TAG_TYPES,
     endpoints,
   });
@@ -90,6 +90,34 @@ describe('shared endpoints', () => {
     );
     expect(body).toEqual({ email: 'cat@example.com', password: 'secret' });
     expect(result).toMatchObject({ data: { accessToken: 'fresh-token' } });
+  });
+});
+
+describe('client options', () => {
+  it('sends the extra headers with every request', async () => {
+    let client: string | null = null;
+    server.use(
+      http.get(`${BASE_URL}/health`, ({ request }) => {
+        client = request.headers.get('x-kotgambit-client');
+        return HttpResponse.json({ status: 'ok' });
+      }),
+    );
+    const { api, store } = setup({}, { 'x-kotgambit-client': 'mobile' });
+    await store.dispatch(api.endpoints.health.initiate());
+    expect(client).toBe('mobile');
+  });
+
+  it('sends the refresh token in the body on logout when given one', async () => {
+    let body: unknown = 'unset';
+    server.use(
+      http.post(`${BASE_URL}/auth/logout`, async ({ request }) => {
+        body = request.headers.get('content-type') ? await request.json() : null;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { api, store } = setup();
+    await store.dispatch(api.endpoints.logout.initiate({ refreshToken: 'stored-refresh' }));
+    expect(body).toEqual({ refreshToken: 'stored-refresh' });
   });
 });
 

@@ -19,6 +19,8 @@ export interface BaseQueryOptions {
   baseUrl: string;
   session: SessionAdapter;
   fetchFn?: typeof fetch;
+  /** Sent with every request, for example the header that marks the mobile client. */
+  headers?: Record<string, string>;
 }
 
 function urlOf(args: string | FetchArgs): string {
@@ -29,6 +31,7 @@ export function createBaseQuery({
   baseUrl,
   session,
   fetchFn,
+  headers: extraHeaders = {},
 }: BaseQueryOptions): KotGambitBaseQuery {
   const rawQuery = fetchBaseQuery({
     baseUrl,
@@ -36,6 +39,7 @@ export function createBaseQuery({
     credentials: 'include',
     ...(fetchFn ? { fetchFn } : {}),
     prepareHeaders: (headers) => {
+      for (const [name, value] of Object.entries(extraHeaders)) headers.set(name, value);
       const token = session.getAccessToken();
       if (token) headers.set('Authorization', `Bearer ${token}`);
       return headers;

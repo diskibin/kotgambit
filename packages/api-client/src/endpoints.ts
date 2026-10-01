@@ -5,6 +5,7 @@ import {
   type AuthResponse,
   type HealthResponse,
   type LoginRequest,
+  type RefreshRequest,
   type RegisterRequest,
   type User,
 } from '@kotgambit/contracts';
@@ -35,8 +36,9 @@ export function endpoints(build: Builder) {
       responseSchema: AuthResponseSchema,
       invalidatesTags: ['Me'],
     }),
-    logout: build.mutation<void, void>({
-      query: () => ({ url: '/auth/logout', method: 'POST' }),
+    // Web ends the session through its cookie, mobile sends the refresh token it keeps
+    logout: build.mutation<void, RefreshRequest | void>({
+      query: (body) => ({ url: '/auth/logout', method: 'POST', ...(body ? { body } : {}) }),
       invalidatesTags: ['Me'],
     }),
     me: build.query<User, void>({

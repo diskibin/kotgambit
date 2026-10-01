@@ -8,17 +8,21 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(uuid(7)) @db.Uuid
+  id               String    @id @default(uuid(7)) @db.Uuid
   // Stored in lower case, the contract normalizes it before it gets here
-  email           String    @unique
-  displayName     String?   @map("display_name")
+  email            String    @unique
+  displayName      String?   @map("display_name")
   // Set when the owner opens the link from the verification email, or resets the password through one
-  emailVerifiedAt DateTime? @map("email_verified_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  emailVerifiedAt  DateTime? @map("email_verified_at")
+  // Daily goal in minutes, the learner picks it in onboarding and settings
+  dailyGoalMinutes Int       @default(10) @map("daily_goal_minutes")
+  createdAt        DateTime  @default(now()) @map("created_at")
 
-  credential    Credential?
-  refreshTokens RefreshToken[]
-  emailTokens   EmailToken[]
+  credential     Credential?
+  refreshTokens  RefreshToken[]
+  emailTokens    EmailToken[]
+  lessonProgress LessonProgress[]
+  dailyActivity  DailyActivity[]
 
   @@map("users")
 }
@@ -73,4 +77,53 @@ model EmailToken {
 
   @@index([userId, kind])
   @@map("email_tokens")
+}
+
+// Lessons are loaded from the content files by the seed script, the table is a copy for fast reads
+model Lesson {
+  id          String   @id
+  track       String
+  order       Int
+  access      String
+  title       String
+  summary     String
+  minutes     Int
+  // The steps as in the content file, validated by content-schema before they get here
+  steps       Json
+  contentHash String   @map("content_hash")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  progress LessonProgress[]
+
+  @@unique([track, order])
+  @@map("lessons")
+}
+
+model LessonProgress {
+  userId       String   @map("user_id") @db.Uuid
+  lessonId     String   @map("lesson_id")
+  // Best result over all runs
+  bestAccuracy Float    @map("best_accuracy")
+  stars        Int
+  attempts     Int      @default(1)
+  completedAt  DateTime @map("completed_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+// One row per learner and calendar day, the "день конём" and the streak are computed from it
+model DailyActivity {
+  userId  String   @map("user_id") @db.Uuid
+  day     DateTime @db.Date
+  seconds Int      @default(0)
+  xp      Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@map("daily_activity")
 }

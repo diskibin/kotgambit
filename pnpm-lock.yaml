@@ -435,6 +435,18 @@ importers:
       '@kotgambit/chess-core':
         specifier: workspace:*
         version: link:../../packages/chess-core
+      '@kotgambit/coach':
+        specifier: workspace:*
+        version: link:../../packages/coach
+      '@kotgambit/content-schema':
+        specifier: workspace:*
+        version: link:../../packages/content-schema
+      '@kotgambit/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@kotgambit/lesson-player':
+        specifier: workspace:*
+        version: link:../../packages/lesson-player
       '@kotgambit/locales':
         specifier: workspace:*
         version: link:../../packages/locales

@@ -39,11 +39,15 @@ export const api = createApi({
 });
 
 export const {
+  useCompleteLessonMutation,
   useForgotPasswordMutation,
   useHealthQuery,
+  useLessonQuery,
+  useLessonsQuery,
   useLoginMutation,
   useLogoutMutation,
   useMeQuery,
+  useProgressQuery,
   useRegisterMutation,
   useResendVerificationMutation,
   useResetPasswordMutation,

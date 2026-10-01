@@ -1,4 +1,4 @@
-import { StepSchema, TRACKS } from '@kotgambit/content-schema';
+import { PIECES, StepSchema, TRACKS } from '@kotgambit/content-schema';
 import { z } from 'zod';
 
 /**
@@ -12,6 +12,7 @@ export const LessonSummarySchema = z.object({
   track: z.enum(TRACKS),
   /** The "Глава N" of the interface. */
   order: z.number().int().positive(),
+  piece: z.enum(PIECES),
   title: z.string(),
   summary: z.string(),
   minutes: z.number().int().positive(),

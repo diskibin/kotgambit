@@ -97,6 +97,7 @@ describe('lessons and progress', () => {
           track: 'basics',
           order: 5,
           access: 'premium',
+          piece: 'k',
           title: 'Секретная глава',
           summary: 'Только для подписчиков',
           minutes: 5,

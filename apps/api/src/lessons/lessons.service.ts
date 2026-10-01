@@ -58,6 +58,7 @@ export class LessonsService {
         id: lesson.id,
         track: lesson.track as LessonSummary['track'],
         order: lesson.order,
+        piece: lesson.piece as LessonSummary['piece'],
         title: lesson.title,
         summary: lesson.summary,
         minutes: lesson.minutes,

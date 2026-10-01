@@ -146,6 +146,7 @@ describe('lesson endpoints', () => {
     id: 'basics-board',
     track: 'basics',
     order: 1,
+    piece: 'k',
     title: 'Доска и фигуры',
     summary: 'Знакомимся с доской.',
     minutes: 5,

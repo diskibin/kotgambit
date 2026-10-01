@@ -23,6 +23,7 @@ const lesson: Lesson = LessonSchema.parse({
   track: 'basics',
   order: 1,
   access: 'free',
+  piece: 'n',
   title: 'Конь',
   summary: 'Конь',
   minutes: 5,

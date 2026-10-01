@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [swc.vite({ module: { type: 'es6' } })],
   test: {
     include: ['src/**/*.spec.ts'],
+    // The spec files share one Postgres and one Redis and clean them between tests
+    fileParallelism: false,
     // Starts Postgres in Docker and exports its DATABASE_URL to the workers
     globalSetup: ['./test/global-setup.ts'],
     // Real hashing and a database make single tests slower than the default allows

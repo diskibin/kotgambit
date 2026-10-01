@@ -9,6 +9,7 @@ const USER = {
   id: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
   email: 'cat@example.com',
   displayName: null,
+  emailVerified: false,
 };
 const CREDENTIALS = { email: 'cat@example.com', password: 'secret' };
 

@@ -3,6 +3,7 @@
 /docs/
 /CLAUDE.md
 /PLAN.md
+/AGENTS.md
 
 # Dependencies and build output
 node_modules/

@@ -6,6 +6,8 @@ import type {
   GameStatus,
   Move,
   PieceType,
+  PlacedPiece,
+  Square,
   PromotionPiece,
 } from './types.js';
 
@@ -96,4 +98,23 @@ export function countMaterial(fen: string): Record<Color, number> | null {
     }
   }
   return total;
+}
+
+export function getPieces(fen: string): PlacedPiece[] {
+  const game = load(fen);
+  if (!game) return [];
+  return game
+    .board()
+    .flat()
+    .flatMap((piece) =>
+      piece ? [{ square: piece.square, color: piece.color, type: piece.type }] : [],
+    );
+}
+
+/** Square of the king that is in check, which is always the side to move. */
+export function checkedKingSquare(fen: string): Square | null {
+  const game = load(fen);
+  if (!game?.inCheck()) return null;
+  const side = game.turn();
+  return getPieces(fen).find((p) => p.type === 'k' && p.color === side)?.square ?? null;
 }

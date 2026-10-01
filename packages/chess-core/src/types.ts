@@ -5,6 +5,12 @@ export type PromotionPiece = 'n' | 'b' | 'r' | 'q';
 /** Algebraic square such as `e4`. */
 export type Square = string;
 
+export interface PlacedPiece {
+  square: Square;
+  color: Color;
+  type: PieceType;
+}
+
 export interface Move {
   from: Square;
   to: Square;

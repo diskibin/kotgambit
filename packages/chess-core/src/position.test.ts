@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   STARTING_FEN,
   applyMove,
+  checkedKingSquare,
   countMaterial,
+  getPieces,
   getStatus,
   isValidFen,
   legalMoves,
@@ -152,5 +154,32 @@ describe('countMaterial', () => {
 
   it('returns null for an invalid FEN', () => {
     expect(countMaterial('x')).toBeNull();
+  });
+});
+
+describe('getPieces', () => {
+  it('lists all 32 pieces at the start', () => {
+    expect(getPieces(STARTING_FEN)).toHaveLength(32);
+  });
+
+  it('reports square, color and type', () => {
+    expect(getPieces(STARTING_FEN)).toContainEqual({ square: 'g1', color: 'w', type: 'n' });
+    expect(getPieces(STARTING_FEN)).toContainEqual({ square: 'e8', color: 'b', type: 'k' });
+  });
+
+  it('returns nothing for an invalid FEN', () => {
+    expect(getPieces('x')).toEqual([]);
+  });
+});
+
+describe('checkedKingSquare', () => {
+  it('finds the king in check', () => {
+    expect(checkedKingSquare(BISHOP_CHECK)).toBe('e8');
+    expect(checkedKingSquare(FOOLS_MATE)).toBe('e1');
+  });
+
+  it('is null when nobody is in check', () => {
+    expect(checkedKingSquare(STARTING_FEN)).toBeNull();
+    expect(checkedKingSquare('x')).toBeNull();
   });
 });

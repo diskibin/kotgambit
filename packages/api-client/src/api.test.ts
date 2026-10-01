@@ -141,6 +141,72 @@ describe('account endpoints', () => {
   });
 });
 
+describe('lesson endpoints', () => {
+  const SUMMARY = {
+    id: 'basics-board',
+    track: 'basics',
+    order: 1,
+    title: 'Доска и фигуры',
+    summary: 'Знакомимся с доской.',
+    minutes: 5,
+    status: 'available',
+    stars: 0,
+  };
+
+  it('loads the catalog', async () => {
+    server.use(http.get(`${BASE_URL}/lessons`, () => HttpResponse.json({ lessons: [SUMMARY] })));
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.lessons.initiate());
+    expect(result.data?.lessons[0]?.title).toBe('Доска и фигуры');
+  });
+
+  it('turns a catalog that breaks the contract into an error', async () => {
+    server.use(
+      http.get(`${BASE_URL}/lessons`, () =>
+        HttpResponse.json({ lessons: [{ ...SUMMARY, status: 'weird' }] }),
+      ),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.lessons.initiate());
+    expect(result.error).toBeDefined();
+  });
+
+  it('reports the finished lesson and refreshes the catalog and the progress', async () => {
+    let body: unknown;
+    let catalogCalls = 0;
+    server.use(
+      http.get(`${BASE_URL}/lessons`, () => {
+        catalogCalls += 1;
+        return HttpResponse.json({ lessons: [SUMMARY] });
+      }),
+      http.post(`${BASE_URL}/lessons/basics-board/complete`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({
+          xp: 20,
+          accuracy: 1,
+          stars: 3,
+          firstTime: true,
+          goalReachedNow: false,
+          nextLessonId: 'basics-rook',
+          progress: { streakDays: 0, todaySeconds: 60, goalSeconds: 600, xpTotal: 20 },
+        });
+      }),
+    );
+    const { api, store } = setup();
+    await store.dispatch(api.endpoints.lessons.initiate());
+    await store.dispatch(
+      api.endpoints.completeLesson.initiate({
+        id: 'basics-board',
+        attempts: [1, 1, 1],
+        seconds: 60,
+        localDate: '2026-10-01',
+      }),
+    );
+    expect(body).toEqual({ attempts: [1, 1, 1], seconds: 60, localDate: '2026-10-01' });
+    await vi.waitFor(() => expect(catalogCalls).toBe(2));
+  });
+});
+
 describe('client options', () => {
   it('sends the extra headers with every request', async () => {
     let client: string | null = null;

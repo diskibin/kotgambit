@@ -1,8 +1,17 @@
 import {
   AuthResponseSchema,
+  CatalogResponseSchema,
+  CompleteLessonResponseSchema,
+  LessonDetailSchema,
+  ProgressSummarySchema,
   HealthResponseSchema,
   UserSchema,
   type AuthResponse,
+  type CatalogResponse,
+  type CompleteLessonRequest,
+  type CompleteLessonResponse,
+  type LessonDetail,
+  type ProgressSummary,
   type ForgotPasswordRequest,
   type HealthResponse,
   type LoginRequest,
@@ -12,6 +21,7 @@ import {
   type VerifyEmailRequest,
   type User,
 } from '@kotgambit/contracts';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 import type { KotGambitBaseQuery } from './baseQuery.js';
 import type { REDUCER_PATH, TagType } from './tags.js';
@@ -57,6 +67,32 @@ export function endpoints(build: Builder) {
     }),
     resendVerification: build.mutation<void, void>({
       query: () => ({ url: '/auth/email/resend', method: 'POST' }),
+    }),
+    lessons: build.query<CatalogResponse, void>({
+      query: () => '/lessons',
+      responseSchema: CatalogResponseSchema,
+      providesTags: ['Lessons'],
+    }),
+    lesson: build.query<LessonDetail, string>({
+      query: (id) => `/lessons/${encodeURIComponent(id)}`,
+      // The steps have defaults in the content schema: optional in a file, always present in a response.
+      // Zod's input type therefore differs from the output type, while RTK Query wants one type for both.
+      responseSchema: LessonDetailSchema as unknown as StandardSchemaV1<LessonDetail>,
+    }),
+    completeLesson: build.mutation<CompleteLessonResponse, CompleteLessonRequest & { id: string }>({
+      query: ({ id, ...body }) => ({
+        url: `/lessons/${encodeURIComponent(id)}/complete`,
+        method: 'POST',
+        body,
+      }),
+      responseSchema: CompleteLessonResponseSchema,
+      // Finishing a chapter opens the next one and moves the day bar
+      invalidatesTags: ['Lessons', 'Progress'],
+    }),
+    progress: build.query<ProgressSummary, string>({
+      query: (localDate) => `/progress/summary?localDate=${localDate}`,
+      responseSchema: ProgressSummarySchema,
+      providesTags: ['Progress'],
     }),
     me: build.query<User, void>({
       query: () => '/users/me',

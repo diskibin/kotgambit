@@ -1,8 +1,150 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import * as Keychain from 'react-native-keychain';
 import App from '../App';
+import { makeStore } from '../src/app/store';
+import { empty, json, mockApi } from '../src/test/mockApi';
 
-test('renders the sandbox with the board and the cat', () => {
-  render(<App />);
-  expect(screen.getByText('Кот Гамбит')).toBeOnTheScreen();
-  expect(screen.getByLabelText('Белый конь g1')).toBeOnTheScreen();
+const USER = {
+  id: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+  email: 'cat@example.com',
+  displayName: null,
+};
+const AUTH = { accessToken: 'token-1', refreshToken: 'refresh-1', expiresIn: 900, user: USER };
+
+const apiError = (code: string, message: string) => ({ code, message });
+
+function renderApp() {
+  render(<App store={makeStore()} />);
+}
+
+/** Nobody is signed in: the session check fails quietly and the sign-in screen appears. */
+const ANONYMOUS = {
+  'GET /users/me': () => empty(401),
+  'POST /auth/refresh': () => empty(401),
+};
+
+async function fillAndSubmit(mail: string, pass: string, button = 'Войти') {
+  fireEvent.changeText(await screen.findByLabelText('Email'), mail);
+  fireEvent.changeText(screen.getByLabelText('Пароль'), pass);
+  fireEvent.press(screen.getByRole('button', { name: button }));
+}
+
+beforeEach(async () => {
+  await Keychain.resetGenericPassword();
+});
+
+test('shows the sign-in screen with a greeting from the cat when nobody is signed in', async () => {
+  mockApi(ANONYMOUS);
+  renderApp();
+  expect(await screen.findByText('С возвращением! Войди, и продолжим.')).toBeOnTheScreen();
+  expect(screen.getByRole('tab', { name: 'Вход', selected: true })).toBeOnTheScreen();
+});
+
+test('explains a missing @ without calling the server', async () => {
+  const fetchMock = mockApi(ANONYMOUS);
+  renderApp();
+  await fillAndSubmit('dima.mail.ru', 'gambit2026');
+
+  expect(await screen.findByText('Кажется, в адресе не хватает «@».')).toBeOnTheScreen();
+  expect(screen.getByText('Проверь адрес почты.')).toBeOnTheScreen();
+  expect(fetchMock.mock.calls.some(([request]) => request.url.includes('/auth/login'))).toBe(false);
+});
+
+test('signs in, keeps the refresh token in the Keystore and opens the app', async () => {
+  let marker: string | null = null;
+  mockApi({
+    'GET /users/me': (request) =>
+      request.headers.get('Authorization') === 'Bearer token-1' ? json(USER) : empty(401),
+    'POST /auth/refresh': () => empty(401),
+    'POST /auth/login': (request) => {
+      marker = request.headers.get('x-kotgambit-client');
+      return json(AUTH);
+    },
+  });
+  renderApp();
+  await fillAndSubmit('cat@example.com', 'gambit2026');
+
+  expect(await screen.findByText('Ты вошёл как cat@example.com')).toBeOnTheScreen();
+  expect(marker).toBe('mobile');
+  expect(Keychain.setGenericPassword).toHaveBeenCalledWith('refresh-token', 'refresh-1', {
+    service: 'kotgambit.refresh-token',
+  });
+});
+
+test('shows a calm banner when the password is wrong', async () => {
+  mockApi({
+    ...ANONYMOUS,
+    'POST /auth/login': () =>
+      json(apiError('auth.invalid_credentials', 'Не получилось войти.'), 401),
+  });
+  renderApp();
+  await fillAndSubmit('cat@example.com', 'wrong-password');
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Пароль не подошёл. Проверь раскладку и Caps Lock.',
+  );
+  expect(screen.getByText('Пароль что-то не подошёл.')).toBeOnTheScreen();
+});
+
+test('asks for 8 characters when registering', async () => {
+  mockApi(ANONYMOUS);
+  renderApp();
+  fireEvent.press(await screen.findByRole('tab', { name: 'Регистрация' }));
+  await fillAndSubmit('cat@example.com', 'short', 'Создать аккаунт');
+  expect(await screen.findByText('Минимум 8 символов.')).toBeOnTheScreen();
+});
+
+test('offers to sign in when the email is taken', async () => {
+  mockApi({
+    ...ANONYMOUS,
+    'POST /auth/register': () => json(apiError('auth.email_taken', 'Эта почта занята.'), 409),
+  });
+  renderApp();
+  fireEvent.press(await screen.findByRole('tab', { name: 'Регистрация' }));
+  await fillAndSubmit('cat@example.com', 'gambit2026', 'Создать аккаунт');
+
+  expect(await screen.findByText('Кажется, мы уже знакомы!')).toBeOnTheScreen();
+  fireEvent.press(screen.getByRole('link', { name: /Войти с этим email/ }));
+  expect(await screen.findByRole('tab', { name: 'Вход', selected: true })).toBeOnTheScreen();
+});
+
+test('restores the session from the stored refresh token', async () => {
+  await Keychain.setGenericPassword('refresh-token', 'stored-refresh', {
+    service: 'kotgambit.refresh-token',
+  });
+  let refreshBody: unknown;
+  mockApi({
+    'GET /users/me': (request) =>
+      request.headers.get('Authorization') === 'Bearer token-1' ? json(USER) : empty(401),
+    'POST /auth/refresh': async (request) => {
+      refreshBody = await request.json();
+      return json(AUTH);
+    },
+  });
+  renderApp();
+
+  expect(await screen.findByText('Ты вошёл как cat@example.com')).toBeOnTheScreen();
+  expect(refreshBody).toEqual({ refreshToken: 'stored-refresh' });
+});
+
+test('signing out revokes the session and clears the Keystore', async () => {
+  await Keychain.setGenericPassword('refresh-token', 'refresh-1', {
+    service: 'kotgambit.refresh-token',
+  });
+  let logoutBody: unknown;
+  mockApi({
+    'GET /users/me': (request) =>
+      request.headers.get('Authorization') === 'Bearer token-1' ? json(USER) : empty(401),
+    'POST /auth/refresh': () => json(AUTH),
+    'POST /auth/logout': async (request) => {
+      logoutBody = await request.json();
+      return empty(204);
+    },
+  });
+  renderApp();
+
+  fireEvent.press(await screen.findByRole('button', { name: 'Выйти' }));
+  expect(await screen.findByRole('tab', { name: 'Вход', selected: true })).toBeOnTheScreen();
+  await waitFor(() => expect(logoutBody).toEqual({ refreshToken: 'refresh-1' }));
+  expect(await Keychain.getGenericPassword()).toBe(false);
 });

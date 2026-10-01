@@ -3,14 +3,20 @@ import { MOODS } from '@kotgambit/mascot';
 import { useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Provider } from 'react-redux';
-import { Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { store } from './src/app/store';
+import { useMeQuery } from './src/app/api';
+import { useAppSelector } from './src/app/hooks';
+import { store as appStore, type AppStore } from './src/app/store';
+import { AuthScreen } from './src/features/auth/AuthScreen';
+import { SplashScreen } from './src/features/auth/SplashScreen';
+import { useSignOut } from './src/features/auth/useSignOut';
 import { Board } from './src/features/board/Board';
 import { Mascot } from './src/features/mascot/Mascot';
 import './src/shared/i18n';
+import { Button } from './src/shared/ui/Button';
 import { ThemeProvider, useTheme, type ThemePreference } from './src/theme/ThemeProvider';
-import { radius, screenPadding, shashka, size, space, typography } from './src/theme/theme';
+import { radius, screenPadding, size, space, typography } from './src/theme/theme';
 
 // A placeholder page to look at the finished parts until the real screens exist
 function Sandbox({ onToggleTheme }: { onToggleTheme: () => void }) {
@@ -18,28 +24,8 @@ function Sandbox({ onToggleTheme }: { onToggleTheme: () => void }) {
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const [board, dispatch] = useReducer(boardReducer, undefined, () => createBoardState());
-
-  const button = (label: string, onPress: () => void) => (
-    <View style={styles.buttonWrap}>
-      <View style={[styles.buttonShadow, { backgroundColor: colors.edge }]} />
-      <Pressable
-        accessibilityRole="button"
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.edge,
-            transform: pressed
-              ? [{ translateX: shashka.pressShift }, { translateY: shashka.pressShift }]
-              : [],
-          },
-        ]}
-      >
-        <Text style={[typography.button, { color: colors.text }]}>{label}</Text>
-      </Pressable>
-    </View>
-  );
+  const { data: user } = useMeQuery();
+  const signOut = useSignOut();
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -56,12 +42,27 @@ function Sandbox({ onToggleTheme }: { onToggleTheme: () => void }) {
           <Text style={[typography.display, { color: colors.text }]}>{t('app.title')}</Text>
           <Text style={[typography.body, { color: colors.text2 }]}>{t('app.tagline')}</Text>
           <Text style={[typography.small, { color: colors.textMuted }]}>{t('sandbox.note')}</Text>
+          {user && (
+            <Text style={[typography.small, { color: colors.text2 }]}>
+              {t('sandbox.signedInAs', { email: user.email })}
+            </Text>
+          )}
           <View style={styles.row}>
-            {button(
-              t(scheme === 'light' ? 'sandbox.theme.dark' : 'sandbox.theme.light'),
-              onToggleTheme,
-            )}
-            {button(t('sandbox.flip'), () => dispatch({ type: 'orientation/flip' }))}
+            <Button
+              variant="secondary"
+              label={t(scheme === 'light' ? 'sandbox.theme.dark' : 'sandbox.theme.light')}
+              onPress={onToggleTheme}
+            />
+            <Button
+              variant="secondary"
+              label={t('sandbox.flip')}
+              onPress={() => dispatch({ type: 'orientation/flip' })}
+            />
+            <Button
+              variant="secondary"
+              label={t('sandbox.signOut')}
+              onPress={() => void signOut()}
+            />
           </View>
         </View>
 
@@ -91,13 +92,24 @@ function Sandbox({ onToggleTheme }: { onToggleTheme: () => void }) {
   );
 }
 
-function App() {
-  const [preference, setPreference] = useState<ThemePreference>('light');
+/** Checks the stored session first, then shows either the sign-in screen or the app. */
+function Root({ onToggleTheme }: { onToggleTheme: () => void }) {
+  // A 401 makes the base query try the refresh token from the Keystore before giving up
+  const { isLoading } = useMeQuery();
+  const status = useAppSelector((state) => state.auth.status);
+
+  if (status === 'unknown' && isLoading) return <SplashScreen />;
+  return status === 'authenticated' ? <Sandbox onToggleTheme={onToggleTheme} /> : <AuthScreen />;
+}
+
+/** `store` is only passed by tests, each of which needs a fresh one. */
+function App({ store = appStore }: { store?: AppStore } = {}) {
+  const [preference, setPreference] = useState<ThemePreference>('system');
   return (
     <Provider store={store}>
       <SafeAreaProvider>
         <ThemeProvider preference={preference}>
-          <Sandbox onToggleTheme={() => setPreference(preference === 'light' ? 'dark' : 'light')} />
+          <Root onToggleTheme={() => setPreference(preference === 'dark' ? 'light' : 'dark')} />
         </ThemeProvider>
       </SafeAreaProvider>
     </Provider>
@@ -106,23 +118,6 @@ function App() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3], paddingTop: space[2] },
-  buttonWrap: { paddingRight: shashka.offset, paddingBottom: shashka.offset },
-  buttonShadow: {
-    position: 'absolute',
-    left: shashka.offset,
-    top: shashka.offset,
-    right: 0,
-    bottom: 0,
-    borderRadius: radius.control,
-  },
-  button: {
-    minHeight: size.tapMin,
-    paddingHorizontal: space[4],
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.control,
-    borderWidth: shashka.border,
-  },
   cats: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3] },
   cat: {
     width: 140,

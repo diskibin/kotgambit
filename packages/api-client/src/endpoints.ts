@@ -44,7 +44,8 @@ export function endpoints(build: Builder) {
     me: build.query<User, void>({
       query: () => '/users/me',
       responseSchema: UserSchema,
-      providesTags: ['Me'],
+      // Provided on failure too, so that signing in repeats a profile request that failed with 401
+      providesTags: () => ['Me'],
     }),
   };
 }

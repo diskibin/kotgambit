@@ -15,3 +15,60 @@
     outline-offset: 2px;
   }
 }
+
+/* The cat's reply card pops in (components.md, motion), reduced motion only fades it */
+@keyframes reply-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes reply-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.reply-card {
+  animation: reply-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reply-card {
+    animation: reply-fade 120ms linear;
+  }
+}
+
+/* Confetti falls once and stays where it lands, reduced motion shows only the landing */
+@keyframes confetti-fall {
+  from {
+    translate: 0 -20px;
+    opacity: 1;
+  }
+  to {
+    translate: 0 70vh;
+    opacity: 0.85;
+  }
+}
+
+.confetti-bit {
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-bit {
+    animation: none;
+    translate: 0 30vh;
+    opacity: 0.85;
+  }
+}

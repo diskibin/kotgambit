@@ -15,6 +15,7 @@
     "@fontsource/unbounded": "^5.3.0",
     "@kotgambit/board-controller": "workspace:*",
     "@kotgambit/chess-core": "workspace:*",
+    "@kotgambit/mascot": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "i18next": "^26.4.2",
     "react": "19.2.3",

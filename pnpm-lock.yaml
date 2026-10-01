@@ -321,6 +321,9 @@ importers:
       '@kotgambit/chess-core':
         specifier: workspace:*
         version: link:../../packages/chess-core
+      '@kotgambit/mascot':
+        specifier: workspace:*
+        version: link:../../packages/mascot
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.6.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))

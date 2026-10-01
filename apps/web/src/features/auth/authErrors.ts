@@ -1,0 +1,28 @@
+import { ApiErrorSchema, type ApiError } from '@kotgambit/contracts';
+import { z } from 'zod';
+
+export type EmailProblem = 'noAt' | 'invalid' | 'taken';
+export type PasswordProblem = 'required' | 'tooShort' | 'wrong';
+
+const MIN_PASSWORD_LENGTH = 8;
+
+export function checkEmail(email: string): EmailProblem | null {
+  if (!email.includes('@')) return 'noAt';
+  return z.email().safeParse(email).success ? null : 'invalid';
+}
+
+export function checkPassword(
+  password: string,
+  mode: 'login' | 'register',
+): PasswordProblem | null {
+  if (password.length === 0) return 'required';
+  if (mode === 'register' && password.length < MIN_PASSWORD_LENGTH) return 'tooShort';
+  return null;
+}
+
+/** The API error behind a failed request, if the server sent one in the common format. */
+export function apiErrorOf(error: unknown): ApiError | null {
+  if (typeof error !== 'object' || error === null || !('data' in error)) return null;
+  const parsed = ApiErrorSchema.safeParse(error.data);
+  return parsed.success ? parsed.data : null;
+}

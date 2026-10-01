@@ -21,12 +21,12 @@ export type CoachEvent =
   | {
       type: 'STEP_CORRECT';
       /** The explanation written for this step, shown instead of a generic line. */
-      detail?: string;
+      detail?: string | undefined;
       attempts: number;
       /** Steps solved correctly in a row, this one included. */
       streak: number;
     }
-  | { type: 'STEP_WRONG'; detail?: string; attempts: number }
+  | { type: 'STEP_WRONG'; detail?: string | undefined; attempts: number }
   | { type: 'HINT'; level: 1 | 2 | 3; detail?: string }
   | { type: 'DEMO'; detail?: string }
   /** `accuracy` is the share of steps solved on the first try, from 0 to 1. */

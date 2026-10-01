@@ -49,10 +49,15 @@ const TASK_STEPS: readonly StepType[] = ['move', 'quiz', 'find-squares'];
 export const isTaskStep = (type: StepType | undefined): boolean =>
   type !== undefined && TASK_STEPS.includes(type);
 
+/**
+ * Takes any Redux action, so that it can sit in a store next to other reducers. Actions that are
+ * not ours fall through to the default branch and leave the state alone.
+ */
 export function lessonSessionReducer(
   state: LessonSession = initialLessonSession,
-  action: LessonSessionAction,
+  incoming: { type: string },
 ): LessonSession {
+  const action = incoming as LessonSessionAction;
   switch (action.type) {
     case 'lesson/started':
       return {
@@ -94,6 +99,9 @@ export function lessonSessionReducer(
 
     case 'lesson/exited':
       return initialLessonSession;
+
+    default:
+      return state;
   }
 }
 

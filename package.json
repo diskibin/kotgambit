@@ -13,7 +13,9 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "services:up": "docker compose -f infra/compose.dev.yml up -d --wait",
+    "services:down": "docker compose -f infra/compose.dev.yml down"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

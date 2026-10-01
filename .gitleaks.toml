@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public React Native debug signing key shipped with the template"
+paths = ['''apps/mobile/android/app/debug\.keystore''']

@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
+import { AuthModule } from './auth/auth.module.js';
 import { CONFIG, ConfigModule, type AppConfig } from './config/config.module.js';
 import { HealthController } from './health/health.controller.js';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { UsersModule } from './users/users.module.js';
 
 // Secrets that must never reach the logs, see PLAN.md 15.5
 const REDACTED_PATHS = [
@@ -16,6 +19,9 @@ const REDACTED_PATHS = [
 @Module({
   imports: [
     ConfigModule,
+    PrismaModule,
+    AuthModule,
+    UsersModule,
     LoggerModule.forRootAsync({
       inject: [CONFIG],
       useFactory: (config: AppConfig) => ({

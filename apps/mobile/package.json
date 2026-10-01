@@ -11,19 +11,23 @@
     "test": "jest"
   },
   "dependencies": {
+    "@kotgambit/api-client": "workspace:*",
     "@kotgambit/board-controller": "workspace:*",
     "@kotgambit/chess-core": "workspace:*",
     "@kotgambit/mascot": "workspace:*",
     "@react-native/new-app-screen": "0.87.1",
+    "@reduxjs/toolkit": "^2.13.0",
     "i18next": "^26.4.2",
     "react": "19.2.3",
     "react-i18next": "^17.0.15",
     "react-native": "0.87.1",
     "react-native-safe-area-context": "^5.5.2",
-    "react-native-svg": "^15.15.5"
+    "react-native-svg": "^15.15.5",
+    "react-redux": "^9.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-export-namespace-from": "^7.29.7",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
     "@kotgambit/config": "workspace:*",

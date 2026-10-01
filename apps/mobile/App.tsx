@@ -2,8 +2,10 @@ import { boardReducer, createBoardState } from '@kotgambit/board-controller';
 import { MOODS } from '@kotgambit/mascot';
 import { useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Provider } from 'react-redux';
 import { Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { store } from './src/app/store';
 import { Board } from './src/features/board/Board';
 import { Mascot } from './src/features/mascot/Mascot';
 import './src/shared/i18n';
@@ -92,11 +94,13 @@ function Sandbox({ onToggleTheme }: { onToggleTheme: () => void }) {
 function App() {
   const [preference, setPreference] = useState<ThemePreference>('light');
   return (
-    <SafeAreaProvider>
-      <ThemeProvider preference={preference}>
-        <Sandbox onToggleTheme={() => setPreference(preference === 'light' ? 'dark' : 'light')} />
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <ThemeProvider preference={preference}>
+          <Sandbox onToggleTheme={() => setPreference(preference === 'light' ? 'dark' : 'light')} />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </Provider>
   );
 }
 

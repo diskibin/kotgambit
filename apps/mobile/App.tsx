@@ -1,96 +1,58 @@
-import { boardReducer, createBoardState } from '@kotgambit/board-controller';
-import { MOODS } from '@kotgambit/mascot';
-import { useEffect, useReducer, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
+import { BackHandler, StatusBar } from 'react-native';
 import { Provider } from 'react-redux';
-import { BackHandler, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useMeQuery } from './src/app/api';
 import { useAppSelector } from './src/app/hooks';
 import { store as appStore, type AppStore } from './src/app/store';
 import { AuthScreen } from './src/features/auth/AuthScreen';
 import { RecoverScreen } from './src/features/auth/RecoverScreen';
 import { SplashScreen } from './src/features/auth/SplashScreen';
-import { useSignOut } from './src/features/auth/useSignOut';
-import { Board } from './src/features/board/Board';
-import { Mascot } from './src/features/mascot/Mascot';
+import { CompleteScreen } from './src/features/lessons/CompleteScreen';
+import { LessonScreen, type LessonResult } from './src/features/lessons/LessonScreen';
+import { PathScreen } from './src/features/path/PathScreen';
 import './src/shared/i18n';
-import { Button } from './src/shared/ui/Button';
-import { ThemeProvider, useTheme, type ThemePreference } from './src/theme/ThemeProvider';
-import { radius, screenPadding, size, space, typography } from './src/theme/theme';
+import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
-// A placeholder page to look at the finished parts until the real screens exist
-function Sandbox({ onToggleTheme }: { onToggleTheme: () => void }) {
-  const { t } = useTranslation();
-  const { colors, scheme } = useTheme();
-  const insets = useSafeAreaInsets();
-  const [board, dispatch] = useReducer(boardReducer, undefined, () => createBoardState());
-  const { data: user } = useMeQuery();
-  const signOut = useSignOut();
+type Screen =
+  { name: 'path' } | { name: 'lesson'; id: string } | { name: 'done'; data: LessonResult };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentContainerStyle={{
-          padding: screenPadding,
-          paddingTop: insets.top + screenPadding,
-          paddingBottom: insets.bottom + screenPadding,
-          gap: space[6],
-        }}
-      >
-        <View style={{ gap: space[2] }}>
-          <Text style={[typography.display, { color: colors.text }]}>{t('app.title')}</Text>
-          <Text style={[typography.body, { color: colors.text2 }]}>{t('app.tagline')}</Text>
-          <Text style={[typography.small, { color: colors.textMuted }]}>{t('sandbox.note')}</Text>
-          {user && (
-            <Text style={[typography.small, { color: colors.text2 }]}>
-              {t('sandbox.signedInAs', { email: user.email })}
-            </Text>
-          )}
-          <View style={styles.row}>
-            <Button
-              variant="secondary"
-              label={t(scheme === 'light' ? 'sandbox.theme.dark' : 'sandbox.theme.light')}
-              onPress={onToggleTheme}
-            />
-            <Button
-              variant="secondary"
-              label={t('sandbox.flip')}
-              onPress={() => dispatch({ type: 'orientation/flip' })}
-            />
-            <Button
-              variant="secondary"
-              label={t('sandbox.signOut')}
-              onPress={() => void signOut()}
-            />
-          </View>
-        </View>
+/** The signed-in app: the chapters, a lesson in focus mode, and the finish screen. */
+function SignedIn() {
+  const [screen, setScreen] = useState<Screen>({ name: 'path' });
 
-        <View style={{ gap: space[3] }}>
-          <Text style={[typography.h1, { color: colors.text }]}>{t('sandbox.board')}</Text>
-          <Board state={board} dispatch={dispatch} size={size.board} />
-        </View>
+  // The finish screen has nothing behind it but the chapters. The lesson asks before leaving on its own.
+  useEffect(() => {
+    if (screen.name !== 'done') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      setScreen({ name: 'path' });
+      return true;
+    });
+    return () => subscription.remove();
+  }, [screen.name]);
 
-        <View style={{ gap: space[3] }}>
-          <Text style={[typography.h1, { color: colors.text }]}>{t('sandbox.mascot')}</Text>
-          <View style={styles.cats}>
-            {MOODS.map((mood) => (
-              <View
-                key={mood}
-                style={[styles.cat, { backgroundColor: colors.surface, borderColor: colors.line }]}
-              >
-                <Mascot mood={mood} size={104} dark={scheme === 'dark'} animate />
-                <Text style={[typography.small, { color: colors.text2 }]}>
-                  {t(`mascot.mood.${mood}`)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      </ScrollView>
-    </View>
-  );
+  if (screen.name === 'lesson') {
+    return (
+      <LessonScreen
+        // A new id is a new lesson with fresh state
+        key={screen.id}
+        id={screen.id}
+        onExit={() => setScreen({ name: 'path' })}
+        onFinished={(data) => setScreen({ name: 'done', data })}
+      />
+    );
+  }
+  if (screen.name === 'done') {
+    return (
+      <CompleteScreen
+        data={screen.data}
+        onRepeat={(id) => setScreen({ name: 'lesson', id })}
+        onNext={(id) => setScreen({ name: 'lesson', id })}
+        onHome={() => setScreen({ name: 'path' })}
+      />
+    );
+  }
+  return <PathScreen onOpenLesson={(id) => setScreen({ name: 'lesson', id })} />;
 }
 
 /** Sign-in with the way to password recovery; the system Back button leaves recovery first. */
@@ -114,40 +76,37 @@ function SignedOut() {
 }
 
 /** Checks the stored session first, then shows either the sign-in screen or the app. */
-function Root({ onToggleTheme }: { onToggleTheme: () => void }) {
+function Root() {
+  const { scheme } = useTheme();
   // A 401 makes the base query try the refresh token from the Keystore before giving up
   const { isLoading } = useMeQuery();
   const status = useAppSelector((state) => state.auth.status);
 
-  if (status === 'unknown' && isLoading) return <SplashScreen />;
-  return status === 'authenticated' ? <Sandbox onToggleTheme={onToggleTheme} /> : <SignedOut />;
+  return (
+    <>
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+      {status === 'unknown' && isLoading ? (
+        <SplashScreen />
+      ) : status === 'authenticated' ? (
+        <SignedIn />
+      ) : (
+        <SignedOut />
+      )}
+    </>
+  );
 }
 
 /** `store` is only passed by tests, each of which needs a fresh one. */
 function App({ store = appStore }: { store?: AppStore } = {}) {
-  const [preference, setPreference] = useState<ThemePreference>('system');
   return (
     <Provider store={store}>
       <SafeAreaProvider>
-        <ThemeProvider preference={preference}>
-          <Root onToggleTheme={() => setPreference(preference === 'dark' ? 'light' : 'dark')} />
+        <ThemeProvider preference="system">
+          <Root />
         </ThemeProvider>
       </SafeAreaProvider>
     </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3], paddingTop: space[2] },
-  cats: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3] },
-  cat: {
-    width: 140,
-    alignItems: 'center',
-    gap: space[1],
-    padding: space[3],
-    borderRadius: radius.card,
-    borderWidth: 2,
-  },
-});
 
 export default App;

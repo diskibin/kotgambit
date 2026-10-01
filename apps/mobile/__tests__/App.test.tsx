@@ -2,15 +2,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import * as Keychain from 'react-native-keychain';
 import App from '../App';
 import { makeStore } from '../src/app/store';
+import { HOME, USER, AUTH } from '../src/test/fixtures';
 import { empty, json, mockApi } from '../src/test/mockApi';
-
-const USER = {
-  id: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
-  email: 'cat@example.com',
-  displayName: null,
-  emailVerified: false,
-};
-const AUTH = { accessToken: 'token-1', refreshToken: 'refresh-1', expiresIn: 900, user: USER };
 
 const apiError = (code: string, message: string) => ({ code, message });
 
@@ -57,6 +50,7 @@ test('signs in, keeps the refresh token in the Keystore and opens the app', asyn
     'GET /users/me': (request) =>
       request.headers.get('Authorization') === 'Bearer token-1' ? json(USER) : empty(401),
     'POST /auth/refresh': () => empty(401),
+    ...HOME,
     'POST /auth/login': (request) => {
       marker = request.headers.get('x-kotgambit-client');
       return json(AUTH);
@@ -65,7 +59,7 @@ test('signs in, keeps the refresh token in the Keystore and opens the app', asyn
   renderApp();
   await fillAndSubmit('cat@example.com', 'gambit2026');
 
-  expect(await screen.findByText('Ты вошёл как cat@example.com')).toBeOnTheScreen();
+  expect(await screen.findByText('Доска и фигуры')).toBeOnTheScreen();
   expect(marker).toBe('mobile');
   expect(Keychain.setGenericPassword).toHaveBeenCalledWith('refresh-token', 'refresh-1', {
     service: 'kotgambit.refresh-token',
@@ -121,10 +115,11 @@ test('restores the session from the stored refresh token', async () => {
       refreshBody = await request.json();
       return json(AUTH);
     },
+    ...HOME,
   });
   renderApp();
 
-  expect(await screen.findByText('Ты вошёл как cat@example.com')).toBeOnTheScreen();
+  expect(await screen.findByText('Доска и фигуры')).toBeOnTheScreen();
   expect(refreshBody).toEqual({ refreshToken: 'stored-refresh' });
 });
 
@@ -137,6 +132,7 @@ test('signing out revokes the session and clears the Keystore', async () => {
     'GET /users/me': (request) =>
       request.headers.get('Authorization') === 'Bearer token-1' ? json(USER) : empty(401),
     'POST /auth/refresh': () => json(AUTH),
+    ...HOME,
     'POST /auth/logout': async (request) => {
       logoutBody = await request.json();
       return empty(204);

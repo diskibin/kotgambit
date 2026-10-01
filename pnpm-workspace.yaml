@@ -1,3 +1,5 @@
+# Metro (React Native) does not follow pnpm symlinks, see PLAN.md section 4
+nodeLinker: hoisted
 packages:
   - apps/*
   - packages/*

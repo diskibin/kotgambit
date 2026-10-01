@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+/**
+ * Clients that cannot use the httpOnly refresh cookie (the mobile app) send this header
+ * and get the refresh token in the response body instead.
+ */
+export const CLIENT_HEADER = 'x-kotgambit-client';
+export const MOBILE_CLIENT = 'mobile';
+
 const MIN_PASSWORD_LENGTH = 8;
 // argon2 hashes any length, the cap only protects the server from huge request bodies
 const MAX_PASSWORD_LENGTH = 128;

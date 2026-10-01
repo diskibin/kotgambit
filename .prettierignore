@@ -6,3 +6,4 @@ coverage
 .cxx
 .gradle
 Pods
+apps/api/src/generated

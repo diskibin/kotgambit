@@ -13,8 +13,8 @@ export default [
   },
   {
     // Metro, Babel and Jest configs are CommonJS by React Native convention
-    files: ['*.config.js'],
-    languageOptions: { sourceType: 'commonjs', globals: globals.node },
+    files: ['*.config.js', 'jest.setup.js'],
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.jest } },
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
 ];

@@ -16,6 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@kotgambit/content-schema": "workspace:*",
     "zod": "^4.6.5"
   },
   "devDependencies": {

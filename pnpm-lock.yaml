@@ -199,6 +199,9 @@ importers:
       '@fastify/helmet':
         specifier: ^13.1.1
         version: 13.1.1
+      '@kotgambit/content-schema':
+        specifier: workspace:*
+        version: link:../../packages/content-schema
       '@kotgambit/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -247,6 +250,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -652,6 +658,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@kotgambit/content-schema':
+        specifier: workspace:*
+        version: link:../content-schema
       zod:
         specifier: ^4.6.5
         version: 4.6.5

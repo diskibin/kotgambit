@@ -1,6 +1,7 @@
 import { boardReducer, createBoardState, type BoardOptions } from '@kotgambit/board-controller';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useReducer } from 'react';
+import { vi } from 'vitest';
 import { Board } from './Board';
 
 const PROMOTION_FEN = '8/4P2k/8/8/8/8/8/K7 w - - 0 1';
@@ -131,5 +132,46 @@ describe('Board', () => {
     const state = createBoardState();
     render(<Board state={state} dispatch={() => {}} hintSquares={['g1']} />);
     expect(document.querySelector('[data-square="g1"] .board-hint')).not.toBeNull();
+  });
+});
+
+describe('Board in lesson mode', () => {
+  it('draws arrows between the given squares', () => {
+    render(
+      <Board
+        state={createBoardState()}
+        dispatch={() => {}}
+        arrows={[{ from: 'g1', to: 'f3', color: 'sun' }]}
+      />,
+    );
+    expect(document.querySelector('[data-arrow="g1f3"]')).not.toBeNull();
+  });
+
+  it('reports presses instead of moving pieces when asked to', () => {
+    const onSquarePress = vi.fn();
+    const dispatch = vi.fn();
+    render(
+      <Board
+        state={createBoardState()}
+        dispatch={dispatch}
+        onSquarePress={onSquarePress}
+        marked={['e4']}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Белая пешка e2' }));
+    expect(onSquarePress).toHaveBeenCalledWith('e2');
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Пустая клетка e4' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(document.querySelector('[data-square="e4"] .board-selected')).not.toBeNull();
+  });
+
+  it('shows the last move it is told about', () => {
+    render(
+      <Board state={createBoardState()} dispatch={() => {}} lastMove={{ from: 'e2', to: 'e4' }} />,
+    );
+    expect(document.querySelectorAll('.board-last')).toHaveLength(2);
   });
 });

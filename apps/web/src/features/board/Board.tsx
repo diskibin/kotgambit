@@ -19,6 +19,7 @@ import {
 } from '@kotgambit/chess-core';
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Arrows, type BoardArrow } from './Arrows';
 import './board.css';
 import { pieceUrl } from './pieceAssets';
 
@@ -44,6 +45,16 @@ interface BoardProps {
   hintSquares?: readonly Square[];
   coords?: boolean;
   disabled?: boolean;
+  arrows?: readonly BoardArrow[];
+  /** Squares marked by the learner, drawn like a selection. */
+  marked?: readonly Square[];
+  /**
+   * When given, squares only report presses to it: no piece is selected, moved or dragged.
+   * Used where the learner marks squares instead of moving.
+   */
+  onSquarePress?: (square: Square) => void;
+  /** Overrides the last move of the state, for the positions of a demo. */
+  lastMove?: { from: Square; to: Square } | null;
 }
 
 interface Drag {
@@ -72,6 +83,10 @@ export function Board({
   hintSquares = [],
   coords = true,
   disabled = false,
+  arrows = [],
+  marked = [],
+  onSquarePress,
+  lastMove: lastMoveOverride,
 }: BoardProps) {
   const { t } = useTranslation();
   const boardRef = useRef<HTMLDivElement>(null);
@@ -81,7 +96,9 @@ export function Board({
   const [drag, setDrag] = useState<Drag | null>(null);
   const [focused, setFocused] = useState<Square | null>(null);
 
-  const { fen, orientation, selected, lastMove, pendingPromotion } = state;
+  const { fen, orientation, selected, pendingPromotion } = state;
+  const lastMove = lastMoveOverride === undefined ? state.lastMove : lastMoveOverride;
+  const markedSet = useMemo(() => new Set(marked), [marked]);
   const squares = useMemo(() => displaySquares(orientation), [orientation]);
   const pieces = useMemo(() => new Map(getPieces(fen).map((p) => [p.square, p])), [fen]);
   const movable = useMemo(() => new Set(legalMoves(fen).map((m) => m.from)), [fen]);
@@ -124,7 +141,7 @@ export function Board({
   }
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (disabled || pendingPromotion || event.button !== 0) return;
+    if (disabled || onSquarePress || pendingPromotion || event.button !== 0) return;
     const square = squareOf(event.target);
     if (!square || !movable.has(square)) return;
     pending.current = {
@@ -223,9 +240,12 @@ export function Board({
               data-square={square}
               tabIndex={square === tabStop ? 0 : -1}
               aria-label={labelFor(square, piece)}
+              aria-pressed={onSquarePress ? markedSet.has(square) : undefined}
               disabled={disabled}
               onFocus={() => setFocused(square)}
-              onClick={() => dispatch({ type: 'square/select', square })}
+              onClick={() =>
+                onSquarePress ? onSquarePress(square) : dispatch({ type: 'square/select', square })
+              }
               className={`relative flex items-center justify-center p-0 ${light ? 'bg-board-b' : 'bg-board-a'}`}
             >
               {lastMove && (lastMove.from === square || lastMove.to === square) && (
@@ -237,7 +257,7 @@ export function Board({
               {isTarget && piece && (
                 <span className="board-capture absolute inset-0" aria-hidden="true" />
               )}
-              {selected === square && (
+              {(selected === square || markedSet.has(square)) && (
                 <span className="board-selected absolute" aria-hidden="true" />
               )}
               {piece && (
@@ -281,6 +301,8 @@ export function Board({
           );
         })}
       </div>
+
+      <Arrows arrows={arrows} orientation={orientation} />
 
       {drag && (
         <img

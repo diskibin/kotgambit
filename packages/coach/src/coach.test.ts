@@ -136,8 +136,14 @@ describe('createCoach', () => {
   });
 
   it('uses every variant over time', () => {
-    const coach = createCoach(sequence([0, 0.34, 0.67, 0.99]));
-    const seen = new Set(Array.from({ length: 30 }, () => coach.message(correct()).title));
+    // A small seeded generator stands in for Math.random
+    let state = 12345;
+    const random = () => {
+      state = (state * 1664525 + 1013904223) % 4294967296;
+      return state / 4294967296;
+    };
+    const coach = createCoach(random);
+    const seen = new Set(Array.from({ length: 60 }, () => coach.message(correct()).title));
     expect(seen.size).toBe(PHRASES.correct.length);
   });
 });

@@ -32,11 +32,19 @@ export const UserSchema = z.object({
 });
 export type User = z.infer<typeof UserSchema>;
 
-/** The refresh token travels in an httpOnly cookie on web, so it is not part of this body. */
+/**
+ * On web the refresh token travels in an httpOnly cookie. Clients that cannot use cookies
+ * (the mobile app, which keeps it in the Keychain/Keystore) get it in `refreshToken` instead.
+ */
 export const AuthResponseSchema = z.object({
   accessToken: z.string().min(1),
+  refreshToken: z.string().min(1).optional(),
   /** Lifetime of the access token in seconds. */
   expiresIn: z.number().int().positive(),
   user: UserSchema,
 });
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+
+/** Cookie clients send an empty body. */
+export const RefreshRequestSchema = z.object({ refreshToken: z.string().min(1).optional() });
+export type RefreshRequest = z.infer<typeof RefreshRequestSchema>;

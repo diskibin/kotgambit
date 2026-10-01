@@ -1,5 +1,6 @@
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
+import { themeSlice } from '../features/theme/theme.slice';
 import { api, sessionBridge } from './api';
 
 export function makeStore() {
@@ -25,6 +26,7 @@ export function makeStore() {
     reducer: {
       [api.reducerPath]: api.reducer,
       auth: authSlice.reducer,
+      theme: themeSlice.reducer,
     },
     middleware: (getDefault) => getDefault().prepend(listener.middleware).concat(api.middleware),
   });

@@ -52,7 +52,9 @@ describe('loadConfig', () => {
   });
 
   it('requires REDIS_URL', () => {
-    const { REDIS_URL: _omitted, ...rest } = VALID_ENV;
+    const rest = Object.fromEntries(
+      Object.entries(VALID_ENV).filter(([key]) => key !== 'REDIS_URL'),
+    );
     expect(() => loadConfig(rest)).toThrow(/REDIS_URL/);
   });
 

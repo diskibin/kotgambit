@@ -11,6 +11,7 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.string().min(1),
+  REDIS_URL: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(MIN_JWT_SECRET_LENGTH),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce
     .number()
@@ -22,6 +23,11 @@ const EnvSchema = z.object({
     .int()
     .positive()
     .default(DEFAULT_REFRESH_TOKEN_TTL_DAYS),
+  /** Set when a reverse proxy sits in front, so that the client address comes from X-Forwarded-For. */
+  TRUST_PROXY: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   /** Comma-separated list of origins allowed to call the API from a browser. */
   CORS_ORIGINS: z
     .string()
@@ -39,6 +45,8 @@ export interface AppConfig {
   port: number;
   logLevel: string;
   databaseUrl: string;
+  redisUrl: string;
+  trustProxy: boolean;
   jwtAccessSecret: string;
   accessTokenTtlSeconds: number;
   refreshTokenTtlDays: number;
@@ -64,6 +72,8 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     port: values.PORT,
     logLevel: values.LOG_LEVEL,
     databaseUrl: values.DATABASE_URL,
+    redisUrl: values.REDIS_URL,
+    trustProxy: values.TRUST_PROXY,
     jwtAccessSecret: values.JWT_ACCESS_SECRET,
     accessTokenTtlSeconds: values.ACCESS_TOKEN_TTL_SECONDS,
     refreshTokenTtlDays: values.REFRESH_TOKEN_TTL_DAYS,

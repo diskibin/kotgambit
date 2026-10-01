@@ -3,6 +3,7 @@ import { ConfigError, loadConfig } from './config.js';
 
 const VALID_ENV = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
+  REDIS_URL: 'redis://localhost:6379',
   JWT_ACCESS_SECRET: 'x'.repeat(32),
 };
 
@@ -15,6 +16,7 @@ describe('loadConfig', () => {
       accessTokenTtlSeconds: 900,
       refreshTokenTtlDays: 30,
       corsOrigins: [],
+      trustProxy: false,
       isProduction: false,
     });
   });
@@ -47,6 +49,11 @@ describe('loadConfig', () => {
       expect((error as Error).message).toMatch(/JWT_ACCESS_SECRET/);
       expect((error as Error).message).not.toContain(secret);
     }
+  });
+
+  it('requires REDIS_URL', () => {
+    const { REDIS_URL: _omitted, ...rest } = VALID_ENV;
+    expect(() => loadConfig(rest)).toThrow(/REDIS_URL/);
   });
 
   it('rejects an invalid port', () => {

@@ -1,5 +1,10 @@
 import {
+  BOARD_SIZE,
+  displaySquares,
+  isLightSquare,
+  neighbour,
   selectTargetSquares,
+  squareAtPoint,
   type BoardAction,
   type BoardState,
 } from '@kotgambit/board-controller';
@@ -15,7 +20,6 @@ import {
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import './board.css';
-import { BOARD_SIZE, displaySquares, isLightSquare, neighbour, squareAtPoint } from './geometry';
 import { pieceUrl } from './pieceAssets';
 
 // Dragging starts only after the pointer travels this far, so that a plain tap stays a tap

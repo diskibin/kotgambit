@@ -14,6 +14,7 @@
     "@kotgambit/api-client": "workspace:*",
     "@kotgambit/board-controller": "workspace:*",
     "@kotgambit/chess-core": "workspace:*",
+    "@kotgambit/locales": "workspace:*",
     "@kotgambit/mascot": "workspace:*",
     "@react-native/new-app-screen": "0.87.1",
     "@reduxjs/toolkit": "^2.13.0",

@@ -16,6 +16,7 @@
     "@kotgambit/api-client": "workspace:*",
     "@kotgambit/board-controller": "workspace:*",
     "@kotgambit/chess-core": "workspace:*",
+    "@kotgambit/locales": "workspace:*",
     "@kotgambit/mascot": "workspace:*",
     "@reduxjs/toolkit": "^2.13.0",
     "@tailwindcss/vite": "^4.3.3",

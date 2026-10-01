@@ -85,6 +85,7 @@ model Lesson {
   track       String
   order       Int
   access      String
+  piece       String
   title       String
   summary     String
   minutes     Int

@@ -34,6 +34,8 @@ const DRAG_LIFT_SQUARES = 1;
 const PROMOTION_PIECES: PromotionPiece[] = ['q', 'r', 'b', 'n'];
 const PROMOTION_BORDER = 3;
 const PROMOTION_EDGE_DEPTH = 4;
+// Embedded in android/app/src/main/assets/fonts
+const COORD_FONT = 'Onest-ExtraBold';
 const MIN_COORD_FONT = 9;
 const COORD_FONT_RATIO = 0.2;
 const SELECTION_INSET = 3;
@@ -232,7 +234,9 @@ const Cell = memo(function Cell({
             justifyContent: 'center',
           }}
         >
-          <Text style={{ color: colors.onAccent, fontSize: 12, fontWeight: '800', lineHeight: 14 }}>
+          <Text
+            style={{ color: colors.onAccent, fontSize: 12, fontFamily: COORD_FONT, lineHeight: 14 }}
+          >
             +
           </Text>
         </View>
@@ -245,7 +249,7 @@ const Cell = memo(function Cell({
             bottom: 2,
             color: coordColor,
             fontSize: coordSize,
-            fontWeight: '800',
+            fontFamily: COORD_FONT,
             lineHeight: coordSize + 1,
           }}
         >
@@ -260,7 +264,7 @@ const Cell = memo(function Cell({
             top: 3,
             color: coordColor,
             fontSize: coordSize,
-            fontWeight: '800',
+            fontFamily: COORD_FONT,
             lineHeight: coordSize + 1,
           }}
         >

@@ -1,0 +1,42 @@
+import { z } from 'zod';
+
+const MIN_PASSWORD_LENGTH = 8;
+// argon2 hashes any length, the cap only protects the server from huge request bodies
+const MAX_PASSWORD_LENGTH = 128;
+const MAX_DISPLAY_NAME_LENGTH = 40;
+
+const EmailSchema = z
+  .email()
+  .max(254)
+  .transform((email) => email.toLowerCase());
+const PasswordSchema = z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH);
+
+export const RegisterRequestSchema = z.object({
+  email: EmailSchema,
+  password: PasswordSchema,
+  displayName: z.string().trim().min(1).max(MAX_DISPLAY_NAME_LENGTH).optional(),
+});
+export type RegisterRequest = z.input<typeof RegisterRequestSchema>;
+
+export const LoginRequestSchema = z.object({
+  email: EmailSchema,
+  // No length rules here: a wrong password must not reveal the password policy
+  password: z.string().min(1).max(MAX_PASSWORD_LENGTH),
+});
+export type LoginRequest = z.input<typeof LoginRequestSchema>;
+
+export const UserSchema = z.object({
+  id: z.uuid(),
+  email: z.email(),
+  displayName: z.string().nullable(),
+});
+export type User = z.infer<typeof UserSchema>;
+
+/** The refresh token travels in an httpOnly cookie on web, so it is not part of this body. */
+export const AuthResponseSchema = z.object({
+  accessToken: z.string().min(1),
+  /** Lifetime of the access token in seconds. */
+  expiresIn: z.number().int().positive(),
+  user: UserSchema,
+});
+export type AuthResponse = z.infer<typeof AuthResponseSchema>;

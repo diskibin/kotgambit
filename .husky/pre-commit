@@ -1,0 +1,8 @@
+pnpm exec lint-staged
+
+# Local gitleaks is required by the project rules, CI scans again either way
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --staged --redact --no-banner
+else
+  echo "gitleaks is not installed, skipping the local secret scan (CI will still run it)" >&2
+fi

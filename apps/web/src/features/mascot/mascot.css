@@ -1,0 +1,67 @@
+/* Idle animations from the design (shared/characters.md). */
+.mascot--animate [data-layer='eyes'] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-blink 4s infinite;
+}
+
+.mascot--animate [data-layer='tail'] {
+  transform-origin: 136px 170px;
+  animation: mascot-wag 2.4s ease-in-out infinite alternate;
+}
+
+.mascot--animate [data-layer='jump'] {
+  animation: mascot-bob 2.4s ease-in-out infinite;
+}
+
+.mascot--animate[data-mood='cheer'] [data-layer='jump'] {
+  animation: mascot-jump 300ms cubic-bezier(0.34, 1.56, 0.64, 1) 2 forwards;
+}
+
+@keyframes mascot-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  95%,
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes mascot-wag {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes mascot-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* The resting pose of the cheering cat is already lifted by 12 units */
+@keyframes mascot-jump {
+  0%,
+  100% {
+    transform: translateY(-12px);
+  }
+  50% {
+    transform: translateY(-26px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot--animate [data-layer] {
+    animation: none;
+  }
+}

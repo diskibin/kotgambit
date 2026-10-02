@@ -23,6 +23,8 @@ keystore.properties
 *.key
 *.p12
 *.sql
+# The migrations are the schema history, not a database dump
+!apps/api/prisma/migrations/**/*.sql
 *.sql.gz
 dump*
 backups/

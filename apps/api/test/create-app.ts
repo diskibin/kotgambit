@@ -1,5 +1,5 @@
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
-import { Test } from '@nestjs/testing';
+import { Test, type TestingModuleBuilder } from '@nestjs/testing';
 import { AppModule } from '../src/app.module.js';
 import { setupApp } from '../src/app.setup.js';
 import { loadConfig } from '../src/config/config.js';
@@ -15,12 +15,15 @@ export interface TestApp {
   mail: MemoryMailTransport;
 }
 
-export async function createTestApp(): Promise<TestApp> {
+/** `configure` lets a spec swap providers, such as the engine pool, before the app is built. */
+export async function createTestApp(
+  configure: (builder: TestingModuleBuilder) => TestingModuleBuilder = (builder) => builder,
+): Promise<TestApp> {
   const mail = new MemoryMailTransport();
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+  const builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(MAIL_TRANSPORT)
-    .useValue(mail)
-    .compile();
+    .useValue(mail);
+  const moduleRef = await configure(builder).compile();
   const app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
   await setupApp(app, loadConfig(process.env));
   await app.init();

@@ -3,7 +3,9 @@ import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 import { AuthModule } from './auth/auth.module.js';
 import { CONFIG, ConfigModule, type AppConfig } from './config/config.module.js';
+import { EngineModule } from './engine/engine.module.js';
 import { HealthController } from './health/health.controller.js';
+import { ReadyController } from './health/ready.controller.js';
 import { LessonsModule } from './lessons/lessons.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -32,6 +34,7 @@ const REDACTED_PATHS = [
     UsersModule,
     ProgressModule,
     LessonsModule,
+    EngineModule,
     LoggerModule.forRootAsync({
       inject: [CONFIG],
       useFactory: (config: AppConfig) => ({
@@ -40,11 +43,11 @@ const REDACTED_PATHS = [
           redact: { paths: REDACTED_PATHS, censor: '[redacted]' },
           // Reuses the id from a reverse proxy so that one request can be followed across services
           genReqId: (req) => req.headers['x-request-id']?.toString() ?? randomUUID(),
-          autoLogging: { ignore: (req) => req.url === '/health' },
+          autoLogging: { ignore: (req) => req.url === '/health' || req.url === '/ready' },
         },
       }),
     }),
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, ReadyController],
 })
 export class AppModule {}

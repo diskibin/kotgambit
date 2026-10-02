@@ -199,6 +199,9 @@ importers:
       '@fastify/helmet':
         specifier: ^13.1.1
         version: 13.1.1
+      '@kotgambit/chess-core':
+        specifier: workspace:*
+        version: link:../../packages/chess-core
       '@kotgambit/content-schema':
         specifier: workspace:*
         version: link:../../packages/content-schema

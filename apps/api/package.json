@@ -19,6 +19,7 @@
     "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "^13.1.1",
+    "@kotgambit/chess-core": "workspace:*",
     "@kotgambit/content-schema": "workspace:*",
     "@kotgambit/contracts": "workspace:*",
     "@nestjs/common": "^12.1.2",

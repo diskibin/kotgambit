@@ -1,0 +1,73 @@
+id: openings-traps
+track: openings
+order: 7
+access: free
+piece: q
+title: Детский мат
+summary: Самая известная дебютная ловушка и как от неё защититься.
+minutes: 6
+steps:
+  - type: text
+    title: Атака на пешку f7
+    body: >-
+      Детский мат ставят всего за четыре хода. Белый ферзь и слон вдвоём нападают на пешку f7,
+      а в начале партии её защищает только король. Если чёрные не заметят угрозу, партия закончится
+      почти сразу.
+    pointsTitle: Как это выглядит
+    points:
+      - Слон выходит на c4 и смотрит на f7
+      - Ферзь выходит на h5 и тоже смотрит на f7
+      - Ход Фxf7 ставит мат, если f7 никто не защитил
+    board:
+      fen: r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3
+      arrows:
+        - { from: h5, to: f7, color: sun }
+        - { from: c4, to: f7, color: sky }
+      caption: Ферзь и слон целятся в пешку f7
+    remember: Следи за пешкой f7, пока король не спрятался.
+
+  - type: demo
+    title: Гамбит показывает ловушку
+    body: Смотри, как чёрные пропускают угрозу и получают мат.
+    fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+    moves: [e2e4, e7e5, f1c4, b8c6, d1h5, g8f6, h5f7]
+
+  - type: move
+    title: Защитись
+    prompt: Белый ферзь грозит взять пешку f7 с матом. Прогони его ходом коня g8.
+    fen: r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3
+    orientation: b
+    answers: [g8f6]
+    hints:
+      piece: Ходи конём, он стоит на g8.
+      idea: Конь на f6 нападает на ферзя и заставляет его уйти от пешки f7.
+    success: Угроза отбита! Конь напал на ферзя, и мата не будет.
+    oops: Белые грозят взять пешку f7 с матом. Лучше всего напасть на ферзя конём с g8.
+    successArrows:
+      - { from: g8, to: f6, color: mint }
+
+  - type: move
+    title: Поставь мат
+    prompt: Чёрные не заметили угрозы. Поставь мат ферзём.
+    fen: r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4
+    answers: [h5f7]
+    hints:
+      piece: Мат поставит ферзь, он стоит на h5.
+      idea: Пешку f7 защищает только король, а слон c4 прикрывает ферзя. Бери f7.
+    success: Мат! Ферзь на f7 под защитой слона, а королю некуда идти.
+    oops: Пока шаха с матом нет. Возьми ферзём пешку f7, ведь слон прикроет его.
+    successArrows:
+      - { from: h5, to: f7, color: sun }
+
+  - type: quiz
+    question: Почему детский мат возможен в начале партии?
+    options:
+      - text: Пешку f7 защищает только король
+        correct: true
+        explanation: Да! Пока у неё нет других защитников, ферзь со слоном забирают её с матом.
+      - text: Чёрные не могут защитить пешку f7
+        correct: false
+        explanation: Почти! Защитить можно, например ходом коня f6, надо только заметить угрозу.
+      - text: Белые первыми ходят ферзём
+        correct: false
+        explanation: Ферзь тут ни при чём. Всё дело в слабой пешке f7.

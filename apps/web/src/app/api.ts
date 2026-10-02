@@ -40,6 +40,7 @@ export const api = createApi({
 
 export const {
   useCompleteLessonMutation,
+  useDailyPuzzleQuery,
   useForgotPasswordMutation,
   useHealthQuery,
   useLessonQuery,
@@ -47,7 +48,13 @@ export const {
   useLoginMutation,
   useLogoutMutation,
   useMeQuery,
+  useNextPuzzleMutation,
   useProgressQuery,
+  usePuzzleGiveUpMutation,
+  usePuzzleHintMutation,
+  usePuzzleMoveMutation,
+  usePuzzleStatsQuery,
+  usePuzzleThemesQuery,
   useRegisterMutation,
   useResendVerificationMutation,
   useResetPasswordMutation,

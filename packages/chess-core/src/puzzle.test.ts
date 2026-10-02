@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { checkPuzzleMove, isPlayablePuzzle, nextSolutionMove, startPuzzle } from './puzzle.js';
+import {
+  checkPuzzleMove,
+  isPlayablePuzzle,
+  nextSolutionMove,
+  remainingSolution,
+  startPuzzle,
+} from './puzzle.js';
 
 // Rows of the Lichess puzzle database (CC0), the moves are split as in the file
 const LONG = {
@@ -148,5 +154,23 @@ describe('isPlayablePuzzle', () => {
   it('rejects a line that is too short or leaves nothing to solve', () => {
     expect(isPlayablePuzzle(LONG.fen, ['f2g3'])).toBe(false);
     expect(isPlayablePuzzle('nonsense', LONG.moves)).toBe(false);
+  });
+});
+
+describe('remainingSolution', () => {
+  it('gives the rest of the line after the moves already made', () => {
+    expect(remainingSolution(LONG.fen, LONG.moves, [])).toEqual([
+      'e6e7',
+      'b2b1',
+      'b3c1',
+      'b1c1',
+      'h6c1',
+    ]);
+    expect(remainingSolution(LONG.fen, LONG.moves, ['e6e7'])).toEqual(['b3c1', 'b1c1', 'h6c1']);
+  });
+
+  it('is empty when solved and null for a history that does not follow the line', () => {
+    expect(remainingSolution(LONG.fen, LONG.moves, ['e6e7', 'b3c1', 'h6c1'])).toEqual([]);
+    expect(remainingSolution(LONG.fen, LONG.moves, ['h6h7'])).toBeNull();
   });
 });

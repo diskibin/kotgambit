@@ -44,7 +44,8 @@ function deliversMate(fen: string, uci: string): boolean {
 
 /**
  * Replays the moves already accepted from `start` and returns the position and the index in `moves` of the
- * solver's next move. `null` when the history does not follow the line.
+ * solver's next move, which is past the end once the puzzle is solved. `null` when the history does not
+ * follow the line.
  */
 function replay(
   start: PuzzleStart,
@@ -57,11 +58,15 @@ function replay(
     const expected = moves[index];
     const result = applyMove(fen, uci);
     if (expected === undefined || !result.ok) return null;
-    // Only a mating move may differ from the line, and it ends the puzzle, so nothing can follow it
-    if (uci !== expected && !deliversMate(fen, uci)) return null;
+    const mate = uci !== expected && deliversMate(fen, uci);
+    // Only a mating move may differ from the line
+    if (uci !== expected && !mate) return null;
     fen = result.fen;
+    if (mate) return index === played.length * 2 - 1 ? { fen, index: moves.length } : null;
     const reply = moves[index + 1];
-    if (reply === undefined) return null;
+    // The last move of the line has no reply, and the puzzle ends there
+    if (reply === undefined)
+      return index === played.length * 2 - 1 ? { fen, index: moves.length } : null;
     const answered = applyMove(fen, reply);
     if (!answered.ok) return null;
     fen = answered.fen;
@@ -108,6 +113,18 @@ export function nextSolutionMove(
   if (!start) return null;
   const position = replay(start, moves, played);
   return position ? (moves[position.index] ?? null) : null;
+}
+
+/** What is left of the line from here: the solver's move, the reply, and so on to the end. */
+export function remainingSolution(
+  fen: string,
+  moves: readonly string[],
+  played: readonly string[],
+): string[] | null {
+  const start = startPuzzle(fen, moves);
+  if (!start) return null;
+  const position = replay(start, moves, played);
+  return position ? moves.slice(position.index) : null;
 }
 
 /** Every move of the line is legal in turn and the solver has a position to solve, not a finished game. */

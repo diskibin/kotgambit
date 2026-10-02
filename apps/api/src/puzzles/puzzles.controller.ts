@@ -1,6 +1,7 @@
 import {
   NextPuzzleRequestSchema,
   PuzzleMoveRequestSchema,
+  type DailyPuzzle,
   type Puzzle,
   type PuzzleGiveUpResponse,
   type PuzzleHintResponse,
@@ -16,6 +17,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
@@ -30,6 +32,13 @@ type NextBody = z.input<typeof NextPuzzleRequestSchema>;
 type MoveBody = z.output<typeof PuzzleMoveRequestSchema>;
 
 const AttemptIdSchema = z.uuid();
+const DailyQuerySchema = z.object({
+  /** The learner's calendar day, YYYY-MM-DD. Without it the server's UTC date is used. */
+  localDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+});
 
 @Controller('puzzles')
 @UseGuards(AccessTokenGuard, RateLimitGuard)
@@ -82,8 +91,16 @@ export class PuzzlesController {
     return this.puzzles.stats(userId);
   }
 
+  @Get('daily')
+  daily(
+    @CurrentUserId() userId: string,
+    @Query(new ZodValidationPipe(DailyQuerySchema)) query: z.output<typeof DailyQuerySchema>,
+  ): Promise<DailyPuzzle> {
+    return this.puzzles.dailyPreview(userId, query.localDate);
+  }
+
   @Get('themes')
-  themes(): Promise<PuzzleThemeList> {
-    return this.puzzles.themeList();
+  themes(@CurrentUserId() userId: string): Promise<PuzzleThemeList> {
+    return this.puzzles.themeList(userId);
   }
 }

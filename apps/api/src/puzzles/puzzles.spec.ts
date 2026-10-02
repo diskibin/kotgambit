@@ -1,6 +1,7 @@
 import {
   ApiErrorSchema,
   AuthResponseSchema,
+  DailyPuzzleSchema,
   PuzzleGiveUpResponseSchema,
   PuzzleHintResponseSchema,
   PuzzleMoveResponseSchema,
@@ -397,7 +398,47 @@ describe('puzzles', () => {
       expect(list.themes.find((theme) => theme.key === 'mate')).toMatchObject({
         title: 'Мат',
         count: 3,
+        solved: 0,
       });
+    });
+
+    it('counts the puzzles the learner has solved in every theme', async () => {
+      await solve(await next({ mode: 'theme', theme: 'mateIn1' }));
+      const list = PuzzleThemeListSchema.parse((await call('GET', '/puzzles/themes')).json());
+      const solved = Object.fromEntries(list.themes.map((theme) => [theme.key, theme.solved]));
+      // The mate in one is also an endgame, a rook endgame and a mate
+      expect(solved).toMatchObject({ mateIn1: 1, mate: 1, endgame: 1, rookEndgame: 1, mateIn2: 0 });
+    });
+
+    it('shows the puzzle of the day without starting an attempt, and says when it is solved', async () => {
+      const preview = DailyPuzzleSchema.parse(
+        (await call('GET', `/puzzles/daily?localDate=${today()}`)).json(),
+      );
+      expect(preview).toMatchObject({ solved: false, solver: expect.stringMatching(/^[wb]$/) });
+      expect(preview.title).not.toBe('');
+      expect(await prisma.puzzleAttempt.count()).toBe(0);
+
+      // It is the one the daily mode then hands out
+      const started = await next({ mode: 'daily', localDate: today() });
+      expect(started.puzzleId).toBe(preview.puzzleId);
+      await solve(started);
+      const after = DailyPuzzleSchema.parse(
+        (await call('GET', `/puzzles/daily?localDate=${today()}`)).json(),
+      );
+      expect(after.solved).toBe(true);
+    });
+
+    it('names a puzzle by its idea, not by the phase of the game', async () => {
+      // 00Qqp has endgame, mate, mateIn1, oneMove, rookEndgame: the idea is the mate in one
+      const puzzle = await prisma.puzzle.findUniqueOrThrow({ where: { id: MATE_IN_ONE } });
+      expect(puzzle.themes).toContain('mateIn1');
+      const day = today();
+      const date = new Date(`${day}T00:00:00.000Z`);
+      await prisma.dailyPuzzle.create({ data: { day: date, puzzleId: MATE_IN_ONE } });
+      const preview = DailyPuzzleSchema.parse(
+        (await call('GET', `/puzzles/daily?localDate=${day}`)).json(),
+      );
+      expect(preview.title).toBe('Мат в 1 ход');
     });
 
     it('starts the stats at the beginner level', async () => {

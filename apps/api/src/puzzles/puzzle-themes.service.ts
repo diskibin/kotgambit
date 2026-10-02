@@ -10,6 +10,17 @@ const THEMES_FILE = fileURLToPath(
   new URL('../../../../content/puzzle-themes.ru.yaml', import.meta.url),
 );
 
+// Themes that say where in the game a puzzle is or how big the gain is, not what the idea is
+const GENERIC_THEMES: ReadonlySet<string> = new Set([
+  'advantage',
+  'crushing',
+  'equality',
+  'opening',
+  'middlegame',
+  'endgame',
+  'mate',
+]);
+
 /** The Russian names of the puzzle themes. A hidden or unknown theme is never shown to the learner. */
 @Injectable()
 export class PuzzleThemesService {
@@ -32,5 +43,11 @@ export class PuzzleThemesService {
 
   labels(keys: readonly string[]): PuzzleThemeLabel[] {
     return keys.flatMap((key) => this.label(key) ?? []);
+  }
+
+  /** The theme that names a puzzle best: the most specific one, not "endgame" or "advantage". */
+  headline(keys: readonly string[]): PuzzleThemeLabel | null {
+    const labels = this.labels(keys);
+    return labels.find((label) => !GENERIC_THEMES.has(label.key)) ?? labels[0] ?? null;
   }
 }

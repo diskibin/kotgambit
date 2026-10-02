@@ -5,6 +5,7 @@ import {
   startPuzzle,
 } from '@kotgambit/chess-core';
 import type {
+  DailyPuzzle,
   NextPuzzleRequest,
   Puzzle,
   PuzzleGiveUpResponse,
@@ -181,17 +182,45 @@ export class PuzzlesService {
     };
   }
 
-  /** The themes a learner can practise, with how many puzzles each has. */
-  async themeList(): Promise<PuzzleThemeList> {
-    const rows = await this.prisma.$queryRaw<{ theme: string; count: number }[]>`
-      SELECT theme, COUNT(*)::int AS count FROM puzzles, unnest(themes) AS theme GROUP BY theme`;
+  /** The themes a learner can practise, with how many puzzles each has and how many they have solved. */
+  async themeList(userId: string): Promise<PuzzleThemeList> {
+    const rows = await this.prisma.$queryRaw<{ theme: string; count: number; solved: number }[]>`
+      WITH mine AS (
+        SELECT DISTINCT puzzle_id FROM puzzle_attempts
+        WHERE user_id = ${userId}::uuid AND solved_at IS NOT NULL
+      )
+      SELECT theme, COUNT(*)::int AS count, COUNT(mine.puzzle_id)::int AS solved
+      FROM puzzles p
+      CROSS JOIN LATERAL unnest(p.themes) AS theme
+      LEFT JOIN mine ON mine.puzzle_id = p.id
+      GROUP BY theme`;
     const themes = rows
-      .flatMap(({ theme, count }) => {
+      .flatMap(({ theme, count, solved }) => {
         const label = this.themes.label(theme);
-        return label ? [{ ...label, count }] : [];
+        return label ? [{ ...label, count, solved }] : [];
       })
       .sort((a, b) => a.title.localeCompare(b.title, 'ru'));
     return { themes };
+  }
+
+  /** A look at the puzzle of the day for the catalog. Nothing is started and no attempt is recorded. */
+  async dailyPreview(userId: string, localDate: string | undefined): Promise<DailyPuzzle> {
+    const puzzle = await this.daily(this.progress.resolveToday(localDate));
+    if (!puzzle) throw new AppError('puzzle.none', HttpStatus.NOT_FOUND);
+    const start = startPuzzle(puzzle.fen, puzzle.moves);
+    if (!start) throw new Error(`Puzzle ${puzzle.id} cannot be started`);
+    const solved = await this.prisma.puzzleAttempt.findFirst({
+      where: { userId, puzzleId: puzzle.id, solvedAt: { not: null } },
+      select: { id: true },
+    });
+    return {
+      puzzleId: puzzle.id,
+      fen: start.fen,
+      lastMove: start.lastMove,
+      solver: start.solver,
+      title: this.themes.headline(puzzle.themes)?.title ?? '',
+      solved: solved !== null,
+    };
   }
 
   private async openAttempt(userId: string, id: string): Promise<AttemptWithPuzzle> {

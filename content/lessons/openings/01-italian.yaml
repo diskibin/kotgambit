@@ -1,0 +1,73 @@
+id: openings-italian
+track: openings
+order: 1
+access: free
+piece: b
+title: Итальянская партия
+summary: Один из самых понятных дебютов, где слон сразу целится в слабое место чёрных.
+minutes: 6
+steps:
+  - type: text
+    title: Слон смотрит на f7
+    body: >-
+      Итальянская партия начинается ходами 1.e4 e5 2.Кf3 Кc6 3.Сc4. Белый слон выходит на
+      диагональ, которая упирается в пешку f7. Это самая слабая клетка чёрного лагеря в начале
+      партии, ведь её защищает только король.
+    pointsTitle: Идеи белых
+    points:
+      - Развить фигуры с темпом, не теряя времени
+      - Давить на пешку f7
+      - Подготовить пешечный центр c3 и d4
+    board:
+      fen: r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3
+      arrows:
+        - { from: c4, to: f7, color: sun }
+      caption: Слон c4 нацелен на пешку f7
+    remember: Слон на c4, конь на f3, потом рокировка.
+
+  - type: demo
+    title: Гамбит показывает дебют
+    body: Смотри, как белые выводят фигуры в итальянской партии.
+    fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+    moves: [e2e4, e7e5, g1f3, b8c6, f1c4]
+
+  - type: move
+    title: Выведи слона
+    prompt: Сыграй третий ход итальянской партии и выведи слона на c4.
+    fen: r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3
+    answers: [f1c4]
+    hints:
+      piece: Ходи слоном, он стоит на f1.
+      idea: Слон идёт по диагонали на c4, откуда он смотрит на пешку f7.
+    success: Итальянская партия! Слон целится в f7 и готов к бою.
+    oops: Слон пока не там, где нужно. Выведи его на диагональ, которая упирается в пешку f7.
+    successArrows:
+      - { from: f1, to: c4, color: sun }
+
+  - type: move
+    title: Готовь центр
+    prompt: Чёрные сыграли Сc5. Подготовь пешечный центр и сходи пешкой c2 на c3.
+    fen: r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4
+    answers: [c2c3]
+    hints:
+      piece: Ходи пешкой c2.
+      idea: Пешка c3 готовит ход d4, а после него белые получают сильный центр.
+    success: Пешка c3 готовит d4. Теперь центр скоро будет твоим!
+    oops: Нам нужна пешка c3, она подготовит ход d4. Сходи ей с c2 на одну клетку вперёд.
+    successArrows:
+      - { from: c2, to: c3, color: sun }
+
+  - type: quiz
+    question: На какую клетку смотрит белый слон в итальянской партии?
+    board:
+      fen: r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3
+    options:
+      - text: На f7
+        correct: true
+        explanation: Да! Эту пешку защищает только король, поэтому слон нацеливается на неё.
+      - text: На d5
+        correct: false
+        explanation: Почти! Но по диагонали c4 слон смотрит в сторону пешки f7.
+      - text: На h7
+        correct: false
+        explanation: Там слон не стоит. Его диагональ идёт к f7.

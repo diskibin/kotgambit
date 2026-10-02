@@ -332,6 +332,9 @@ importers:
       '@kotgambit/mascot':
         specifier: workspace:*
         version: link:../../packages/mascot
+      '@kotgambit/puzzle-player':
+        specifier: workspace:*
+        version: link:../../packages/puzzle-player
       '@react-native/new-app-screen':
         specifier: 0.87.1
         version: 0.87.1(@types/react@19.3.0)(react-native@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native-community/cli@20.2.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
@@ -465,6 +468,9 @@ importers:
       '@kotgambit/mascot':
         specifier: workspace:*
         version: link:../../packages/mascot
+      '@kotgambit/puzzle-player':
+        specifier: workspace:*
+        version: link:../../packages/puzzle-player
       '@reduxjs/toolkit':
         specifier: ^2.13.0
         version: 2.13.0(react-redux@9.3.0(@types/react@19.3.0)(react@19.2.3)(redux@5.0.1))(react@19.2.3)

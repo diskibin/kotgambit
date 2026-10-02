@@ -178,6 +178,8 @@ model PuzzleAttempt {
   playedMoves  String[]            @map("played_moves")
   // Set when the line is finished, also after mistakes
   solvedAt     DateTime?           @map("solved_at")
+  // No more moves are taken after this: the puzzle is solved, given up or left for the next one
+  closedAt     DateTime?           @map("closed_at")
   // Only the first run at a puzzle changes the rating, so that a known solution cannot be farmed
   rated        Boolean             @default(true)
   ratingBefore Int                 @map("rating_before")

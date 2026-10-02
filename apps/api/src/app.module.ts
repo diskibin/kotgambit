@@ -10,6 +10,7 @@ import { LessonsModule } from './lessons/lessons.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProgressModule } from './progress/progress.module.js';
+import { PuzzlesModule } from './puzzles/puzzles.module.js';
 import { RateLimitModule } from './rate-limit/rate-limit.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -35,6 +36,7 @@ const REDACTED_PATHS = [
     ProgressModule,
     LessonsModule,
     EngineModule,
+    PuzzlesModule,
     LoggerModule.forRootAsync({
       inject: [CONFIG],
       useFactory: (config: AppConfig) => ({

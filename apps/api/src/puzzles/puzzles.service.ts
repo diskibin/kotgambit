@@ -145,11 +145,18 @@ export class PuzzlesService {
     const solution = nextSolutionMove(puzzle.fen, puzzle.moves, attempt.playedMoves);
     if (solution === null) throw new AppError('puzzle.finished', HttpStatus.CONFLICT);
 
-    const level = Math.min(MAX_HINT_LEVEL, attempt.hintLevel + 1);
+    // The chain starts again after every move that was played, but the rating remembers the highest level
+    const moveIndex = attempt.playedMoves.length;
+    const reached = attempt.moveHintAt === moveIndex ? attempt.moveHintLevel : 0;
+    const level = Math.min(MAX_HINT_LEVEL, reached + 1);
     return this.prisma.$transaction(async (tx) => {
       await tx.puzzleAttempt.update({
         where: { id: attempt.id },
-        data: { hintLevel: Math.max(level, attempt.hintLevel) },
+        data: {
+          hintLevel: Math.max(level, attempt.hintLevel),
+          moveHintLevel: level,
+          moveHintAt: moveIndex,
+        },
       });
       if (level === 1) return { level: 1, square: solution.slice(0, 2) };
       if (level === 2) return { level: 2, themes: this.themes.labels(puzzle.themes) };

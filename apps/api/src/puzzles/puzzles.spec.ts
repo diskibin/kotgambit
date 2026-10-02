@@ -297,6 +297,28 @@ describe('puzzles', () => {
       expect((await stats()).streak).toBe(1);
     });
 
+    it('starts the chain of hints again after every move of the line', async () => {
+      const puzzle = await next({ mode: 'theme', theme: 'mateIn2' });
+      const hint = async () =>
+        PuzzleHintResponseSchema.parse(
+          (await call('POST', `/puzzles/attempts/${puzzle.attemptId}/hint`)).json(),
+        );
+
+      expect(await hint()).toEqual({ level: 1, square: 'h4' });
+      expect(await hint()).toMatchObject({ level: 2 });
+      await move(puzzle.attemptId, 'h4g6');
+      // The second move of the line is the queen's, and the piece comes first again
+      expect(await hint()).toEqual({ level: 1, square: 'f6' });
+
+      // The rating still remembers the highest level: a hint of level two means half a point
+      const result = await move(puzzle.attemptId, 'f6h8');
+      expect(result).toMatchObject({ solved: true, summary: { status: 'solved' } });
+      const attempt = await prisma.puzzleAttempt.findUniqueOrThrow({
+        where: { id: puzzle.attemptId },
+      });
+      expect(attempt.hintLevel).toBe(2);
+    });
+
     it('does not give a hint for a puzzle that is over', async () => {
       const puzzle = await next({ mode: 'theme', theme: 'mateIn1' });
       await solve(puzzle);

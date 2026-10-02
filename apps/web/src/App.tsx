@@ -6,6 +6,8 @@ import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
 import { CompletePage } from './features/lessons/CompletePage';
 import { LessonPage } from './features/lessons/LessonPage';
 import { PathPage } from './features/path/PathPage';
+import { PuzzlePage } from './features/puzzles/PuzzlePage';
+import { PuzzlesPage } from './features/puzzles/PuzzlesPage';
 import { SandboxPage } from './features/sandbox/SandboxPage';
 import { ThemeSync } from './features/theme/ThemeSync';
 
@@ -23,6 +25,8 @@ export function App() {
         <Route path="/verify" element={<VerifyEmailPage />} />
         <Route path="/lesson/:id" element={<LessonPage />} />
         <Route path="/lesson/:id/done" element={<CompletePage />} />
+        <Route path="/puzzles" element={<PuzzlesPage />} />
+        <Route path="/puzzles/solve" element={<PuzzlePage />} />
         <Route path="/sandbox" element={<SandboxPage />} />
         <Route path="*" element={<PathPage />} />
       </Routes>

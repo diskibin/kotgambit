@@ -47,6 +47,9 @@ export function PathPage() {
         <h1 className="m-0 font-heading text-[24px] font-bold">{t('path.title')}</h1>
         <div className="flex items-center gap-5">
           {progress.data && <DayBar progress={progress.data} />}
+          <Button variant="text" onClick={() => void navigate('/puzzles')}>
+            {t('puzzles.title')}
+          </Button>
           <Button variant="text" onClick={() => void logout()}>
             {t('path.signOut')}
           </Button>

@@ -19,8 +19,39 @@ describe('loadConfig', () => {
       trustProxy: false,
       webUrl: 'http://localhost:5173',
       smtpUrl: undefined,
+      engine: null,
       isProduction: false,
     });
+  });
+
+  it('turns the engine on when a path is given and applies its defaults', () => {
+    const { engine } = loadConfig({ ...VALID_ENV, ENGINE_PATH: '/usr/local/bin/stockfish' });
+    expect(engine).toMatchObject({
+      path: '/usr/local/bin/stockfish',
+      threads: 1,
+      hashMb: 64,
+      queueLimit: 20,
+      timeoutMs: 5000,
+      retryAfterSeconds: 3,
+    });
+    expect(engine?.workers).toBeGreaterThanOrEqual(1);
+  });
+
+  it('reads the engine limits from the environment', () => {
+    const { engine } = loadConfig({
+      ...VALID_ENV,
+      ENGINE_PATH: 'stockfish',
+      ENGINE_WORKERS: '3',
+      ENGINE_QUEUE_LIMIT: '8',
+      ENGINE_TIMEOUT_MS: '2500',
+    });
+    expect(engine).toMatchObject({ workers: 3, queueLimit: 8, timeoutMs: 2500 });
+  });
+
+  it('rejects a non-positive engine limit', () => {
+    expect(() =>
+      loadConfig({ ...VALID_ENV, ENGINE_PATH: 'stockfish', ENGINE_WORKERS: '0' }),
+    ).toThrow(/ENGINE_WORKERS/);
   });
 
   it('reads and converts the values it is given', () => {

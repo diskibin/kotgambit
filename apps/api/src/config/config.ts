@@ -1,3 +1,4 @@
+import { availableParallelism } from 'node:os';
 import { z } from 'zod';
 
 const SECONDS_IN_MINUTE = 60;
@@ -6,12 +7,37 @@ const DEFAULT_REFRESH_TOKEN_TTL_DAYS = 30;
 // A short HMAC secret is brute-forceable, 32 characters is the floor for HS256
 const MIN_JWT_SECRET_LENGTH = 32;
 
+const DEFAULT_ENGINE_HASH_MB = 64;
+const DEFAULT_ENGINE_QUEUE_LIMIT = 20;
+const DEFAULT_ENGINE_TIMEOUT_MS = 5000;
+const DEFAULT_ENGINE_RETRY_AFTER_SECONDS = 3;
+const DEFAULT_ENGINE_CACHE_TTL_SECONDS = 24 * 60 * SECONDS_IN_MINUTE;
+// One core is left for the API itself and the database, the rest goes to engines
+const DEFAULT_ENGINE_WORKERS = Math.max(1, availableParallelism() - 1);
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
+  /** Path to the Stockfish binary. Without it the engine is off and analysis answers 503. */
+  ENGINE_PATH: z.string().min(1).optional(),
+  ENGINE_WORKERS: z.coerce.number().int().positive().default(DEFAULT_ENGINE_WORKERS),
+  ENGINE_THREADS: z.coerce.number().int().positive().default(1),
+  ENGINE_HASH_MB: z.coerce.number().int().positive().default(DEFAULT_ENGINE_HASH_MB),
+  ENGINE_QUEUE_LIMIT: z.coerce.number().int().positive().default(DEFAULT_ENGINE_QUEUE_LIMIT),
+  ENGINE_TIMEOUT_MS: z.coerce.number().int().positive().default(DEFAULT_ENGINE_TIMEOUT_MS),
+  ENGINE_RETRY_AFTER_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(DEFAULT_ENGINE_RETRY_AFTER_SECONDS),
+  ENGINE_CACHE_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(DEFAULT_ENGINE_CACHE_TTL_SECONDS),
   /** Where the web app lives, the links in emails point there. */
   WEB_URL: z.url().default('http://localhost:5173'),
   MAIL_FROM: z.string().min(1).default('Кот Гамбит <noreply@localhost>'),
@@ -45,6 +71,18 @@ const EnvSchema = z.object({
     ),
 });
 
+export interface EngineConfig {
+  path: string;
+  workers: number;
+  /** UCI `Threads` per process. Several single-threaded workers serve many users better than one wide one. */
+  threads: number;
+  hashMb: number;
+  queueLimit: number;
+  timeoutMs: number;
+  retryAfterSeconds: number;
+  cacheTtlSeconds: number;
+}
+
 export interface AppConfig {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
@@ -54,6 +92,8 @@ export interface AppConfig {
   webUrl: string;
   mailFrom: string;
   smtpUrl: string | undefined;
+  /** `null` when ENGINE_PATH is not set. */
+  engine: EngineConfig | null;
   trustProxy: boolean;
   jwtAccessSecret: string;
   accessTokenTtlSeconds: number;
@@ -88,6 +128,18 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     webUrl: values.WEB_URL.replace(/\/$/, ''),
     mailFrom: values.MAIL_FROM,
     smtpUrl: values.SMTP_URL,
+    engine: values.ENGINE_PATH
+      ? {
+          path: values.ENGINE_PATH,
+          workers: values.ENGINE_WORKERS,
+          threads: values.ENGINE_THREADS,
+          hashMb: values.ENGINE_HASH_MB,
+          queueLimit: values.ENGINE_QUEUE_LIMIT,
+          timeoutMs: values.ENGINE_TIMEOUT_MS,
+          retryAfterSeconds: values.ENGINE_RETRY_AFTER_SECONDS,
+          cacheTtlSeconds: values.ENGINE_CACHE_TTL_SECONDS,
+        }
+      : null,
     trustProxy: values.TRUST_PROXY,
     jwtAccessSecret: values.JWT_ACCESS_SECRET,
     accessTokenTtlSeconds: values.ACCESS_TOKEN_TTL_SECONDS,

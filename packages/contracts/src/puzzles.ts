@@ -48,6 +48,19 @@ export const PuzzleSchema = z.object({
 });
 export type Puzzle = z.infer<typeof PuzzleSchema>;
 
+/** The puzzle of the day as the catalog shows it: a look at it, without starting an attempt. */
+export const DailyPuzzleSchema = z.object({
+  puzzleId: z.string(),
+  fen: z.string(),
+  lastMove: z.string().regex(UCI_MOVE),
+  solver: z.enum(['w', 'b']),
+  /** The theme that names it, such as "Мат в 2 хода". The card tells it, the solving screen does not. */
+  title: z.string(),
+  /** The learner has already solved today's puzzle. */
+  solved: z.boolean(),
+});
+export type DailyPuzzle = z.infer<typeof DailyPuzzleSchema>;
+
 export const PuzzleMoveRequestSchema = z.object({ move: z.string().regex(UCI_MOVE) });
 
 /** What the attempt came to, sent once its rating is settled. */
@@ -112,6 +125,12 @@ export const PuzzleStatsSchema = z.object({
 export type PuzzleStats = z.infer<typeof PuzzleStatsSchema>;
 
 export const PuzzleThemeListSchema = z.object({
-  themes: z.array(PuzzleThemeLabelSchema.extend({ count: z.number().int().positive() })),
+  themes: z.array(
+    PuzzleThemeLabelSchema.extend({
+      count: z.number().int().positive(),
+      /** How many of them this learner has solved. */
+      solved: z.number().int().nonnegative(),
+    }),
+  ),
 });
 export type PuzzleThemeList = z.infer<typeof PuzzleThemeListSchema>;

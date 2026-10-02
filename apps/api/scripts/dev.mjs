@@ -2,6 +2,7 @@
 // `tsx` cannot do this job, it does not emit the decorator metadata that NestJS needs to inject dependencies.
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
+import process from 'node:process';
 
 const require = createRequire(import.meta.url);
 const tsc = require.resolve('typescript/bin/tsc');

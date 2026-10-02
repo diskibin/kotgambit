@@ -4,6 +4,7 @@ import {
   initialPuzzleSession,
   puzzleMarks,
   puzzleSessionReducer,
+  themeGroup,
   ratingChange,
   type PuzzleSession,
   type PuzzleSessionAction,
@@ -191,5 +192,25 @@ describe('puzzleMarks', () => {
         { from: 'f8', to: 'g8', color: 'sky' },
       ],
     });
+  });
+});
+
+describe('themeGroup', () => {
+  it('puts every mate, in any spelling, under mate', () => {
+    for (const key of ['mate', 'mateIn1', 'mateIn5', 'backRankMate', 'smotheredMate']) {
+      expect(themeGroup(key), key).toBe('mate');
+    }
+  });
+
+  it('puts the endgames under endgame', () => {
+    for (const key of ['endgame', 'rookEndgame', 'pawnEndgame', 'queenRookEndgame']) {
+      expect(themeGroup(key), key).toBe('endgame');
+    }
+  });
+
+  it('calls everything else tactics', () => {
+    for (const key of ['fork', 'pin', 'skewer', 'middlegame', 'opening', 'promotion']) {
+      expect(themeGroup(key), key).toBe('tactics');
+    }
   });
 });

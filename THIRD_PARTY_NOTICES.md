@@ -10,3 +10,10 @@ as they are added to the project.
   Static instances of the Google Fonts variable fonts are embedded in the Android app
   (`apps/mobile/android/app/src/main/assets/fonts`), the license texts are next to them.
   The web app uses the same families through `@fontsource` packages.
+
+## Chess engine
+
+- **Stockfish** (Copyright The Stockfish developers), licensed under the GNU General Public License v3.0.
+  The API starts it as a separate process through `ENGINE_PATH`, the binary is not part of this repository.
+  CI downloads the official release (`.github/workflows/ci.yml`). A deployment image that ships the binary
+  must include its license text and point to the source code at https://github.com/official-stockfish/Stockfish.

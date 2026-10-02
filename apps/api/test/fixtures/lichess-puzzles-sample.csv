@@ -1,0 +1,7 @@
+PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags,DailyDate
+005Bm,4rk2/p1q5/1p3Q1b/8/1p5N/2P1p3/P3P3/2K5 b - - 0 43,c7f7 h4g6 f8g8 f6h8,1434,76,96,6584,endgame mate mateIn2 pin short,https://lichess.org/KKslCMev/black#86,,
+00BCa,1r6/p2kp1P1/3p4/2pP4/2P2B2/pN6/5PK1/8 b - - 1 41,a3a2 b3c5 d6c5 f4b8 a2a1q g7g8q,1293,75,98,2139,advancedPawn crushing endgame long master promotion,https://lichess.org/B8N0BmLk/black#82,,
+00Qqp,6k1/8/p3P1p1/8/8/2P3PP/1r5r/R3RK2 w - - 0 46,e6e7 h2h1,1592,75,99,2302,endgame mate mateIn1 oneMove rookEndgame,https://lichess.org/KZM4JRxc#91,,
+08Sa9,8/pp6/2p1k3/2P2p1p/1PK2PpP/P5P1/8/8 b - - 1 31,b7b5 c5b6 a7b6 a3a4,1948,75,96,2029,crushing defensiveMove enPassant endgame pawnEndgame short,https://lichess.org/ZPUXITna/black#62,,
+17zHs,rr6/p3p2k/3pNpp1/1pp5/q1P1P3/5R2/P2Q2PP/6K1 b - - 3 26,a4c4 d2h6 h7h6 f3h3,1984,84,95,42999,anastasiaMate attraction endgame mate mateIn2 sacrifice short,https://lichess.org/AmKlUkC1/black#52,,1650613793268
+00008,r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2R1/PqP2bPP/7K b - - 0 24,f2g3 e6e7 b2b1 b3c1 b1c1 h6c1,1811,76,95,10282,crushing hangingPiece long middlegame,https://lichess.org/787zsVup/black#48,,

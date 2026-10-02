@@ -320,3 +320,163 @@ describe('token refresh', () => {
     expect(setRefreshToken).toHaveBeenCalledWith('rotated-refresh');
   });
 });
+
+describe('puzzle endpoints', () => {
+  const PUZZLE = {
+    attemptId: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+    puzzleId: '005Bm',
+    fen: '4rk2/p1q5/1p3Q1b/8/1p5N/2P1p3/P3P3/2K5 b - - 0 43',
+    lastMove: 'c7f7',
+    solver: 'w',
+    rating: 1434,
+    themes: [],
+  };
+  const SUMMARY = {
+    status: 'solved',
+    rated: true,
+    ratingBefore: 1000,
+    ratingAfter: 1016,
+    themes: [],
+    streak: 1,
+  };
+  const STATS = { rating: 1016, solved: 1, failed: 0, streak: 1, bestStreak: 1 };
+
+  it('starts a puzzle by mode and theme', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/puzzles/next`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(PUZZLE);
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.nextPuzzle.initiate({ mode: 'theme', theme: 'mateIn2' }),
+    );
+    expect(body).toEqual({ mode: 'theme', theme: 'mateIn2' });
+    expect(result).toMatchObject({ data: { puzzleId: '005Bm', solver: 'w' } });
+  });
+
+  it('turns an answer that does not fit the contract into an error', async () => {
+    server.use(http.post(`${BASE_URL}/puzzles/next`, () => HttpResponse.json({ fen: 'x' })));
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.nextPuzzle.initiate({}));
+    expect(result).toHaveProperty('error');
+  });
+
+  it('sends a move to the attempt and reads the three kinds of answer', async () => {
+    const answers = [
+      { result: 'illegal' },
+      { result: 'wrong', mistakes: 1, summary: null },
+      { result: 'correct', reply: 'f8g8', solved: false, summary: null },
+    ];
+    const urls: string[] = [];
+    server.use(
+      http.post(`${BASE_URL}/puzzles/attempts/:id/move`, ({ request }) => {
+        urls.push(new URL(request.url).pathname);
+        return HttpResponse.json(answers[urls.length - 1]);
+      }),
+    );
+    const { api, store } = setup();
+    const results = [];
+    for (const move of ['a1a8', 'a2a3', 'h4g6']) {
+      results.push(
+        await store.dispatch(
+          api.endpoints.puzzleMove.initiate({ attemptId: PUZZLE.attemptId, move }),
+        ),
+      );
+    }
+    expect(urls[0]).toBe(`/puzzles/attempts/${PUZZLE.attemptId}/move`);
+    expect(results.map((r) => ('data' in r ? r.data?.result : null))).toEqual([
+      'illegal',
+      'wrong',
+      'correct',
+    ]);
+  });
+
+  it('refreshes the stats only when a move settled the rating', async () => {
+    let statsCalls = 0;
+    server.use(
+      http.get(`${BASE_URL}/puzzles/stats`, () => {
+        statsCalls += 1;
+        return HttpResponse.json(STATS);
+      }),
+      http.post(`${BASE_URL}/puzzles/attempts/:id/move`, async ({ request }) => {
+        const { move } = (await request.json()) as { move: string };
+        return HttpResponse.json(
+          move === 'f6h8'
+            ? { result: 'correct', reply: null, solved: true, summary: SUMMARY }
+            : { result: 'correct', reply: 'f8g8', solved: false, summary: null },
+        );
+      }),
+    );
+    const { api, store } = setup();
+    const subscription = store.dispatch(api.endpoints.puzzleStats.initiate());
+    await subscription;
+    expect(statsCalls).toBe(1);
+
+    await store.dispatch(
+      api.endpoints.puzzleMove.initiate({ attemptId: PUZZLE.attemptId, move: 'h4g6' }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(statsCalls).toBe(1);
+
+    await store.dispatch(
+      api.endpoints.puzzleMove.initiate({ attemptId: PUZZLE.attemptId, move: 'f6h8' }),
+    );
+    await vi.waitFor(() => expect(statsCalls).toBe(2));
+    subscription.unsubscribe();
+  });
+
+  it('asks for a hint and for the solution', async () => {
+    server.use(
+      http.post(`${BASE_URL}/puzzles/attempts/:id/hint`, () =>
+        HttpResponse.json({ level: 1, square: 'h4' }),
+      ),
+      http.post(`${BASE_URL}/puzzles/attempts/:id/give-up`, () =>
+        HttpResponse.json({ solution: ['h4g6', 'f8g8', 'f6h8'], summary: null }),
+      ),
+    );
+    const { api, store } = setup();
+    expect(await store.dispatch(api.endpoints.puzzleHint.initiate(PUZZLE.attemptId))).toMatchObject(
+      {
+        data: { level: 1, square: 'h4' },
+      },
+    );
+    expect(
+      await store.dispatch(api.endpoints.puzzleGiveUp.initiate(PUZZLE.attemptId)),
+    ).toMatchObject({ data: { solution: ['h4g6', 'f8g8', 'f6h8'] } });
+  });
+
+  it('loads the stats, the themes and the puzzle of the day for the learner calendar day', async () => {
+    let dailyUrl = '';
+    server.use(
+      http.get(`${BASE_URL}/puzzles/stats`, () => HttpResponse.json(STATS)),
+      http.get(`${BASE_URL}/puzzles/themes`, () =>
+        HttpResponse.json({ themes: [{ key: 'fork', title: 'Вилка', count: 40, solved: 8 }] }),
+      ),
+      http.get(`${BASE_URL}/puzzles/daily`, ({ request }) => {
+        dailyUrl = request.url;
+        return HttpResponse.json({
+          puzzleId: '005Bm',
+          fen: PUZZLE.fen,
+          lastMove: 'c7f7',
+          solver: 'w',
+          title: 'Мат в 2 хода',
+          solved: false,
+        });
+      }),
+    );
+    const { api, store } = setup();
+    expect((await store.dispatch(api.endpoints.puzzleStats.initiate())).data).toEqual(STATS);
+    expect(
+      (await store.dispatch(api.endpoints.puzzleThemes.initiate())).data?.themes[0],
+    ).toMatchObject({
+      key: 'fork',
+      solved: 8,
+    });
+    const daily = await store.dispatch(api.endpoints.dailyPuzzle.initiate('2026-10-02'));
+    expect(dailyUrl).toContain('localDate=2026-10-02');
+    expect(daily.data?.title).toBe('Мат в 2 хода');
+  });
+});

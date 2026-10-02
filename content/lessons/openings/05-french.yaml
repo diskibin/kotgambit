@@ -1,0 +1,75 @@
+id: openings-french
+track: openings
+order: 5
+access: free
+piece: p
+title: Французская защита
+summary: Чёрные строят цепочку пешек e6 и d5 и ждут момента для контрудара.
+minutes: 6
+steps:
+  - type: text
+    title: Цепочка пешек e6 и d5
+    body: >-
+      Французская защита начинается ходами 1.e4 e6 2.d4 d5. Чёрные ставят пешки на e6 и d5, и
+      пешка e6 защищает d5. Получается прочная позиция, но слон c8 оказывается за собственными
+      пешками.
+    pointsTitle: Идеи чёрных
+    points:
+      - Построить крепкую цепочку пешек
+      - Позже ударить по центру белых ходом c5
+      - Найти работу для слона c8
+    board:
+      fen: rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3
+      arrows:
+        - { from: e6, to: d5, color: sky }
+      caption: Пешка e6 защищает пешку d5
+    remember: Цепочка e6 и d5 держит центр, а слон c8 ждёт своего часа.
+
+  - type: demo
+    title: Гамбит показывает дебют
+    body: Смотри, как чёрные отвечают на ход e4 во французской защите.
+    fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+    moves: [e2e4, e7e6, d2d4, d7d5]
+
+  - type: move
+    title: Начни защиту
+    prompt: Белые сыграли e4. Ответь ходом французской защиты и сходи пешкой e7 на e6.
+    fen: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
+    orientation: b
+    answers: [e7e6]
+    hints:
+      piece: Ходи пешкой e7.
+      idea: Пешка e6 станет основой цепочки и будет защищать поле d5.
+    success: Французская защита! Основа цепочки пешек готова.
+    oops: Нам нужна пешка e6, она станет основой цепочки. Сходи пешкой e7 на одну клетку вперёд.
+    successArrows:
+      - { from: e7, to: e6, color: sun }
+
+  - type: move
+    title: Займи центр
+    prompt: Белые сыграли d4. Поставь пешку на d5 и займи центр.
+    fen: rnbqkbnr/pppp1ppp/4p3/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq - 0 2
+    orientation: b
+    answers: [d7d5]
+    hints:
+      piece: Ходи пешкой d7.
+      idea: Пешка d5 встаёт в центр, а пешка e6 уже её защищает.
+    success: Цепочка готова, и центр под защитой. Отличный ход!
+    oops: Вспомни план. Сходи пешкой d7 на d5, пешка e6 её защитит.
+    successArrows:
+      - { from: d7, to: d5, color: sun }
+
+  - type: quiz
+    question: Какая фигура чёрных оказывается заперта во французской защите?
+    board:
+      fen: rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3
+    options:
+      - text: Слон c8
+        correct: true
+        explanation: Да! Его закрывает пешка e6, поэтому чёрным нужно найти ему применение.
+      - text: Ферзь d8
+        correct: false
+        explanation: Почти! Ферзь свободен, а вот слон c8 стоит за пешкой e6.
+      - text: Ладья h8
+        correct: false
+        explanation: Ладья пока на месте у всех. Закрыт слон c8.

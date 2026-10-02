@@ -147,6 +147,7 @@ model Puzzle {
   openingTags     String[] @map("opening_tags")
 
   attempts PuzzleAttempt[]
+  daily    DailyPuzzle[]
 
   @@index([rating])
   // Finds the puzzles of a theme without scanning the table
@@ -177,6 +178,8 @@ model PuzzleAttempt {
   playedMoves  String[]            @map("played_moves")
   // Set when the line is finished, also after mistakes
   solvedAt     DateTime?           @map("solved_at")
+  // Only the first run at a puzzle changes the rating, so that a known solution cannot be farmed
+  rated        Boolean             @default(true)
   ratingBefore Int                 @map("rating_before")
   // Set once the attempt has changed the player's rating, which happens only once per attempt
   ratingAfter  Int?                @map("rating_after")
@@ -203,4 +206,14 @@ model UserPuzzleStats {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_puzzle_stats")
+}
+
+// The puzzle of the day is picked on the first request and then kept, so that everybody gets the same one
+model DailyPuzzle {
+  day      DateTime @id @db.Date
+  puzzleId String   @map("puzzle_id")
+
+  puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+
+  @@map("daily_puzzles")
 }

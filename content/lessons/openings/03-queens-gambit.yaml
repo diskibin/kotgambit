@@ -1,0 +1,71 @@
+id: openings-queens-gambit
+track: openings
+order: 3
+access: free
+piece: p
+title: Ферзевый гамбит
+summary: Белые отвлекают пешку d5 и борются за центр.
+minutes: 6
+steps:
+  - type: text
+    title: Пешка c4 борется за центр
+    body: >-
+      Ферзевый гамбит начинается ходами 1.d4 d5 2.c4. Белые предлагают чёрным взять пешку, чтобы
+      отвлечь пешку d5 от центра. Если чёрные возьмут, белые вернут пешку и получат сильный
+      центр.
+    pointsTitle: Идеи белых
+    points:
+      - Не дать чёрным удержать пешку d5
+      - Получить больше места в центре
+      - Выводить фигуры на активные поля
+    board:
+      fen: rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2
+      arrows:
+        - { from: c4, to: d5, color: sun }
+      caption: Пешка c4 нападает на пешку d5
+    remember: Гамбит только по названию, пешку почти всегда можно вернуть.
+
+  - type: demo
+    title: Гамбит показывает дебют
+    body: Смотри, как белые предлагают пешку, а чёрные её берут.
+    fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+    moves: [d2d4, d7d5, c2c4, d5c4]
+
+  - type: move
+    title: Предложи пешку
+    prompt: Сыграй второй ход ферзевого гамбита и сходи пешкой c2 на c4.
+    fen: rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2
+    answers: [c2c4]
+    hints:
+      piece: Ходи пешкой c2.
+      idea: Пешка идёт на две клетки вперёд, на c4, и нападает на пешку d5.
+    success: Ферзевый гамбит! Пешка c4 борется за центр.
+    oops: Нам нужна пешка c4, она нападает на пешку d5. Сходи пешкой c2 вперёд.
+    successArrows:
+      - { from: c2, to: c4, color: sun }
+
+  - type: move
+    title: Верни пешку
+    prompt: Чёрные взяли пешку на c4. Освободи слона и сходи пешкой e2 на e3, чтобы потом вернуть пешку.
+    fen: rnbqkbnr/ppp1pppp/8/8/2pP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3
+    answers: [e2e3]
+    hints:
+      piece: Ходи пешкой e2.
+      idea: Пешка e3 открывает путь слону f1, и он вернёт пешку на c4.
+    success: Слон f1 теперь свободен и скоро вернёт пешку. Отличный план!
+    oops: Нам нужно освободить слона f1. Сходи пешкой e2 на e3.
+    successArrows:
+      - { from: e2, to: e3, color: sun }
+
+  - type: quiz
+    question: Зачем белые играют c4 в ферзевом гамбите?
+    options:
+      - text: Чтобы отвлечь пешку d5 и побороться за центр
+        correct: true
+        explanation: Да! Если пешка d5 уйдёт, центр останется за белыми.
+      - text: Чтобы пожертвовать пешку навсегда
+        correct: false
+        explanation: Почти! Но обычно белые возвращают её, поэтому это скорее обмен.
+      - text: Чтобы сразу поставить мат
+        correct: false
+        explanation: До мата ещё далеко. Здесь белые просто занимают центр.

@@ -21,6 +21,9 @@ const GOAL_SECONDS = 600;
 // basics-board: text, text, find-squares, quiz, quiz
 const BOARD_ALL_FIRST_TRY = [1, 1, 1, 1, 1];
 const BOARD_ONE_RETRY = [1, 1, 2, 1, 1];
+// These tests are written for the first four chapters. The real content keeps growing, and a new
+// chapter must not change what they count or take the order numbers they use.
+const TESTED_LESSONS = ['basics-board', 'basics-rook', 'basics-knight', 'basics-check'];
 
 describe('lessons and progress', () => {
   let app: NestFastifyApplication;
@@ -35,6 +38,7 @@ describe('lessons and progress', () => {
     ({ app, prisma, redis, mail } = await createTestApp());
     await prisma.lesson.deleteMany();
     await seedLessons(prisma, CONTENT_DIR);
+    await prisma.lesson.deleteMany({ where: { id: { notIn: TESTED_LESSONS } } });
   });
 
   afterAll(() => app.close());

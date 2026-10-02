@@ -4,3 +4,4 @@ export * from './engine.js';
 export * from './errors.js';
 export * from './health.js';
 export * from './lessons.js';
+export * from './puzzles.js';

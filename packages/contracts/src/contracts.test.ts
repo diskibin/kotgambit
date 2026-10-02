@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  NextPuzzleRequestSchema,
+  PuzzleHintResponseSchema,
+  PuzzleMoveResponseSchema,
+  PuzzleSchema,
   ENGINE_MAX_DEPTH,
   ENGINE_MAX_MULTIPV,
   EngineAnalysisRequestSchema,
@@ -164,5 +168,55 @@ describe('engine schemas', () => {
 
   it('reports no engine as null on the ready response', () => {
     expect(ReadyResponseSchema.safeParse({ status: 'ok', engine: null }).success).toBe(true);
+  });
+});
+
+describe('puzzle schemas', () => {
+  it('defaults to the rating mode and asks for a theme in the theme mode', () => {
+    expect(NextPuzzleRequestSchema.parse({}).mode).toBe('rating');
+    expect(NextPuzzleRequestSchema.safeParse({ mode: 'theme' }).success).toBe(false);
+    expect(NextPuzzleRequestSchema.parse({ mode: 'theme', theme: 'fork' }).theme).toBe('fork');
+    expect(NextPuzzleRequestSchema.safeParse({ mode: 'nonsense' }).success).toBe(false);
+    expect(NextPuzzleRequestSchema.safeParse({ mode: 'theme', theme: 'a b' }).success).toBe(false);
+  });
+
+  it('describes a puzzle without its solution', () => {
+    const puzzle = {
+      attemptId: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+      puzzleId: '005Bm',
+      fen: '4rk2/p1q5/1p3Q1b/8/1p5N/2P1p3/P3P3/2K5 b - - 0 43',
+      lastMove: 'c7f7',
+      solver: 'w',
+      rating: 1434,
+      themes: [],
+    };
+    expect(PuzzleSchema.safeParse(puzzle).success).toBe(true);
+    expect(Object.keys(PuzzleSchema.parse({ ...puzzle, moves: ['a1a2'] }))).not.toContain('moves');
+  });
+
+  it('tells the three outcomes of a move apart', () => {
+    expect(PuzzleMoveResponseSchema.safeParse({ result: 'illegal' }).success).toBe(true);
+    expect(
+      PuzzleMoveResponseSchema.safeParse({ result: 'wrong', mistakes: 1, summary: null }).success,
+    ).toBe(true);
+    expect(
+      PuzzleMoveResponseSchema.safeParse({
+        result: 'correct',
+        reply: 'b2b1',
+        solved: false,
+        summary: null,
+      }).success,
+    ).toBe(true);
+    expect(PuzzleMoveResponseSchema.safeParse({ result: 'wrong', mistakes: 0 }).success).toBe(
+      false,
+    );
+  });
+
+  it('has a different payload for each hint level', () => {
+    expect(PuzzleHintResponseSchema.safeParse({ level: 1, square: 'e6' }).success).toBe(true);
+    expect(PuzzleHintResponseSchema.safeParse({ level: 2, themes: [] }).success).toBe(true);
+    expect(PuzzleHintResponseSchema.safeParse({ level: 3, move: 'e6e7' }).success).toBe(true);
+    expect(PuzzleHintResponseSchema.safeParse({ level: 1, move: 'e6e7' }).success).toBe(false);
+    expect(PuzzleHintResponseSchema.safeParse({ level: 4 }).success).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PHRASES, createCoach, type CoachEvent } from './index.js';
+import { PHRASES, PUZZLE_PHRASES, PUZZLE_TITLES, createCoach, type CoachEvent } from './index.js';
 
 const MAX_WORDS = 16;
 // Words that would break the cat's voice: scolding, guilt, pressure, sarcasm
@@ -149,3 +149,91 @@ describe('createCoach', () => {
 });
 
 const HINT_AFTER = 2;
+
+describe('puzzle phrases', () => {
+  const texts = Object.entries(PUZZLE_PHRASES).flatMap(([key, items]) =>
+    items.map((text) => ({ key, text })),
+  );
+
+  it('has at least three variants for every situation, all different', () => {
+    for (const [key, items] of Object.entries(PUZZLE_PHRASES)) {
+      expect(items.length, key).toBeGreaterThanOrEqual(3);
+      expect(new Set(items).size, key).toBe(items.length);
+    }
+  });
+
+  it('keeps every line short and free of scolding and pressure', () => {
+    for (const { key, text } of texts) {
+      expect(text.split(/\s+/).length, `${key}: ${text}`).toBeLessThanOrEqual(MAX_WORDS);
+      for (const word of FORBIDDEN)
+        expect(text.toLowerCase(), `${key}: ${word}`).not.toContain(word);
+    }
+  });
+
+  it('uses the headings of the design and no red', () => {
+    expect(PUZZLE_TITLES).toEqual({
+      solving: 'Найди лучший ход',
+      correct: 'Верно!',
+      wrong: 'Не совсем',
+      solution: 'Решение',
+    });
+  });
+});
+
+describe('puzzle messages', () => {
+  const coach = () => createCoach(() => 0);
+
+  it('invites to look for the move with a thinking cat and a plain card', () => {
+    expect(coach().message({ type: 'PUZZLE_START' })).toMatchObject({
+      title: 'Найди лучший ход',
+      mascot: 'thinking',
+      tone: 'neutral',
+    });
+  });
+
+  it('praises a solved puzzle, and notices a streak', () => {
+    expect(coach().message({ type: 'PUZZLE_SOLVED', streak: 1 })).toMatchObject({
+      title: 'Верно!',
+      mascot: 'happy',
+      tone: 'success',
+    });
+    const streak = coach().message({ type: 'PUZZLE_SOLVED', streak: 3 });
+    expect(streak).toMatchObject({ title: 'Верно!', mascot: 'proud' });
+    expect(PUZZLE_PHRASES.streak).toContain(streak.text);
+  });
+
+  it('answers a wrong move calmly, with the title of the design and the oops cat', () => {
+    expect(coach().message({ type: 'PUZZLE_WRONG' })).toMatchObject({
+      title: 'Не совсем',
+      mascot: 'oops',
+      tone: 'oops',
+      effect: 'none',
+    });
+  });
+
+  it('numbers the hints and names the ideas on the second level', () => {
+    expect(coach().message({ type: 'PUZZLE_HINT', level: 1 }).title).toBe('Подсказка 1 из 3');
+    const second = coach().message({ type: 'PUZZLE_HINT', level: 2, themes: ['Вилка', 'Связка'] });
+    expect(second).toMatchObject({ title: 'Подсказка 2 из 3', tone: 'hint', mascot: 'hint' });
+    expect(second.text.endsWith('Вилка, Связка.')).toBe(true);
+    expect(coach().message({ type: 'PUZZLE_HINT', level: 3 }).title).toBe('Подсказка 3 из 3');
+  });
+
+  it('gives a general idea when the puzzle has no theme to show', () => {
+    const plain = coach().message({ type: 'PUZZLE_HINT', level: 2, themes: [] });
+    expect(PUZZLE_PHRASES.hint2Plain).toContain(plain.text);
+  });
+
+  it('shows the solution with the title of the design', () => {
+    expect(coach().message({ type: 'PUZZLE_SOLUTION' })).toMatchObject({
+      title: 'Решение',
+      tone: 'demo',
+    });
+  });
+
+  it('never repeats the same line twice in a row', () => {
+    const c = coach();
+    const texts = Array.from({ length: 10 }, () => c.message({ type: 'PUZZLE_WRONG' }).text);
+    texts.slice(1).forEach((text, index) => expect(text).not.toBe(texts[index]));
+  });
+});

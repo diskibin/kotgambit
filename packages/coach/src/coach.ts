@@ -1,4 +1,11 @@
-import { PHRASES, type PhraseKey } from './phrases.js';
+import {
+  PHRASES,
+  PUZZLE_PHRASES,
+  PUZZLE_TITLES,
+  puzzleHintTitle,
+  type PhraseKey,
+  type PuzzlePhraseKey,
+} from './phrases.js';
 import {
   HINT_OFFER_ATTEMPTS,
   STREAK_NOTICE,
@@ -28,6 +35,18 @@ export function createCoach(random: () => number = Math.random): Coach {
     const index = pool[Math.floor(random() * pool.length)] ?? 0;
     last.set(key, index);
     return variants[index] as Phrase;
+  }
+
+  const lastText = new Map<PuzzlePhraseKey, number>();
+
+  /** The puzzle card has fixed headings, so only its text is picked, again never the same twice in a row. */
+  function pickText(key: PuzzlePhraseKey): string {
+    const variants: readonly string[] = PUZZLE_PHRASES[key];
+    const previous = lastText.get(key);
+    const pool = variants.map((_, index) => index).filter((index) => index !== previous);
+    const index = pool[Math.floor(random() * pool.length)] ?? 0;
+    lastText.set(key, index);
+    return variants[index] as string;
   }
 
   return {
@@ -87,6 +106,60 @@ export function createCoach(random: () => number = Math.random): Coach {
             effect: 'confetti',
           };
         }
+        case 'PUZZLE_START':
+          return {
+            title: PUZZLE_TITLES.solving,
+            text: pickText('solving'),
+            mascot: 'thinking',
+            tone: 'neutral',
+            effect: 'none',
+          };
+        case 'PUZZLE_SOLVED': {
+          const streak = event.streak >= STREAK_NOTICE;
+          return {
+            title: PUZZLE_TITLES.correct,
+            text: pickText(streak ? 'streak' : 'correct'),
+            mascot: streak ? 'proud' : 'happy',
+            tone: 'success',
+            effect: 'none',
+          };
+        }
+        case 'PUZZLE_WRONG':
+          return {
+            title: PUZZLE_TITLES.wrong,
+            text: pickText('wrong'),
+            mascot: 'oops',
+            tone: 'oops',
+            effect: 'none',
+          };
+        case 'PUZZLE_HINT': {
+          const named = event.level === 2 && event.themes && event.themes.length > 0;
+          const key: PuzzlePhraseKey =
+            event.level === 1
+              ? 'hint1'
+              : event.level === 3
+                ? 'hint3'
+                : named
+                  ? 'hint2'
+                  : 'hint2Plain';
+          // The themes follow the sentence, so that "these tricks" has something to point at
+          const text = named ? `${pickText(key)} ${event.themes?.join(', ')}.` : pickText(key);
+          return {
+            title: puzzleHintTitle(event.level),
+            text,
+            mascot: 'hint',
+            tone: 'hint',
+            effect: 'none',
+          };
+        }
+        case 'PUZZLE_SOLUTION':
+          return {
+            title: PUZZLE_TITLES.solution,
+            text: pickText('solution'),
+            mascot: 'hint',
+            tone: 'demo',
+            effect: 'none',
+          };
       }
     },
   };

@@ -1,6 +1,6 @@
 import type { Mood } from '@kotgambit/mascot';
 
-export type Tone = 'success' | 'oops' | 'hint' | 'demo' | 'celebrate' | 'soft';
+export type Tone = 'neutral' | 'success' | 'oops' | 'hint' | 'demo' | 'celebrate' | 'soft';
 export type Effect = 'confetti' | 'shake' | 'none';
 
 /** What the cat says: the apps only show it, they never write texts of their own. */
@@ -30,7 +30,16 @@ export type CoachEvent =
   | { type: 'HINT'; level: 1 | 2 | 3; detail?: string }
   | { type: 'DEMO'; detail?: string }
   /** `accuracy` is the share of steps solved on the first try, from 0 to 1. */
-  | { type: 'LESSON_COMPLETED'; accuracy: number };
+  | { type: 'LESSON_COMPLETED'; accuracy: number }
+  /** A puzzle has just been shown. */
+  | { type: 'PUZZLE_START' }
+  /** `streak` counts the puzzles solved cleanly in a row, this one included. */
+  | { type: 'PUZZLE_SOLVED'; streak: number }
+  | { type: 'PUZZLE_WRONG' }
+  /** `themes` are the Russian names of the puzzle's ideas, shown by the second level. */
+  | { type: 'PUZZLE_HINT'; level: 1 | 2 | 3; themes?: readonly string[] }
+  /** The learner asked to see the solution. */
+  | { type: 'PUZZLE_SOLUTION' };
 
 export interface Phrase {
   title: string;

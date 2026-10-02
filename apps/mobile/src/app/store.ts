@@ -1,4 +1,5 @@
 import { lessonSessionReducer } from '@kotgambit/lesson-player';
+import { puzzleSessionReducer } from '@kotgambit/puzzle-player';
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
 import { api, sessionBridge } from './api';
@@ -23,6 +24,7 @@ export function makeStore() {
       [api.reducerPath]: api.reducer,
       auth: authSlice.reducer,
       lessonSession: lessonSessionReducer,
+      puzzleSession: puzzleSessionReducer,
     },
     middleware: (getDefault) => getDefault().prepend(listener.middleware).concat(api.middleware),
   });

@@ -52,8 +52,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const reply = host.switchToHttp().getResponse<FastifyReply>();
     const { status, code, details } = map(exception);
 
-    // Unexpected failures are logged with the stack, the client only sees the generic message
-    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) this.logger.error(exception);
+    // Unexpected failures are logged with the stack, the client only sees the generic message.
+    // A busy server is an expected state, a line without the stack is enough to see how often it happens.
+    if (status === HttpStatus.SERVICE_UNAVAILABLE) this.logger.warn(code);
+    else if (status >= HttpStatus.INTERNAL_SERVER_ERROR) this.logger.error(exception);
 
     const body: ApiError = {
       code,

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { LessonSchema, StepSchema, validateCatalog, validateLesson, type Lesson } from './index.js';
+import {
+  LICHESS_PUZZLE_THEMES,
+  LessonSchema,
+  PuzzleThemesSchema,
+  StepSchema,
+  validateCatalog,
+  validateLesson,
+  validatePuzzleThemes,
+  type Lesson,
+} from './index.js';
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 // A lone knight on g1 can go to f3, h3 and e2
@@ -151,6 +160,47 @@ describe('validateCatalog', () => {
     const issues = validateCatalog([lesson(), lesson({ order: 3 })]);
     expect(issues.map((i) => i.message)).toEqual(
       expect.arrayContaining(['duplicate lesson id', expect.stringContaining('1, 3')]),
+    );
+  });
+});
+
+describe('puzzle themes', () => {
+  const full = () =>
+    PuzzleThemesSchema.parse({
+      themes: Object.fromEntries(
+        LICHESS_PUZZLE_THEMES.map((key) => [key, { title: `Тема ${key}` }]),
+      ),
+    });
+
+  it('accepts a dictionary that names every known theme', () => {
+    expect(validatePuzzleThemes(full())).toEqual([]);
+  });
+
+  it('shows a theme as visible unless it is marked hidden', () => {
+    const themes = PuzzleThemesSchema.parse({
+      themes: { fork: { title: 'Вилка' }, short: { title: 'Короткая', hidden: true } },
+    }).themes;
+    expect(themes['fork']?.hidden).toBe(false);
+    expect(themes['short']?.hidden).toBe(true);
+  });
+
+  it('reports a theme without a Russian name', () => {
+    const rest = Object.fromEntries(
+      Object.entries(full().themes).filter(([key]) => key !== 'fork'),
+    );
+    expect(validatePuzzleThemes({ themes: rest })).toEqual(['fork: no Russian name']);
+  });
+
+  it('keeps the cat from saying a puzzle is wrong', () => {
+    const file = full();
+    file.themes['pin'] = { title: 'Связка, а ход неверно', hidden: false };
+    expect(validatePuzzleThemes(file)).toEqual([expect.stringContaining('pin: the word "неверно')]);
+  });
+
+  it('rejects an empty title and a key with odd characters', () => {
+    expect(PuzzleThemesSchema.safeParse({ themes: { fork: { title: '' } } }).success).toBe(false);
+    expect(PuzzleThemesSchema.safeParse({ themes: { 'for k': { title: 'x' } } }).success).toBe(
+      false,
     );
   });
 });

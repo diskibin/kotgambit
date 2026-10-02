@@ -1,0 +1,74 @@
+themes:
+  advancedPawn: { title: Продвинутая пешка }
+  advantage: { title: Преимущество }
+  anastasiaMate: { title: Мат Анастасии }
+  arabianMate: { title: Арабский мат }
+  attackingF2F7: { title: Атака на f2 или f7 }
+  attraction: { title: Завлечение }
+  backRankMate: { title: Мат на последней горизонтали }
+  balestraMate: { title: Мат Балестры }
+  blindSwineMate: { title: Мат двумя ладьями }
+  bishopEndgame: { title: Слоновый эндшпиль }
+  bodenMate: { title: Мат Бодена }
+  capturingDefender: { title: Уничтожение защитника }
+  castling: { title: Рокировка }
+  clearance: { title: Освобождение линии }
+  collinearMove: { title: Ход вдоль линии удара }
+  cornerMate: { title: Мат в углу }
+  crushing: { title: Решающее преимущество }
+  defensiveMove: { title: Защитный ход }
+  deflection: { title: Отвлечение }
+  discoveredAttack: { title: Вскрытое нападение }
+  discoveredCheck: { title: Вскрытый шах }
+  doubleBishopMate: { title: Мат двумя слонами }
+  doubleCheck: { title: Двойной шах }
+  dovetailMate: { title: Мат ферзём вплотную }
+  endgame: { title: Эндшпиль }
+  enPassant: { title: Взятие на проходе }
+  epauletteMate: { title: Мат «эполеты» }
+  equality: { title: Равенство }
+  exposedKing: { title: Открытый король }
+  fork: { title: Вилка }
+  hangingPiece: { title: Незащищённая фигура }
+  hookMate: { title: Мат «крюк» }
+  interference: { title: Перекрытие }
+  intermezzo: { title: Промежуточный ход }
+  killBoxMate: { title: Мат ладьёй с поддержкой ферзя }
+  kingsideAttack: { title: Атака на королевском фланге }
+  knightEndgame: { title: Эндшпиль с конями }
+  long: { title: Длинная задача, hidden: true }
+  master: { title: Партии мастеров, hidden: true }
+  masterVsMaster: { title: Партии двух мастеров, hidden: true }
+  mate: { title: Мат }
+  mateIn1: { title: Мат в 1 ход }
+  mateIn2: { title: Мат в 2 хода }
+  mateIn3: { title: Мат в 3 хода }
+  mateIn4: { title: Мат в 4 хода }
+  mateIn5: { title: Мат в 5 ходов и больше }
+  middlegame: { title: Миттельшпиль }
+  morphysMate: { title: Мат Морфи }
+  oneMove: { title: Задача в один ход, hidden: true }
+  opening: { title: Дебют }
+  operaMate: { title: Оперный мат }
+  pawnEndgame: { title: Пешечный эндшпиль }
+  pillsburysMate: { title: Мат Пилсбери }
+  pin: { title: Связка }
+  promotion: { title: Превращение пешки }
+  queenEndgame: { title: Ферзевый эндшпиль }
+  queenRookEndgame: { title: Эндшпиль с ферзями и ладьями }
+  queensideAttack: { title: Атака на ферзевом фланге }
+  quietMove: { title: Тихий ход }
+  rookEndgame: { title: Ладейный эндшпиль }
+  sacrifice: { title: Жертва }
+  short: { title: Короткая задача, hidden: true }
+  skewer: { title: Сквозной удар }
+  smotheredMate: { title: Спёртый мат }
+  superGM: { title: Партии сильнейших, hidden: true }
+  swallowstailMate: { title: Мат «ласточкин хвост» }
+  trappedPiece: { title: Пойманная фигура }
+  triangleMate: { title: Мат «треугольник» }
+  underPromotion: { title: Превращение не в ферзя }
+  veryLong: { title: Очень длинная задача, hidden: true }
+  vukovicMate: { title: Мат Вуковича }
+  xRayAttack: { title: Рентгеновское нападение }
+  zugzwang: { title: Цугцванг }

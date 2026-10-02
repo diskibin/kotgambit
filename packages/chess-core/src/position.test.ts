@@ -30,6 +30,15 @@ describe('isValidFen', () => {
   it('rejects a position without kings', () => {
     expect(isValidFen('8/8/8/8/8/8/8/8 w - - 0 1')).toBe(false);
   });
+
+  it('rejects a position where the side that is not to move is in check', () => {
+    // The queen on a1 attacks the king on h8 along the long diagonal, and it is White to move
+    expect(isValidFen('7k/8/6K1/8/8/8/8/Q7 w - - 0 1')).toBe(false);
+  });
+
+  it('accepts a position where the side to move is in check', () => {
+    expect(isValidFen(FOOLS_MATE)).toBe(true);
+  });
 });
 
 describe('turn', () => {
@@ -129,7 +138,7 @@ describe('getStatus', () => {
   });
 
   it('reports the fifty-move rule', () => {
-    expect(getStatus('4k3/8/8/8/8/8/4R3/4K3 w - - 100 80')).toEqual({
+    expect(getStatus('4k3/8/8/8/8/8/R7/4K3 w - - 100 80')).toEqual({
       kind: 'draw',
       reason: 'fifty-moves',
     });

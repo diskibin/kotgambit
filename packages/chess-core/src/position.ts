@@ -18,9 +18,23 @@ const UCI_PATTERN = /^([a-h][1-8])([a-h][1-8])([nbrq])?$/;
 // Conventional piece values, the king is not counted
 const PIECE_VALUES: Record<PieceType, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 
+/**
+ * chess.js lets a position through where the side that is not to move is in check, which could only
+ * arise if the last move left its own king under attack. Engines such as Stockfish crash on it.
+ */
+function opponentKingIsAttacked(game: Chess): boolean {
+  const mover = game.turn();
+  const king = game
+    .board()
+    .flat()
+    .find((piece) => piece?.type === 'k' && piece.color !== mover);
+  return king ? game.isAttacked(king.square, mover) : false;
+}
+
 function load(fen: string): Chess | null {
   try {
-    return new Chess(fen);
+    const game = new Chess(fen);
+    return opponentKingIsAttacked(game) ? null : game;
   } catch {
     // chess.js reports a malformed or illegal FEN by throwing
     return null;

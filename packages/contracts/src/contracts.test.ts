@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ENGINE_MAX_DEPTH,
+  ENGINE_MAX_MULTIPV,
+  EngineAnalysisRequestSchema,
+  EngineAnalysisResponseSchema,
+  ReadyResponseSchema,
   ApiErrorSchema,
   AuthResponseSchema,
   ForgotPasswordRequestSchema,
@@ -120,5 +125,44 @@ describe('HealthResponseSchema', () => {
   it('accepts only ok', () => {
     expect(HealthResponseSchema.safeParse({ status: 'ok' }).success).toBe(true);
     expect(HealthResponseSchema.safeParse({ status: 'down' }).success).toBe(false);
+  });
+});
+
+describe('engine schemas', () => {
+  const FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+  it('defaults to one line and rejects a search past the caps', () => {
+    expect(EngineAnalysisRequestSchema.parse({ fen: FEN, depth: 10 }).multipv).toBe(1);
+    expect(
+      EngineAnalysisRequestSchema.safeParse({ fen: FEN, depth: ENGINE_MAX_DEPTH + 1 }).success,
+    ).toBe(false);
+    expect(
+      EngineAnalysisRequestSchema.safeParse({ fen: FEN, depth: 5, multipv: ENGINE_MAX_MULTIPV + 1 })
+        .success,
+    ).toBe(false);
+    expect(EngineAnalysisRequestSchema.safeParse({ fen: '', depth: 5 }).success).toBe(false);
+  });
+
+  it('describes an analysis with a centipawn and a mate line', () => {
+    const parsed = EngineAnalysisResponseSchema.safeParse({
+      bestMove: 'e2e4',
+      lines: [
+        { multipv: 1, depth: 12, score: { kind: 'cp', value: 34 }, pv: ['e2e4', 'e7e5'] },
+        { multipv: 2, depth: 12, score: { kind: 'mate', value: -2 }, pv: ['d2d4'] },
+      ],
+      timedOut: false,
+      cached: true,
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('allows no move for a finished game but not a malformed one', () => {
+    const base = { lines: [], timedOut: false, cached: false };
+    expect(EngineAnalysisResponseSchema.safeParse({ ...base, bestMove: null }).success).toBe(true);
+    expect(EngineAnalysisResponseSchema.safeParse({ ...base, bestMove: 'e2' }).success).toBe(false);
+  });
+
+  it('reports no engine as null on the ready response', () => {
+    expect(ReadyResponseSchema.safeParse({ status: 'ok', engine: null }).success).toBe(true);
   });
 });

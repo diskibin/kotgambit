@@ -1,0 +1,85 @@
+id: openings-sicilian
+track: openings
+order: 6
+access: free
+piece: n
+title: Сицилианская защита
+summary: Чёрные отвечают на e4 ходом c5 и играют на победу, а не на ничью.
+minutes: 6
+steps:
+  - type: text
+    title: Ответ c5
+    body: >-
+      Сицилианская защита начинается ходами 1.e4 c5. Чёрные не повторяют ход белых, а сразу
+      нападают на поле d4 с фланга. Позиции получаются неравными, поэтому игра бывает острой, а
+      у обеих сторон есть шансы выиграть.
+    pointsTitle: Идеи сторон
+    points:
+      - Чёрные борются за поле d4 и за центр
+      - Белые хотят развить фигуры и сыграть d4
+      - Игра идёт острая, оба короля могут оказаться под ударом
+    board:
+      fen: rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
+      arrows:
+        - { from: c5, to: d4, color: sky }
+      caption: Пешка c5 нацелена на поле d4
+    remember: Чёрные играют c5 и борются за поле d4.
+
+  - type: demo
+    title: Гамбит показывает дебют
+    body: Смотри, как белые разменивают пешку d4 и забирают её конём.
+    fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+    moves: [e2e4, c7c5, g1f3, d7d6, d2d4, c5d4, f3d4]
+
+  - type: move
+    title: Начни защиту
+    prompt: Белые сыграли e4. Ответь ходом сицилианской защиты и сходи пешкой c7 на c5.
+    fen: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
+    orientation: b
+    answers: [c7c5]
+    hints:
+      piece: Ходи пешкой c7.
+      idea: Пешка идёт на две клетки вперёд, на c5, и нацеливается на поле d4.
+    success: Сицилианская защита! Пешка c5 уже борется за d4.
+    oops: Нам нужна пешка c5. Сходи пешкой c7 на две клетки вперёд.
+    successArrows:
+      - { from: c7, to: c5, color: sun }
+
+  - type: move
+    title: Открой центр
+    prompt: Чёрные сыграли d6. Теперь белым пора занять центр, сходи пешкой d2 на d4.
+    fen: rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3
+    answers: [d2d4]
+    hints:
+      piece: Ходи пешкой d2.
+      idea: Пешка d4 открывает центр. Чёрные возьмут её, а белые заберут пешку конём.
+    success: Центр открыт, и фигуры белых вышли в игру. Отличный ход!
+    oops: Нам нужна пешка d4, чтобы открыть центр. Сходи пешкой d2 на две клетки вперёд.
+    successArrows:
+      - { from: d2, to: d4, color: sun }
+
+  - type: move
+    title: Забери пешку конём
+    prompt: Чёрные взяли пешку на d4. Верни её конём.
+    fen: rnbqkbnr/pp2pppp/3p4/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4
+    answers: [f3d4]
+    hints:
+      piece: Бери конём, он стоит на f3.
+      idea: Конь берёт пешку на d4 и встаёт в самый центр.
+    success: Конь в центре, а пешки поровну. Белые получили активную позицию.
+    oops: Верни пешку конём, он стоит на f3. Нам нужна клетка d4.
+    successArrows:
+      - { from: f3, to: d4, color: sun }
+
+  - type: quiz
+    question: Какой ответ на e4 у чёрных в сицилианской защите?
+    options:
+      - text: c5
+        correct: true
+        explanation: Да! Чёрные сразу нападают на поле d4, а не повторяют ход белых.
+      - text: e5
+        correct: false
+        explanation: Почти! Это уже другой дебют, а в сицилианской играют c5.
+      - text: c6
+        correct: false
+        explanation: Так начинается защита Каро-Канн. В сицилианской пешка идёт на c5.

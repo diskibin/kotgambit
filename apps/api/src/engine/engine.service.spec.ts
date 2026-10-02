@@ -115,6 +115,14 @@ describe('EngineService', () => {
     expect(searches).toHaveLength(0);
   });
 
+  it('rejects a position that would crash the engine, with the idle king under attack', async () => {
+    const { service, searches } = setup();
+    await expect(
+      service.analyze({ ...query, fen: '7k/8/6K1/8/8/8/8/Q7 w - - 0 1' }),
+    ).rejects.toMatchObject({ code: 'validation.failed' });
+    expect(searches).toHaveLength(0);
+  });
+
   it('answers 503 when no engine is configured', async () => {
     const config: AppConfig = loadConfig({ ...ENV, ENGINE_PATH: undefined });
     const service = new EngineService(null, config, new MemoryCache() as unknown as AnalysisCache);

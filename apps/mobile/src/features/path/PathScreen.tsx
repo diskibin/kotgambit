@@ -18,7 +18,13 @@ const PERCENT = 100;
 const CAT = 40;
 
 /** The home screen: the day bar, then the chapters of every track as a list, the current one as a card. */
-export function PathScreen({ onOpenLesson }: { onOpenLesson: (id: string) => void }) {
+export function PathScreen({
+  onOpenLesson,
+  onOpenPuzzles,
+}: {
+  onOpenLesson: (id: string) => void;
+  onOpenPuzzles: () => void;
+}) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -52,6 +58,7 @@ export function PathScreen({ onOpenLesson }: { onOpenLesson: (id: string) => voi
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[3] }}>
         <Mascot mood={current ? 'wave' : 'proud'} size={CAT} dark={scheme === 'dark'} />
         <View style={{ flex: 1 }}>{progress.data && <DayBar progress={progress.data} />}</View>
+        <Button variant="text" label={t('puzzles.title')} onPress={onOpenPuzzles} />
         <Button variant="text" label={t('path.signOut')} onPress={() => void signOut()} />
       </View>
 

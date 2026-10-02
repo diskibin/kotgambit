@@ -11,25 +11,52 @@ import { SplashScreen } from './src/features/auth/SplashScreen';
 import { CompleteScreen } from './src/features/lessons/CompleteScreen';
 import { LessonScreen, type LessonResult } from './src/features/lessons/LessonScreen';
 import { PathScreen } from './src/features/path/PathScreen';
+import { PuzzleScreen } from './src/features/puzzles/PuzzleScreen';
+import { PuzzlesScreen, type PuzzleRequest } from './src/features/puzzles/PuzzlesScreen';
 import './src/shared/i18n';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
 type Screen =
-  { name: 'path' } | { name: 'lesson'; id: string } | { name: 'done'; data: LessonResult };
+  | { name: 'path' }
+  | { name: 'lesson'; id: string }
+  | { name: 'done'; data: LessonResult }
+  | { name: 'puzzles' }
+  | { name: 'puzzle'; request: PuzzleRequest };
 
-/** The signed-in app: the chapters, a lesson in focus mode, and the finish screen. */
+/** The signed-in app: the chapters, a lesson in focus mode, the finish screen and the puzzles. */
 function SignedIn() {
   const [screen, setScreen] = useState<Screen>({ name: 'path' });
 
-  // The finish screen has nothing behind it but the chapters. The lesson asks before leaving on its own.
+  // Behind the finish screen and the puzzle catalog there are the chapters, behind a puzzle the catalog.
+  // The lesson asks before leaving on its own.
   useEffect(() => {
-    if (screen.name !== 'done') return;
+    if (screen.name !== 'done' && screen.name !== 'puzzles' && screen.name !== 'puzzle') return;
+    const back: Screen = screen.name === 'puzzle' ? { name: 'puzzles' } : { name: 'path' };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      setScreen({ name: 'path' });
+      setScreen(back);
       return true;
     });
     return () => subscription.remove();
   }, [screen.name]);
+
+  if (screen.name === 'puzzles') {
+    return (
+      <PuzzlesScreen
+        onOpen={(request) => setScreen({ name: 'puzzle', request })}
+        onBack={() => setScreen({ name: 'path' })}
+      />
+    );
+  }
+  if (screen.name === 'puzzle') {
+    return (
+      <PuzzleScreen
+        // Another mode or theme is another screen with fresh state
+        key={`${screen.request.mode}:${screen.request.theme ?? ''}`}
+        request={screen.request}
+        onClose={() => setScreen({ name: 'puzzles' })}
+      />
+    );
+  }
 
   if (screen.name === 'lesson') {
     return (
@@ -52,7 +79,12 @@ function SignedIn() {
       />
     );
   }
-  return <PathScreen onOpenLesson={(id) => setScreen({ name: 'lesson', id })} />;
+  return (
+    <PathScreen
+      onOpenLesson={(id) => setScreen({ name: 'lesson', id })}
+      onOpenPuzzles={() => setScreen({ name: 'puzzles' })}
+    />
+  );
 }
 
 /** Sign-in with the way to password recovery; the system Back button leaves recovery first. */

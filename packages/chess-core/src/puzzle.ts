@@ -109,3 +109,15 @@ export function nextSolutionMove(
   const position = replay(start, moves, played);
   return position ? (moves[position.index] ?? null) : null;
 }
+
+/** Every move of the line is legal in turn and the solver has a position to solve, not a finished game. */
+export function isPlayablePuzzle(fen: string, moves: readonly string[]): boolean {
+  if (!startPuzzle(fen, moves)) return false;
+  let position = fen;
+  for (const uci of moves) {
+    const result = applyMove(position, uci);
+    if (!result.ok) return false;
+    position = result.fen;
+  }
+  return true;
+}

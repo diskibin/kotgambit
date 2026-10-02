@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkPuzzleMove, nextSolutionMove, startPuzzle } from './puzzle.js';
+import { checkPuzzleMove, isPlayablePuzzle, nextSolutionMove, startPuzzle } from './puzzle.js';
 
 // Rows of the Lichess puzzle database (CC0), the moves are split as in the file
 const LONG = {
@@ -130,5 +130,23 @@ describe('nextSolutionMove', () => {
   it('has nothing to give once the puzzle is solved or the history is wrong', () => {
     expect(nextSolutionMove(LONG.fen, LONG.moves, ['e6e7', 'b3c1', 'h6c1'])).toBeNull();
     expect(nextSolutionMove(LONG.fen, LONG.moves, ['h6h7'])).toBeNull();
+  });
+});
+
+describe('isPlayablePuzzle', () => {
+  it('accepts the lines of the database', () => {
+    expect(isPlayablePuzzle(LONG.fen, LONG.moves)).toBe(true);
+    expect(isPlayablePuzzle(EN_PASSANT.fen, EN_PASSANT.moves)).toBe(true);
+  });
+
+  it('rejects a line with an illegal move in the middle', () => {
+    expect(isPlayablePuzzle(LONG.fen, ['f2g3', 'e6e7', 'b2b1', 'a1a8', 'b1c1', 'h6c1'])).toBe(
+      false,
+    );
+  });
+
+  it('rejects a line that is too short or leaves nothing to solve', () => {
+    expect(isPlayablePuzzle(LONG.fen, ['f2g3'])).toBe(false);
+    expect(isPlayablePuzzle('nonsense', LONG.moves)).toBe(false);
   });
 });

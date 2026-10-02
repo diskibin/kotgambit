@@ -23,6 +23,8 @@ model User {
   emailTokens    EmailToken[]
   lessonProgress LessonProgress[]
   dailyActivity  DailyActivity[]
+  puzzleAttempts PuzzleAttempt[]
+  puzzleStats    UserPuzzleStats?
 
   @@map("users")
 }
@@ -127,4 +129,78 @@ model DailyActivity {
 
   @@id([userId, day])
   @@map("daily_activity")
+}
+
+// A subset of the Lichess puzzle database (CC0), loaded by the import script
+model Puzzle {
+  // The Lichess PuzzleId
+  id              String   @id
+  // The position before the opponent's move, as in the database
+  fen             String
+  // UCI moves: the opponent's move first, then the solver's move and the reply, ending with a solver move
+  moves           String[]
+  rating          Int
+  ratingDeviation Int      @map("rating_deviation")
+  popularity      Int
+  plays           Int
+  themes          String[]
+  openingTags     String[] @map("opening_tags")
+
+  attempts PuzzleAttempt[]
+
+  @@index([rating])
+  // Finds the puzzles of a theme without scanning the table
+  @@index([themes], type: Gin)
+  @@map("puzzles")
+}
+
+enum PuzzleAttemptStatus {
+  open
+  solved
+  failed
+  abandoned
+
+  @@map("puzzle_attempt_status")
+}
+
+// One run at a puzzle. The server keeps the moves played, so the client never sends a position or a history.
+model PuzzleAttempt {
+  id           String              @id @default(uuid(7)) @db.Uuid
+  userId       String              @map("user_id") @db.Uuid
+  puzzleId     String              @map("puzzle_id")
+  // Solved is a clean run (hints up to level 2 allowed), failed is a mistake or the last hint, abandoned is a skip
+  status       PuzzleAttemptStatus @default(open)
+  mistakes     Int                 @default(0)
+  // The highest hint level used, 0 when none
+  hintLevel    Int                 @default(0) @map("hint_level")
+  // The solver's moves accepted so far
+  playedMoves  String[]            @map("played_moves")
+  // Set when the line is finished, also after mistakes
+  solvedAt     DateTime?           @map("solved_at")
+  ratingBefore Int                 @map("rating_before")
+  // Set once the attempt has changed the player's rating, which happens only once per attempt
+  ratingAfter  Int?                @map("rating_after")
+  startedAt    DateTime            @default(now()) @map("started_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@index([userId, puzzleId])
+  @@map("puzzle_attempts")
+}
+
+model UserPuzzleStats {
+  userId     String   @id @map("user_id") @db.Uuid
+  // A simplified Elo, kept as a float so that small changes do not vanish in rounding
+  rating     Float    @default(1000)
+  solved     Int      @default(0)
+  failed     Int      @default(0)
+  streak     Int      @default(0)
+  bestStreak Int      @default(0) @map("best_streak")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_puzzle_stats")
 }

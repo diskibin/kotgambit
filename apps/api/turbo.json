@@ -5,7 +5,8 @@
     "test": {
       "dependsOn": ["^build", "generate"],
       "inputs": ["$TURBO_DEFAULT$", "../../content/**"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "env": ["ENGINE_PATH"]
     }
   }
 }

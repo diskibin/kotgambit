@@ -30,6 +30,17 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm validate:content
       - run: pnpm content-guard
+      # The version and checksum are pinned: an engine that changes under us changes every evaluation
+      - name: Install Stockfish
+        env:
+          STOCKFISH_VERSION: sf_19
+          STOCKFISH_SHA256: 9defc0d4e55d49c65a6d042f3e571a39fcea499ade6dbe741b53b8c65e03611f
+        run: |
+          curl -fsSL -o stockfish.tar.gz "https://github.com/official-stockfish/Stockfish/releases/download/${STOCKFISH_VERSION}/stockfish-linux-x86-64-universal.tar.gz"
+          echo "${STOCKFISH_SHA256}  stockfish.tar.gz" | sha256sum --check
+          tar -xzf stockfish.tar.gz -C "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/stockfish/stockfish-linux-x86-64-universal"
+          echo "ENGINE_PATH=$RUNNER_TEMP/stockfish/stockfish-linux-x86-64-universal" >> "$GITHUB_ENV"
       - run: pnpm test
 
   secrets:

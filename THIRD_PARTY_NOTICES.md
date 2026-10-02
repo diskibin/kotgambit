@@ -17,3 +17,9 @@ as they are added to the project.
   The API starts it as a separate process through `ENGINE_PATH`, the binary is not part of this repository.
   CI downloads the official release (`.github/workflows/ci.yml`). A deployment image that ships the binary
   must include its license text and point to the source code at https://github.com/official-stockfish/Stockfish.
+
+## Chess puzzles
+
+- **Lichess puzzle database** (https://database.lichess.org/#puzzles), released by Lichess under CC0 1.0.
+  A selection of it is loaded into the database by `pnpm --filter @kotgambit/api import:puzzles`,
+  the data is not stored in this repository except for a few rows used as test fixtures.

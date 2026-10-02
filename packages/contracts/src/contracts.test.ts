@@ -174,6 +174,8 @@ describe('engine schemas', () => {
 describe('puzzle schemas', () => {
   it('defaults to the rating mode and asks for a theme in the theme mode', () => {
     expect(NextPuzzleRequestSchema.parse({}).mode).toBe('rating');
+    expect(NextPuzzleRequestSchema.safeParse({ localDate: '2026-10-02' }).success).toBe(true);
+    expect(NextPuzzleRequestSchema.safeParse({ localDate: 'today' }).success).toBe(false);
     expect(NextPuzzleRequestSchema.safeParse({ mode: 'theme' }).success).toBe(false);
     expect(NextPuzzleRequestSchema.parse({ mode: 'theme', theme: 'fork' }).theme).toBe('fork');
     expect(NextPuzzleRequestSchema.safeParse({ mode: 'nonsense' }).success).toBe(false);
@@ -215,7 +217,9 @@ describe('puzzle schemas', () => {
   it('has a different payload for each hint level', () => {
     expect(PuzzleHintResponseSchema.safeParse({ level: 1, square: 'e6' }).success).toBe(true);
     expect(PuzzleHintResponseSchema.safeParse({ level: 2, themes: [] }).success).toBe(true);
-    expect(PuzzleHintResponseSchema.safeParse({ level: 3, move: 'e6e7' }).success).toBe(true);
+    expect(
+      PuzzleHintResponseSchema.safeParse({ level: 3, move: 'e6e7', summary: null }).success,
+    ).toBe(true);
     expect(PuzzleHintResponseSchema.safeParse({ level: 1, move: 'e6e7' }).success).toBe(false);
     expect(PuzzleHintResponseSchema.safeParse({ level: 4 }).success).toBe(false);
   });

@@ -18,6 +18,11 @@ export const NextPuzzleRequestSchema = z
   .object({
     mode: PuzzleModeSchema.default('rating'),
     theme: z.string().regex(THEME_KEY).max(MAX_THEME_KEY_LENGTH).optional(),
+    /** The learner's calendar day, YYYY-MM-DD, decides which puzzle is the daily one. */
+    localDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
   })
   .refine((value) => value.mode !== 'theme' || value.theme !== undefined, {
     message: 'A theme is needed for the theme mode',
@@ -81,7 +86,12 @@ export type PuzzleMoveResponse = z.infer<typeof PuzzleMoveResponseSchema>;
 export const PuzzleHintResponseSchema = z.discriminatedUnion('level', [
   z.object({ level: z.literal(1), square: z.string().regex(SQUARE) }),
   z.object({ level: z.literal(2), themes: z.array(PuzzleThemeLabelSchema) }),
-  z.object({ level: z.literal(3), move: z.string().regex(UCI_MOVE) }),
+  /** The move given away counts as a miss, so the summary comes with it. */
+  z.object({
+    level: z.literal(3),
+    move: z.string().regex(UCI_MOVE),
+    summary: PuzzleSummarySchema.nullable(),
+  }),
 ]);
 export type PuzzleHintResponse = z.infer<typeof PuzzleHintResponseSchema>;
 

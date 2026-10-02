@@ -1,0 +1,72 @@
+id: openings-caro-kann
+track: openings
+order: 4
+access: free
+piece: p
+title: Защита Каро-Канн
+summary: Надёжная защита за чёрных, где пешка c6 готовит прочный центр.
+minutes: 6
+steps:
+  - type: text
+    title: Сначала c6, потом d5
+    body: >-
+      Защита Каро-Канн начинается ходами 1.e4 c6 2.d4 d5. Чёрные сначала готовят пешку d5 ходом
+      c6, а потом спокойно ставят её в центр. Эта защита считается очень надёжной.
+    pointsTitle: Идеи чёрных
+    points:
+      - Построить крепкий центр, где пешка d5 под защитой
+      - Выпустить слона c8 раньше, чем закроется цепочка пешек
+      - Играть спокойно и ждать ошибок
+    board:
+      fen: rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3
+      arrows:
+        - { from: c6, to: d5, color: sky }
+      caption: Пешка c6 защищает пешку d5
+    remember: Пешка c6 готовит d5 и держит центр.
+
+  - type: demo
+    title: Гамбит показывает дебют
+    body: Смотри, как чёрные отвечают на ход e4 в защите Каро-Канн.
+    fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+    moves: [e2e4, c7c6, d2d4, d7d5]
+
+  - type: move
+    title: Начни защиту
+    prompt: Белые сыграли e4. Ответь ходом защиты Каро-Канн и сходи пешкой c7 на c6.
+    fen: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
+    orientation: b
+    answers: [c7c6]
+    hints:
+      piece: Ходи пешкой c7, она стоит перед слоном.
+      idea: Пешка c6 подготовит ход d5, и тогда центр будет под защитой.
+    success: Защита Каро-Канн! Теперь пешка d5 будет под защитой.
+    oops: Нам нужна пешка c6. Она подготовит d5 и поддержит центр.
+    successArrows:
+      - { from: c7, to: c6, color: sun }
+
+  - type: move
+    title: Займи центр
+    prompt: Белые сыграли d4. Теперь поставь пешку на d5 и займи центр.
+    fen: rnbqkbnr/pp1ppppp/2p5/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq - 0 2
+    orientation: b
+    answers: [d7d5]
+    hints:
+      piece: Ходи пешкой d7.
+      idea: Пешка d5 встаёт в центр, а пешка c6 уже её защищает.
+    success: Центр занят, и пешка d5 под защитой. Отличный ход!
+    oops: Вспомни план. Сходи пешкой d7 на d5, пешка c6 её защитит.
+    successArrows:
+      - { from: d7, to: d5, color: sun }
+
+  - type: quiz
+    question: Зачем чёрные играют c6 в защите Каро-Канн?
+    options:
+      - text: Чтобы подготовить d5 и защитить эту пешку
+        correct: true
+        explanation: Да! Пешка c6 стоит позади d5 и охраняет её.
+      - text: Чтобы поставить мат в два хода
+        correct: false
+        explanation: До мата тут далеко. Чёрные просто строят надёжный центр.
+      - text: Чтобы вывести ферзя
+        correct: false
+        explanation: Ферзь пока подождёт. Ход c6 готовит d5.

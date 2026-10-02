@@ -175,7 +175,7 @@ model PuzzleAttempt {
   // The highest hint level used, 0 when none
   hintLevel    Int                 @default(0) @map("hint_level")
   // The solver's moves accepted so far
-  playedMoves  String[]            @map("played_moves")
+  playedMoves  String[]            @default([]) @map("played_moves")
   // Set when the line is finished, also after mistakes
   solvedAt     DateTime?           @map("solved_at")
   // No more moves are taken after this: the puzzle is solved, given up or left for the next one

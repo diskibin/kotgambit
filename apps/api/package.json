@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "dev": "node scripts/dev.mjs",
     "build": "tsc -p tsconfig.build.json",
     "start": "node --env-file-if-exists=../../.env dist/main.js",
     "lint": "eslint .",

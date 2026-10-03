@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 120 120">
+<circle cx="60" cy="60" r="58" fill="#F1E9DF" />
+<g stroke="#1E1A2F" stroke-width="3" stroke-linejoin="round">
+<g data-bot="owl">
+<path d="M30 42 L 28 16 L 48 32 Z" fill="#8B6A4F" />
+<path d="M90 42 L 92 16 L 72 32 Z" fill="#8B6A4F" />
+<ellipse cx="60" cy="66" rx="42" ry="38" fill="#8B6A4F" />
+<circle cx="44" cy="62" r="16" fill="#F3E6D3" stroke="none" />
+<circle cx="76" cy="62" r="16" fill="#F3E6D3" stroke="none" />
+<path d="M54 76 L 66 76 L 60 88 Z" fill="#FFC83D" stroke="#E0A800" />
+<path d="M46 96 Q 50 92 54 96 M58 98 Q 62 94 66 98 M70 96 Q 74 92 78 96" fill="none" stroke="#F3E6D3" stroke-width="2.5" stroke-linecap="round" />
+</g>
+</g>
+<g id="eyes" data-layer="eyes">
+<g fill="none" stroke="#1E1A2F" stroke-width="3.5" stroke-linecap="round">
+<path d="M38 62 Q 44 66 50 62 M70 62 Q 76 66 82 62" />
+</g>
+</g>
+<path d="M96 36 C 92 44, 92 48, 96 48 C 100 48, 100 44, 96 36 Z" fill="#38B6FF" stroke="#1E1A2F" stroke-width="2" />
+</svg>

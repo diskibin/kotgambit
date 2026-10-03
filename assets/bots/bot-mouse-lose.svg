@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 120 120">
+<circle cx="60" cy="60" r="58" fill="#EDEAFF" />
+<g stroke="#1E1A2F" stroke-width="3" stroke-linejoin="round">
+<g data-bot="mouse">
+<circle cx="28" cy="38" r="22" fill="#A9A6BF" />
+<circle cx="92" cy="38" r="22" fill="#A9A6BF" />
+<circle cx="28" cy="38" r="12" fill="#FF9DB5" stroke="none" />
+<circle cx="92" cy="38" r="12" fill="#FF9DB5" stroke="none" />
+<ellipse cx="60" cy="70" rx="36" ry="32" fill="#A9A6BF" />
+<ellipse cx="60" cy="84" rx="18" ry="12" fill="#ECEAF5" stroke="none" />
+<circle cx="60" cy="78" r="4.5" fill="#FF9DB5" />
+<path d="M40 80 L 22 76 M40 86 L 22 88 M80 80 L 98 76 M80 86 L 98 88" stroke="#6F6A8C" stroke-width="2" stroke-linecap="round" />
+</g>
+</g>
+<g id="eyes" data-layer="eyes">
+<g fill="none" stroke="#1E1A2F" stroke-width="3.5" stroke-linecap="round">
+<path d="M40 64 Q 46 68 52 64 M68 64 Q 74 68 80 64" />
+</g>
+</g>
+<g id="mouth" data-layer="mouth" fill="none" stroke="#1E1A2F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M53 93 Q 56.5 89 60 93 Q 63.5 97 67 93" />
+</g>
+<path d="M96 36 C 92 44, 92 48, 96 48 C 100 48, 100 44, 96 36 Z" fill="#38B6FF" stroke="#1E1A2F" stroke-width="2" />
+</svg>

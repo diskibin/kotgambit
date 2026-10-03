@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 120 120">
+<circle cx="60" cy="60" r="58" fill="#FFF3D6" />
+<g stroke="#1E1A2F" stroke-width="3" stroke-linejoin="round">
+<g data-bot="hamster">
+<circle cx="32" cy="38" r="11" fill="#F2B266" />
+<circle cx="88" cy="38" r="11" fill="#F2B266" />
+<circle cx="32" cy="38" r="5.5" fill="#FF9DB5" stroke="none" />
+<circle cx="88" cy="38" r="5.5" fill="#FF9DB5" stroke="none" />
+<ellipse cx="60" cy="68" rx="40" ry="35" fill="#F2B266" />
+<ellipse cx="34" cy="84" rx="16" ry="12" fill="#FFF1DC" stroke="none" />
+<ellipse cx="86" cy="84" rx="16" ry="12" fill="#FFF1DC" stroke="none" />
+<ellipse cx="60" cy="86" rx="14" ry="10" fill="#FFF1DC" stroke="none" />
+<path d="M60 36 L 60 50" stroke="#D98F3E" stroke-width="4" stroke-linecap="round" />
+<ellipse cx="60" cy="79" rx="4" ry="3" fill="#FF9DB5" />
+</g>
+</g>
+<g id="eyes" data-layer="eyes">
+<g fill="none" stroke="#1E1A2F" stroke-width="3.5" stroke-linecap="round">
+<path d="M40 66 Q 46 58 52 66 M68 66 Q 74 58 80 66" />
+</g>
+</g>
+<g id="mouth" data-layer="mouth" fill="none" stroke="#1E1A2F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M52 91 Q 60 103 68 91 Z" fill="#1E1A2F" />
+</g>
+<g fill="#FFC83D">
+<path d="M100 20 Q 101 26 107 27 Q 101 28 100 34 Q 99 28 93 27 Q 99 26 100 20 Z" />
+</g>
+</svg>

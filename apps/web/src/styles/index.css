@@ -2,6 +2,13 @@
 @config '../../tailwind.config.cjs';
 @import './tokens.css';
 
+/* The two constants of the design that do not follow the theme: the dark footer and the white and black pieces' bars */
+:root {
+  --color-ink: #1e1a2f;
+  --color-on-ink: #f4f2ff;
+  --color-white: #ffffff;
+}
+
 @layer base {
   body {
     margin: 0;

@@ -30,8 +30,8 @@ const paymentId = () => new ZodValidationPipe(z.uuid());
 export class BillingController {
   constructor(private readonly billing: BillingService) {}
 
+  // Public: the landing page shows the prices to visitors who have not signed in yet
   @Get('plans')
-  @UseGuards(AccessTokenGuard)
   plans(): PlansResponse {
     return this.billing.plans();
   }

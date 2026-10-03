@@ -7,6 +7,9 @@ module.exports = {
     screens: { tablet: '768px', laptop: '1024px', desktop: '1440px' },
     extend: {
       colors: {
+        ink: 'var(--color-ink)',
+        'on-ink': 'var(--color-on-ink)',
+        white: 'var(--color-white)',
         bg: 'var(--color-bg)',
         surface: 'var(--color-surface)',
         'surface-2': 'var(--color-surface-2)',

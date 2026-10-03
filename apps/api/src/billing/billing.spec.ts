@@ -166,6 +166,10 @@ describe('billing', () => {
     });
   });
 
+  it('shows the prices to a visitor who has not signed in', async () => {
+    expect((await app.inject({ method: 'GET', url: '/billing/plans' })).statusCode).toBe(200);
+  });
+
   it('needs a signed-in user', async () => {
     expect(
       (await app.inject({ method: 'POST', url: '/billing/checkout', payload: {} })).statusCode,

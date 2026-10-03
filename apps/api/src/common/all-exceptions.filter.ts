@@ -15,6 +15,7 @@ interface Mapped {
   status: number;
   code: ErrorCode;
   details?: unknown;
+  message?: string;
 }
 
 const NEST_STATUS_CODES: Partial<Record<number, ErrorCode>> = {
@@ -27,7 +28,12 @@ const NEST_STATUS_CODES: Partial<Record<number, ErrorCode>> = {
 
 function map(exception: unknown): Mapped {
   if (exception instanceof AppError) {
-    return { status: exception.status, code: exception.code, details: exception.details };
+    return {
+      status: exception.status,
+      code: exception.code,
+      details: exception.details,
+      ...(exception.userMessage === undefined ? {} : { message: exception.userMessage }),
+    };
   }
   if (exception instanceof ZodError) {
     // Paths and rules only: the rejected values may be passwords
@@ -50,7 +56,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const reply = host.switchToHttp().getResponse<FastifyReply>();
-    const { status, code, details } = map(exception);
+    const { status, code, details, message } = map(exception);
 
     // Unexpected failures are logged with the stack, the client only sees the generic message.
     // A busy server is an expected state, a line without the stack is enough to see how often it happens.
@@ -59,7 +65,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const body: ApiError = {
       code,
-      message: ERROR_MESSAGES[code],
+      message: message ?? ERROR_MESSAGES[code],
       ...(details === undefined ? {} : { details }),
     };
     void reply.status(status).send(body);

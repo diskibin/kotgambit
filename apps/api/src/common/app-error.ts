@@ -26,6 +26,9 @@ export const ERROR_MESSAGES = {
   'game.learning_only': 'Это доступно только в режиме обучения.',
   'game.nothing_to_undo': 'Пока нечего отменять.',
   'game.hints_over': 'Подсказки в этой партии закончились. Ты справишься!',
+  'analysis.invalid_position': 'Так на доске не бывает. Проверь расстановку.',
+  'review.not_ready': 'Разбор будет готов, когда партия закончится.',
+  'review.not_found': 'Разбор этой партии ещё не начинали.',
   'http.not_found': 'Такой страницы не нашлось.',
   'http.too_many_requests': 'Слишком много попыток. Подожди немного и попробуй снова.',
   'http.bad_request': 'Запрос не получился. Проверь данные и попробуй ещё раз.',
@@ -41,6 +44,8 @@ export class AppError extends Error {
     readonly status: HttpStatus,
     /** For developers only. Never put secrets or personal data here. */
     readonly details?: unknown,
+    /** Replaces the standard text of the code when the exact case needs saying, such as which piece is wrong. */
+    readonly userMessage?: string,
   ) {
     super(code);
   }

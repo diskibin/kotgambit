@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
+import { AnalysisModule } from './analysis/analysis.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CONFIG, ConfigModule, type AppConfig } from './config/config.module.js';
 import { EngineModule } from './engine/engine.module.js';
@@ -39,6 +40,7 @@ const REDACTED_PATHS = [
     EngineModule,
     PuzzlesModule,
     GamesModule,
+    AnalysisModule,
     LoggerModule.forRootAsync({
       inject: [CONFIG],
       useFactory: (config: AppConfig) => ({

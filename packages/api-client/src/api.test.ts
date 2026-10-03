@@ -729,6 +729,8 @@ describe('profile and card endpoints', () => {
           puzzles: { rating: 1040, solved: 58 },
           games: { played: 12, wins: 7, draws: 1, losses: 4 },
           week: [{ day: '2026-10-03', done: true, today: true }],
+          month: [{ day: '2026-10-03', done: true, today: true }],
+          ratingHistory: [],
           achievements: [{ key: 'streak-3', current: 3, target: 3, unlocked: true }],
           themes: [{ key: 'pin', title: 'Связка', accuracy: 31, attempts: 8 }],
           cards: SUMMARY,

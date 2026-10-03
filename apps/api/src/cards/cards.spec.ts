@@ -251,6 +251,15 @@ describe('review cards', () => {
   describe('the profile', () => {
     const profile = async () => ProfileSchema.parse((await call('GET', '/profile')).json());
 
+    it('lists the days of the month and has no rating line before a rated attempt', async () => {
+      const body = await profile();
+      const today = new Date().toISOString().slice(0, 7);
+      expect(body.month.length).toBeGreaterThanOrEqual(28);
+      expect(body.month.every((d) => d.day.startsWith(today))).toBe(true);
+      expect(body.month.filter((d) => d.today)).toHaveLength(1);
+      expect(body.ratingHistory).toEqual([]);
+    });
+
     it('starts at level 1 with nothing reached', async () => {
       const body = await profile();
       expect(body).toMatchObject({

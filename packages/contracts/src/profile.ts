@@ -54,6 +54,13 @@ export const ProfileSchema = z.object({
   }),
   /** The last seven days ending today, oldest first. */
   week: z.array(z.object({ day: z.string().regex(DAY), done: z.boolean(), today: z.boolean() })),
+  /** Every day of the month that today belongs to, the first of the month first. */
+  month: z.array(z.object({ day: z.string().regex(DAY), done: z.boolean(), today: z.boolean() })),
+  /**
+   * The puzzle rating at the end of each of the last eight weeks, oldest first, the last one is today.
+   * Empty until the learner has rated attempts, because a line needs something to start from.
+   */
+  ratingHistory: z.array(z.object({ day: z.string().regex(DAY), rating: z.number().int() })),
   achievements: z.array(AchievementSchema),
   /** Themes with enough attempts to say something, the weakest first. */
   themes: z.array(ThemeAccuracySchema),

@@ -9,6 +9,7 @@ import { evaluateAchievements, type AchievementStats } from '../progress/achieve
 import { levelOf } from '../progress/levels.js';
 import { ProgressService } from '../progress/progress.service.js';
 import { bestStreak, computeStreak, dayKeyOf, shiftDay } from '../progress/streak.js';
+import { monthDays, ratingHistory } from './history.js';
 import { buildWardrobe } from './wardrobe.js';
 
 const SECONDS_IN_MINUTE = 60;
@@ -88,6 +89,8 @@ export class ProfileService {
           today: day === today,
         };
       }),
+      month: monthDays(today, days, goalSeconds),
+      ratingHistory: await this.ratings(userId, today),
       achievements,
       themes: await this.themeAccuracy(userId),
       cards: await this.cards.summary(userId),
@@ -107,6 +110,21 @@ export class ProfileService {
     }
     await this.prisma.user.update({ where: { id: userId }, data: { accessory } });
     return (await this.profile(userId, undefined)).wardrobe;
+  }
+
+  /** The rating at the end of each of the last weeks, for the graph of the profile. */
+  private async ratings(userId: string, today: string) {
+    const attempts = await this.prisma.puzzleAttempt.findMany({
+      where: { userId, ratingAfter: { not: null } },
+      orderBy: { startedAt: 'asc' },
+      select: { startedAt: true, ratingBefore: true, ratingAfter: true },
+    });
+    return ratingHistory(
+      today,
+      attempts.flatMap((a) =>
+        a.ratingAfter === null ? [] : [{ ...a, ratingAfter: a.ratingAfter }],
+      ),
+    );
   }
 
   /** Lessons finished, and whether the whole Basics track is among them. */

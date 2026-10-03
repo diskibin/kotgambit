@@ -62,6 +62,11 @@ interface BoardProps {
   /** Squares marked by the learner, drawn like a selection. */
   marked?: readonly Square[];
   /**
+   * The pieces to draw, when the position is not a legal one that the FEN could carry, as in the
+   * position editor. Without it the pieces are read from the FEN.
+   */
+  pieces?: readonly PlacedPiece[];
+  /**
    * When given, squares only report presses to it: no piece is selected, moved or dragged.
    * Used where the learner marks squares instead of moving.
    */
@@ -367,6 +372,7 @@ export function Board({
   disabled = false,
   arrows = [],
   marked = [],
+  pieces: piecesOverride,
   onSquarePress,
   lastMove: lastMoveOverride,
 }: BoardProps) {
@@ -381,7 +387,10 @@ export function Board({
   const inner = size - shashka.border * 2;
   const cell = inner / BOARD_SIZE;
   const squares = useMemo(() => displaySquares(orientation), [orientation]);
-  const pieces = useMemo(() => new Map(getPieces(fen).map((p) => [p.square, p])), [fen]);
+  const pieces = useMemo(
+    () => new Map((piecesOverride ?? getPieces(fen)).map((p) => [p.square, p])),
+    [fen, piecesOverride],
+  );
   const movable = useMemo(() => new Set(legalMoves(fen).map((m) => m.from)), [fen]);
   const targets = useMemo(() => new Set(selectTargetSquares(state)), [state]);
   const checked = useMemo(() => checkedKingSquare(fen), [fen]);

@@ -57,6 +57,8 @@ export const GameSchema = z.object({
   learning: z.boolean(),
   status: z.enum(['active', 'finished']),
   fen: z.string(),
+  /** Whose move it is. When it is the bot's, its answer did not come (the engine was busy) and the client asks again. */
+  turn: z.enum(['w', 'b']),
   /** Every move of the game, the bot's included, so a client can show the list and replay it. */
   moves: z.array(GameMoveSchema),
   inCheck: z.boolean(),
@@ -67,6 +69,10 @@ export const GameSchema = z.object({
 });
 export type Game = z.infer<typeof GameSchema>;
 
+/** The game to go back to when the app is opened again, if there is one. */
+export const ActiveGameSchema = z.object({ game: GameSchema.nullable() });
+export type ActiveGame = z.infer<typeof ActiveGameSchema>;
+
 export const GameMoveRequestSchema = z.object({ move: z.string().regex(UCI_MOVE) });
 
 export const GameMoveResponseSchema = z.discriminatedUnion('result', [
@@ -76,7 +82,7 @@ export const GameMoveResponseSchema = z.discriminatedUnion('result', [
     result: z.literal('ok'),
     /** The game after the learner's move and the bot's answer. */
     game: GameSchema,
-    /** The bot's answer, `null` when the learner's move ended the game. */
+    /** The bot's answer, `null` when the game is over or the engine was too busy to answer. */
     botMove: GameMoveSchema.nullable(),
   }),
 ]);

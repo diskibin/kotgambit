@@ -25,6 +25,7 @@ model User {
   dailyActivity  DailyActivity[]
   puzzleAttempts PuzzleAttempt[]
   puzzleStats    UserPuzzleStats?
+  games          Game[]
 
   @@map("users")
 }
@@ -166,30 +167,30 @@ enum PuzzleAttemptStatus {
 
 // One run at a puzzle. The server keeps the moves played, so the client never sends a position or a history.
 model PuzzleAttempt {
-  id           String              @id @default(uuid(7)) @db.Uuid
-  userId       String              @map("user_id") @db.Uuid
-  puzzleId     String              @map("puzzle_id")
+  id            String              @id @default(uuid(7)) @db.Uuid
+  userId        String              @map("user_id") @db.Uuid
+  puzzleId      String              @map("puzzle_id")
   // Solved is a clean run (hints up to level 2 allowed), failed is a mistake or the last hint, abandoned is a skip
-  status       PuzzleAttemptStatus @default(open)
-  mistakes     Int                 @default(0)
+  status        PuzzleAttemptStatus @default(open)
+  mistakes      Int                 @default(0)
   // The highest hint level used, 0 when none
-  hintLevel    Int                 @default(0) @map("hint_level")
+  hintLevel     Int                 @default(0) @map("hint_level")
   // The chain of hints (piece, idea, move) starts again at every move of the line: the level reached
   // at the move with this index
-  moveHintLevel Int                @default(0) @map("move_hint_level")
-  moveHintAt    Int                @default(-1) @map("move_hint_at")
+  moveHintLevel Int                 @default(0) @map("move_hint_level")
+  moveHintAt    Int                 @default(-1) @map("move_hint_at")
   // The solver's moves accepted so far
-  playedMoves  String[]            @default([]) @map("played_moves")
+  playedMoves   String[]            @default([]) @map("played_moves")
   // Set when the line is finished, also after mistakes
-  solvedAt     DateTime?           @map("solved_at")
+  solvedAt      DateTime?           @map("solved_at")
   // No more moves are taken after this: the puzzle is solved, given up or left for the next one
-  closedAt     DateTime?           @map("closed_at")
+  closedAt      DateTime?           @map("closed_at")
   // Only the first run at a puzzle changes the rating, so that a known solution cannot be farmed
-  rated        Boolean             @default(true)
-  ratingBefore Int                 @map("rating_before")
+  rated         Boolean             @default(true)
+  ratingBefore  Int                 @map("rating_before")
   // Set once the attempt has changed the player's rating, which happens only once per attempt
-  ratingAfter  Int?                @map("rating_after")
-  startedAt    DateTime            @default(now()) @map("started_at")
+  ratingAfter   Int?                @map("rating_after")
+  startedAt     DateTime            @default(now()) @map("started_at")
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
@@ -222,4 +223,39 @@ model DailyPuzzle {
   puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
 
   @@map("daily_puzzles")
+}
+
+enum GameStatus {
+  active
+  finished
+
+  @@map("game_status")
+}
+
+// A game against a bot. The server keeps the moves, so a client sends one move and never a position.
+model Game {
+  id         String     @id @default(uuid(7)) @db.Uuid
+  userId     String     @map("user_id") @db.Uuid
+  // The id from content/bots.yaml, bots are content and not rows
+  botId      String     @map("bot_id")
+  // 'w' or 'b'
+  userColor  String     @map("user_color") @db.Char(1)
+  // Hints, taking a move back and the cat's remarks
+  learning   Boolean    @default(true)
+  status     GameStatus @default(active)
+  // UCI moves from the starting position, the bot's included
+  moves      String[]   @default([])
+  hintsUsed  Int        @default(0) @map("hints_used")
+  // Set when the game ends: 'win', 'loss' or 'draw' for the learner, and why
+  outcome    String?
+  endReason  String?    @map("end_reason")
+  xp         Int        @default(0)
+  startedAt  DateTime   @default(now()) @map("started_at")
+  finishedAt DateTime?  @map("finished_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // The list of games to resume and the count of games a learner has open
+  @@index([userId, status])
+  @@map("games")
 }

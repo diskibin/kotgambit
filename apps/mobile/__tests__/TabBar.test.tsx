@@ -26,7 +26,7 @@ describe('TabBar', () => {
     setup();
     expect(screen.getAllByRole('tab')).toHaveLength(NAMES.length);
     for (const name of NAMES) expect(screen.getByRole('tab', { name })).toBeOnTheScreen();
-    expect(screen.getByRole('tablist', { name: 'Основная навигация' })).toBeOnTheScreen();
+    expect(screen.getByLabelText('Основная навигация')).toBeOnTheScreen();
   });
 
   it('marks the active place as selected and no other', () => {

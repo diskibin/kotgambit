@@ -172,7 +172,11 @@ export class ReviewService implements OnApplicationBootstrap {
   }
 
   private view(review: GameReview): ReviewStatus {
-    const parsed = review.result === null ? null : GameReviewSchema.safeParse(review.result);
+    // Reviews saved before the list of mistakes existed have none
+    const parsed =
+      review.result === null
+        ? null
+        : GameReviewSchema.safeParse({ mistakes: [], ...(review.result as object) });
     return {
       status: review.status,
       done: review.done,

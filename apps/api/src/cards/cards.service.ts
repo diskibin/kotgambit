@@ -37,7 +37,10 @@ export class CardsService {
     const game = await this.prisma.game.findFirst({ where: { id: gameId, userId } });
     if (!game) throw new AppError('game.not_found', HttpStatus.NOT_FOUND);
     const row = await this.prisma.gameReview.findUnique({ where: { gameId } });
-    const review = row?.status === 'done' ? GameReviewSchema.safeParse(row.result) : null;
+    const review =
+      row?.status === 'done'
+        ? GameReviewSchema.safeParse({ mistakes: [], ...(row.result as object) })
+        : null;
     if (!review?.success) throw new AppError('review.not_ready', HttpStatus.CONFLICT);
 
     const now = new Date();

@@ -626,6 +626,7 @@ describe('analysis and review endpoints', () => {
     chances: [50, 55],
     qualities: ['best'],
     keyMoments: [],
+    mistakes: [],
   };
   const ANALYSIS = {
     fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -707,5 +708,96 @@ describe('analysis and review endpoints', () => {
       });
     });
     subscription.unsubscribe();
+  });
+});
+
+describe('profile and card endpoints', () => {
+  const SUMMARY = { due: 2, total: 2 };
+
+  it('reads the profile for the learner’s day', async () => {
+    let query = '';
+    server.use(
+      http.get(`${BASE_URL}/profile`, ({ request }) => {
+        query = new URL(request.url).search;
+        return HttpResponse.json({
+          displayName: null,
+          memberSince: '2026-09-01',
+          level: { level: 4, xpInLevel: 240, xpForNext: 400 },
+          xpTotal: 840,
+          streak: { current: 3, best: 9 },
+          puzzles: { rating: 1040, solved: 58 },
+          games: { played: 12, wins: 7, draws: 1, losses: 4 },
+          week: [{ day: '2026-10-03', done: true, today: true }],
+          achievements: [{ key: 'streak-3', current: 3, target: 3, unlocked: true }],
+          themes: [{ key: 'pin', title: 'Связка', accuracy: 31, attempts: 8 }],
+          cards: SUMMARY,
+        });
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.profile.initiate('2026-10-03'));
+    expect(query).toBe('?localDate=2026-10-03');
+    expect(result.data?.level).toEqual({ level: 4, xpInLevel: 240, xpForNext: 400 });
+  });
+
+  it('takes a card, answers it and reads the summary again afterwards', async () => {
+    let summaryReads = 0;
+    server.use(
+      http.get(`${BASE_URL}/cards/summary`, () => {
+        summaryReads += 1;
+        return HttpResponse.json(SUMMARY);
+      }),
+      http.post(`${BASE_URL}/cards/next`, () =>
+        HttpResponse.json({
+          card: {
+            id: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+            solver: 'w',
+            playedSan: 'f3',
+            moveNumber: 1,
+          },
+          summary: SUMMARY,
+        }),
+      ),
+      http.post(`${BASE_URL}/cards/:id/answer`, async ({ request }) => {
+        const { move } = (await request.json()) as { move: string };
+        return HttpResponse.json(
+          move === 'e2e4'
+            ? {
+                result: 'correct',
+                best: { uci: 'e2e4', san: 'e4' },
+                nextInDays: 1,
+                summary: { due: 1, total: 2 },
+              }
+            : { result: 'illegal' },
+        );
+      }),
+    );
+    const { api, store } = setup();
+    const subscription = store.dispatch(api.endpoints.cardSummary.initiate());
+    await subscription;
+    const next = await store.dispatch(api.endpoints.nextCard.initiate());
+    const cardId = next.data?.card?.id ?? '';
+
+    // A refused move changes nothing, so the summary is not read again
+    await store.dispatch(api.endpoints.answerCard.initiate({ cardId, move: 'e2e5' }));
+    expect(summaryReads).toBe(1);
+
+    await store.dispatch(api.endpoints.answerCard.initiate({ cardId, move: 'e2e4' }));
+    await vi.waitFor(() => expect(summaryReads).toBe(2));
+    subscription.unsubscribe();
+  });
+
+  it('makes cards from the mistakes of a game', async () => {
+    server.use(
+      http.post(`${BASE_URL}/games/:id/review/cards`, () =>
+        HttpResponse.json({ created: 2, summary: SUMMARY }),
+      ),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.makeCards.initiate('3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11'),
+    );
+    expect(result.data).toEqual({ created: 2, summary: SUMMARY });
   });
 });

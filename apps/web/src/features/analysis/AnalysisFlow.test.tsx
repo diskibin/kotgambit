@@ -214,6 +214,7 @@ describe('the review', () => {
     counts: { best: 3, good: 2, inaccuracy: 0, mistake: 0, blunder: 2 },
     chances: [50, 50, 20, 20, 0],
     qualities: ['best', 'best', 'blunder', 'best'],
+    mistakes: [],
     keyMoments: [
       {
         ply: 3,

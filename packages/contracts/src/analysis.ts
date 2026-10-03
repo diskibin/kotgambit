@@ -111,8 +111,8 @@ export const GameReviewSchema = z.object({
   /** The quality of every half-move, in order. */
   qualities: z.array(MoveQualitySchema),
   keyMoments: z.array(KeyMomentSchema),
-  /** Every mistake and blunder of the learner, for making cards. Reviews made before this field have none. */
-  mistakes: z.array(ReviewMistakeSchema).default([]),
+  /** Every mistake and blunder of the learner, for making cards. */
+  mistakes: z.array(ReviewMistakeSchema),
 });
 export type GameReview = z.infer<typeof GameReviewSchema>;
 

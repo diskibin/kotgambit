@@ -1,5 +1,10 @@
 import {
   ActiveGameSchema,
+  CardAnswerResponseSchema,
+  CardSummarySchema,
+  MakeCardsResponseSchema,
+  NextCardSchema,
+  ProfileSchema,
   PositionAnalysisSchema,
   ReviewStatusSchema,
   AuthResponseSchema,
@@ -21,6 +26,11 @@ import {
   PuzzleThemeListSchema,
   UserSchema,
   type ActiveGame,
+  type CardAnswerResponse,
+  type CardSummary,
+  type MakeCardsResponse,
+  type NextCard,
+  type Profile,
   type PositionAnalysis,
   type ReviewStatus,
   type AuthResponse,
@@ -245,6 +255,40 @@ export function endpoints(build: Builder) {
       query: (gameId) => `/games/${encodeURIComponent(gameId)}/review`,
       responseSchema: ReviewStatusSchema,
       providesTags: ['Reviews'],
+    }),
+    profile: build.query<Profile, string>({
+      query: (localDate) => `/profile?localDate=${localDate}`,
+      responseSchema: ProfileSchema,
+      providesTags: ['Progress', 'Cards'],
+    }),
+    cardSummary: build.query<CardSummary, void>({
+      query: () => '/cards/summary',
+      responseSchema: CardSummarySchema,
+      providesTags: ['Cards'],
+    }),
+    // Taking a card to repeat does not change it, but it is a request that must run when asked
+    nextCard: build.mutation<NextCard, void>({
+      query: () => ({ url: '/cards/next', method: 'POST' }),
+      responseSchema: NextCardSchema,
+    }),
+    answerCard: build.mutation<CardAnswerResponse, { cardId: string; move: string }>({
+      query: ({ cardId, move }) => ({
+        url: `/cards/${encodeURIComponent(cardId)}/answer`,
+        method: 'POST',
+        body: { move },
+      }),
+      responseSchema: CardAnswerResponseSchema,
+      // An answer moves the day's XP and the number of cards that are due
+      invalidatesTags: (result) =>
+        result && result.result !== 'illegal' ? ['Cards', 'Progress'] : [],
+    }),
+    makeCards: build.mutation<MakeCardsResponse, string>({
+      query: (gameId) => ({
+        url: `/games/${encodeURIComponent(gameId)}/review/cards`,
+        method: 'POST',
+      }),
+      responseSchema: MakeCardsResponseSchema,
+      invalidatesTags: ['Cards'],
     }),
     me: build.query<User, void>({
       query: () => '/users/me',

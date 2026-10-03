@@ -1,15 +1,14 @@
-import { createBoardState } from '@kotgambit/board-controller';
 import type { PieceType } from '@kotgambit/chess-core';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { useAppSelector } from '../../app/hooks';
 import { Button } from '../../shared/ui/Button';
 import { PlayIcon } from '../../shared/ui/icons';
-import { Board } from '../board';
 import { pieceUrl } from '../board/pieceAssets';
 import type { Mood } from '@kotgambit/mascot';
 import { Mascot } from '../mascot/Mascot';
+import { MiniBoard } from '../path/MiniBoard';
 import { useScheme } from '../theme/useScheme';
 import {
   DEFAULT_ONBOARDING,
@@ -22,7 +21,6 @@ import {
 } from './onboardingAnswers';
 
 const STEPS = 4;
-const NOOP = () => undefined;
 const LEVEL_PIECE: Record<Level, PieceType> = { novice: 'p', basics: 'n', player: 'q' };
 const GOAL_NOTE: Record<Goal, 'easy' | 'normal' | 'serious'> = {
   5: 'easy',
@@ -147,10 +145,6 @@ export function OnboardingPage() {
   const [level, setLevel] = useState<Level>(DEFAULT_ONBOARDING.level);
   const [goal, setGoal] = useState<Goal>(DEFAULT_ONBOARDING.goal);
   const lesson = FIRST_LESSON[level];
-  const knightBoard = useMemo(
-    () => createBoardState({ fen: '8/8/8/8/3N4/8/8/8 w - - 0 1', orientation: 'w' }),
-    [],
-  );
 
   if (status === 'authenticated') return <Navigate to="/learn" replace />;
 
@@ -309,16 +303,7 @@ export function OnboardingPage() {
                 )}
               </div>
               <div className="flex items-center gap-4 p-4">
-                <div aria-hidden="true" inert className="w-[120px] shrink-0 tablet:w-[200px]">
-                  <Board
-                    state={knightBoard}
-                    dispatch={NOOP}
-                    coords={false}
-                    disabled
-                    onSquarePress={NOOP}
-                    hintSquares={['c6', 'e6', 'f5', 'f3', 'e2', 'c2', 'b3', 'b5']}
-                  />
-                </div>
+                <MiniBoard piece={lesson.piece} size={160} moves />
                 <div className="flex flex-col items-start gap-2 text-[16px] font-bold">
                   <span>{t('onboarding.first.minutes', { count: lesson.minutes })}</span>
                   <span>{t('onboarding.first.steps', { count: lesson.steps })}</span>

@@ -11,10 +11,13 @@ export interface Onboarding {
 export const DEFAULT_ONBOARDING: Onboarding = { level: 'basics', goal: 10 };
 
 // The first chapter of every level. The numbers are those of the lesson files in content/lessons
-export const FIRST_LESSON: Record<Level, { id: string; minutes: number; steps: number }> = {
-  novice: { id: 'basics-board', minutes: 5, steps: 5 },
-  basics: { id: 'basics-knight', minutes: 6, steps: 6 },
-  player: { id: 'openings-italian', minutes: 6, steps: 5 },
+export const FIRST_LESSON: Record<
+  Level,
+  { id: string; piece: 'k' | 'n' | 'b'; minutes: number; steps: number }
+> = {
+  novice: { id: 'basics-board', piece: 'k', minutes: 5, steps: 5 },
+  basics: { id: 'basics-knight', piece: 'n', minutes: 6, steps: 6 },
+  player: { id: 'openings-italian', piece: 'b', minutes: 6, steps: 5 },
 };
 
 const KEY = 'kotgambit.onboarding';

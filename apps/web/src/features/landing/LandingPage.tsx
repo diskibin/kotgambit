@@ -5,8 +5,10 @@ import { Link, Navigate } from 'react-router';
 import { usePlansQuery } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { Board } from '../board';
+import { placementPieces } from '../board/placement';
 import type { BoardArrow } from '../board/Arrows';
 import { Mascot } from '../mascot/Mascot';
+import { MiniBoard } from '../path/MiniBoard';
 import { BotAvatar } from '../play/BotAvatar';
 import { useScheme } from '../theme/useScheme';
 
@@ -15,6 +17,7 @@ const BOT_KINDS = ['mouse', 'hamster', 'fox', 'owl', 'wolf', 'bear'] as const;
 const CHECK = 'M5 12.5l4.5 4.5L19 7.5';
 const DASH = 'M7 12h10';
 const NOOP = () => undefined;
+const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const LINK_BUTTON =
   'flex items-center justify-center rounded-card border-2 border-edge shadow-shashka font-extrabold transition-[transform,box-shadow] duration-press ease-spring motion-reduce:transition-none active:translate-x-press active:translate-y-press active:shadow-none motion-reduce:active:translate-x-0 motion-reduce:active:translate-y-0';
@@ -23,24 +26,33 @@ const LINK_BUTTON =
 function DemoBoard({
   fen,
   size,
+  className = '',
   arrows,
   lastMove,
   hints,
 }: {
   fen: string;
-  size: number;
+  size?: number;
+  className?: string;
   arrows?: BoardArrow[];
   lastMove?: { from: string; to: string };
   hints?: string[];
 }) {
-  const state = useMemo(() => createBoardState({ fen, orientation: 'w' }), [fen]);
+  const state = useMemo(() => createBoardState({ fen: START, orientation: 'w' }), []);
+  const pieces = useMemo(() => placementPieces(fen), [fen]);
   return (
-    <div aria-hidden="true" inert style={{ width: size }}>
+    <div
+      aria-hidden="true"
+      inert
+      className={className}
+      {...(size ? { style: { width: size } } : {})}
+    >
       <Board
         state={state}
         dispatch={NOOP}
         coords={false}
         disabled
+        pieces={pieces}
         {...(arrows ? { arrows } : {})}
         lastMove={lastMove ?? null}
         {...(hints ? { hintSquares: hints } : {})}
@@ -264,7 +276,7 @@ export function LandingPage() {
     'm-0 text-center text-[28px] leading-9 font-extrabold text-balance tablet:text-[36px] tablet:leading-[44px] laptop:text-left';
 
   return (
-    <div className="min-h-screen bg-bg text-text">
+    <div className="min-h-screen overflow-x-clip bg-bg text-text">
       <header className="flex h-16 items-center gap-6 px-4 tablet:h-20 tablet:px-12 laptop:px-24">
         <Link to="/" className="flex items-center gap-2.5 text-text no-underline">
           <Mascot mood="idle" size={44} dark={dark} />
@@ -333,7 +345,7 @@ export function LandingPage() {
             <div className="relative translate-x-8 -rotate-6">
               <DemoBoard
                 fen="r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R"
-                size={300}
+                className="w-[220px] tablet:w-[300px] laptop:w-[340px]"
                 arrows={[{ from: 'f1', to: 'c4', color: 'sky' }]}
                 lastMove={{ from: 'b8', to: 'c6' }}
               />
@@ -374,11 +386,7 @@ export function LandingPage() {
               title={t('landing.features.lessons.title')}
               text={t('landing.features.lessons.text')}
             >
-              <DemoBoard
-                fen="8/8/8/8/3N4/8/8/8"
-                size={180}
-                hints={['c6', 'e6', 'f5', 'f3', 'e2', 'c2', 'b3', 'b5']}
-              />
+              <MiniBoard piece="n" size={180} moves />
             </FeatureCard>
             <FeatureCard
               tone="bg-sun text-on-accent"

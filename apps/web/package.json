@@ -23,6 +23,7 @@
     "@kotgambit/locales": "workspace:*",
     "@kotgambit/mascot": "workspace:*",
     "@kotgambit/puzzle-player": "workspace:*",
+    "@kotgambit/analysis-editor": "workspace:*",
     "@kotgambit/game-player": "workspace:*",
     "@reduxjs/toolkit": "^2.13.0",
     "@tailwindcss/vite": "^4.3.3",

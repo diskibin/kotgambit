@@ -55,15 +55,14 @@ async function playMove() {
 }
 
 describe('home', () => {
-  it('shows the day bar, the chapters and a greeting from the cat', async () => {
+  it('shows the day bar and the chapters of the current section', async () => {
     mockApi(routes());
     render(<App store={makeStore()} />);
 
     expect(await screen.findByText('Доска и фигуры')).toBeOnTheScreen();
     expect(screen.getByText('Откроется позже')).toBeOnTheScreen();
     expect(screen.getByLabelText(/Цель дня: 0 из 10 минут/)).toBeOnTheScreen();
-    expect(screen.getByText(/Начнём с первой главы/)).toBeOnTheScreen();
-    expect(screen.getByText('0 из 2 глав · 0%')).toBeOnTheScreen();
+    expect(screen.getByText('Раздел 1 · 0 из 2 глав')).toBeOnTheScreen();
     expect(screen.getByText('5 шагов · около 5 минут')).toBeOnTheScreen();
   });
 
@@ -81,7 +80,7 @@ describe('home', () => {
     );
     render(<App store={makeStore()} />);
     expect(await screen.findByLabelText('Звёзд: 2 из 3')).toBeOnTheScreen();
-    expect(screen.getByText('1 из 2 глав · 50%')).toBeOnTheScreen();
+    expect(screen.getByText('Раздел 1 · 1 из 2 глав')).toBeOnTheScreen();
   });
 });
 

@@ -233,7 +233,12 @@ function SignedIn() {
         />
       );
     }
-    return <PathScreen onOpenLesson={(id) => setScreen({ name: 'lesson', id })} />;
+    return (
+      <PathScreen
+        onOpenLesson={(id) => setScreen({ name: 'lesson', id })}
+        onOpenTasks={() => setScreen({ name: 'puzzles' })}
+      />
+    );
   };
 
   const tab = TAB_OF[screen.name];

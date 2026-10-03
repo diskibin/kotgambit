@@ -106,7 +106,17 @@ export const SIGNED_IN = {
 };
 
 /** What the home screen asks for. */
+export const DAILY = {
+  puzzleId: 'p-1',
+  fen: '6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1',
+  lastMove: 'g7g6',
+  solver: 'w',
+  title: 'Мат в 1 ход',
+  solved: false,
+};
+
 export const HOME = {
   'GET /lessons': () => json({ lessons: LESSONS }),
   'GET /progress/summary': () => json(PROGRESS),
+  'GET /puzzles/daily': () => json(DAILY),
 };

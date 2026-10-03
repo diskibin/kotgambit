@@ -541,6 +541,15 @@ export const ru = {
       soon: 'Скоро',
       premium: 'В Премиуме',
     },
+    toastMobile: {
+      title_one: 'Серия продлена! {{count}} день',
+      title_few: 'Серия продлена! {{count}} дня',
+      title_many: 'Серия продлена! {{count}} дней',
+      title_other: 'Серия продлена! {{count}} дня',
+      text: 'Цель дня выполнена',
+      ok: 'Ок',
+    },
+    sectionCount: 'Раздел {{n}} · {{done}} из {{total}} глав',
     toast: {
       title: 'Серия продлена!',
       text_one: '{{count}} день подряд. Гамбит гордится.',

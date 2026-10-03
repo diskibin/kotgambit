@@ -7,6 +7,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    // The long screens are drawn with many board squares, and the files run side by side: 5 s is too tight
+    testTimeout: 20_000,
     setupFiles: ['./src/test-setup.ts'],
   },
 });

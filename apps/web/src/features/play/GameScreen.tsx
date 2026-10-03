@@ -373,9 +373,14 @@ export function GameScreen({ bot }: GameScreenProps) {
           </div>
 
           {over ? (
-            <Button large onClick={() => void playAgain()} disabled={creation.isLoading}>
-              {t('play.game.over.again')}
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button large onClick={() => void playAgain()} disabled={creation.isLoading}>
+                {t('play.game.over.again')}
+              </Button>
+              <Button variant="secondary" large onClick={() => void navigate(`/review/${game.id}`)}>
+                {t('play.game.over.review')}
+              </Button>
+            </div>
           ) : (
             <div className="flex flex-wrap gap-3">
               {game.learning && (
@@ -447,6 +452,7 @@ export function GameScreen({ bot }: GameScreenProps) {
           message={message}
           dark={scheme === 'dark'}
           onAgain={() => void playAgain()}
+          onReview={() => void navigate(`/review/${game.id}`)}
           onBots={() => void navigate('/play')}
           onClose={() => setOverOpen(false)}
         />

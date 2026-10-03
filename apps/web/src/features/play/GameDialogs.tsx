@@ -56,6 +56,7 @@ interface GameOverDialogProps {
   message: CoachMessage;
   dark: boolean;
   onAgain: () => void;
+  onReview: () => void;
   onBots: () => void;
   onClose: () => void;
 }
@@ -67,6 +68,7 @@ export function GameOverDialog({
   message,
   dark,
   onAgain,
+  onReview,
   onBots,
   onClose,
 }: GameOverDialogProps) {
@@ -100,7 +102,10 @@ export function GameOverDialog({
       >
         {t('play.game.over.again')}
       </Button>
-      <Button variant="secondary" fullWidth onClick={onBots}>
+      <Button variant="secondary" fullWidth onClick={onReview}>
+        {t('play.game.over.review')}
+      </Button>
+      <Button variant="text" onClick={onBots}>
         {t('play.game.over.toBots')}
       </Button>
     </Dialog>

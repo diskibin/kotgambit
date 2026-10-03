@@ -48,6 +48,7 @@ export const api = createApi({
 
 export const {
   useActiveGameQuery,
+  useAnalyzePositionMutation,
   useBotsQuery,
   useCreateGameMutation,
   useGameBotMoveMutation,
@@ -76,5 +77,7 @@ export const {
   useRegisterMutation,
   useResendVerificationMutation,
   useResetPasswordMutation,
+  useReviewQuery,
+  useStartReviewMutation,
   useVerifyEmailMutation,
 } = api;

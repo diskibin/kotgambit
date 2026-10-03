@@ -383,6 +383,7 @@ export const ru = {
         xp: '+{{xp}} XP',
         xpGame: '+{{xp}} XP за партию',
         again: 'Сыграть ещё',
+        review: 'Разбор партии',
         toBots: 'К выбору соперника',
       },
     },

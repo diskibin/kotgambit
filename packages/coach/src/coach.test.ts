@@ -253,8 +253,9 @@ describe('game phrases', () => {
   it('has different variants for every situation that repeats', () => {
     for (const [key, items] of Object.entries(GAME_PHRASES)) {
       expect(new Set(items).size, key).toBe(items.length);
-      // The resign dialog and the busy card use the design's text, there is nothing to rotate
-      if (key !== 'resign' && key !== 'busy') expect(items.length, key).toBeGreaterThanOrEqual(3);
+      // These use the design's text word for word, there is nothing to rotate
+      if (!['resign', 'busy', 'resigned'].includes(key))
+        expect(items.length, key).toBeGreaterThanOrEqual(3);
     }
   });
 

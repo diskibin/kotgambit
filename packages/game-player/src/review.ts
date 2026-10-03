@@ -61,3 +61,23 @@ export function graphPath(points: readonly GraphPoint[]): string {
 export function lastMoveNumber(plies: number): number {
   return Math.ceil(plies / 2);
 }
+
+/**
+ * A line the way a book writes it: `4…d5 5.exd5 Na5` when Black starts it, `5.exd5 Na5` for White.
+ * The move number and the side come from the position the line starts from.
+ */
+export function formatLine(fen: string, san: readonly string[]): string {
+  const fields = fen.trim().split(/\s+/);
+  let side = fields[1] === 'b' ? 'b' : 'w';
+  let number = Number(fields[5]) || 1;
+  const parts: string[] = [];
+  san.forEach((move, index) => {
+    if (side === 'w') parts.push(`${number}.${move}`);
+    else {
+      parts.push(index === 0 ? `${number}…${move}` : move);
+      number += 1;
+    }
+    side = side === 'w' ? 'b' : 'w';
+  });
+  return parts.join(' ');
+}

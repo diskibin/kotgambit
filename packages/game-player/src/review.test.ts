@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   QUALITY_MARKS,
   chancesGraph,
+  formatLine,
   formatScore,
   graphPath,
   lastMoveNumber,
@@ -73,5 +74,23 @@ describe('marks and move numbers', () => {
 
   it('numbers the last move of a game by full moves', () => {
     expect([1, 2, 3, 13, 14].map(lastMoveNumber)).toEqual([1, 1, 2, 7, 7]);
+  });
+});
+
+describe('formatLine', () => {
+  const white = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2';
+  const black = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1';
+
+  it('numbers the moves of a line that White starts', () => {
+    expect(formatLine(white, ['Nf3', 'Nc6', 'Bb5'])).toBe('2.Nf3 Nc6 3.Bb5');
+  });
+
+  it('starts a line of Black with dots and goes on to the next number', () => {
+    expect(formatLine(black, ['e5', 'Nf3', 'Nc6'])).toBe('1…e5 2.Nf3 Nc6');
+  });
+
+  it('is empty for no moves and reads a bare FEN', () => {
+    expect(formatLine(white, [])).toBe('');
+    expect(formatLine('4k3/8/8/8/8/8/8/4K3 b', ['Kd7'])).toBe('1…Kd7');
   });
 });

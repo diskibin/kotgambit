@@ -1,10 +1,13 @@
 import {
+  CARD_PHRASES,
+  CARD_TITLES,
   GAME_PHRASES,
   GAME_TITLES,
   PHRASES,
   PUZZLE_PHRASES,
   PUZZLE_TITLES,
   puzzleHintTitle,
+  type CardPhraseKey,
   type GamePhraseKey,
   type PhraseKey,
   type PuzzlePhraseKey,
@@ -33,6 +36,7 @@ export interface Coach {
 export function createCoach(random: () => number = Math.random): Coach {
   const last = new Map<PhraseKey, number>();
   const lastGameText = new Map<GamePhraseKey, number>();
+  const lastCardText = new Map<CardPhraseKey, number>();
 
   function pick(key: PhraseKey): Phrase {
     const variants: readonly Phrase[] = PHRASES[key];
@@ -71,6 +75,19 @@ export function createCoach(random: () => number = Math.random): Coach {
     suffix = '',
   ): CoachMessage {
     return { title, text: `${pickGameText(key)}${suffix}`, ...look };
+  }
+
+  function card(
+    title: string,
+    key: CardPhraseKey,
+    look: Pick<CoachMessage, 'mascot' | 'tone' | 'effect'>,
+  ): CoachMessage {
+    const variants: readonly string[] = CARD_PHRASES[key];
+    const previous = lastCardText.get(key);
+    const pool = variants.map((_, index) => index).filter((index) => index !== previous);
+    const index = pool[Math.floor(random() * pool.length)] ?? 0;
+    lastCardText.set(key, index);
+    return { title, text: variants[index] as string, ...look };
   }
 
   function gameOver(
@@ -251,6 +268,26 @@ export function createCoach(random: () => number = Math.random): Coach {
           return game(GAME_TITLES.busy, 'busy', {
             mascot: 'thinking',
             tone: 'soft',
+            effect: 'none',
+          });
+        case 'CARD_START':
+          return card(CARD_TITLES.start, 'start', {
+            mascot: 'thinking',
+            tone: 'neutral',
+            effect: 'none',
+          });
+        case 'CARD_CORRECT':
+          return card(CARD_TITLES.correct, 'correct', {
+            mascot: 'happy',
+            tone: 'success',
+            effect: 'none',
+          });
+        case 'CARD_WRONG':
+          return card(CARD_TITLES.wrong, 'wrong', { mascot: 'hint', tone: 'soft', effect: 'none' });
+        case 'CARD_EMPTY':
+          return card(CARD_TITLES.empty, 'empty', {
+            mascot: 'proud',
+            tone: 'success',
             effect: 'none',
           });
         case 'GAME_OVER':

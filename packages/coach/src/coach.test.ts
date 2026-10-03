@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CARD_PHRASES,
   GAME_PHRASES,
   PHRASES,
   PUZZLE_PHRASES,
@@ -355,5 +356,43 @@ describe('describePositionProblem', () => {
   it('says what to do about the other problems', () => {
     expect(describePositionProblem({ kind: 'pawn-on-edge', square: 'a8' })).toContain('a8');
     expect(describePositionProblem({ kind: 'kings-touch' })).toContain('рядом');
+  });
+});
+
+describe('card phrases and messages', () => {
+  const coach = () => createCoach(() => 0);
+
+  it('has different variants for every situation, short and free of scolding', () => {
+    for (const [key, items] of Object.entries(CARD_PHRASES)) {
+      expect(items.length, key).toBeGreaterThanOrEqual(3);
+      expect(new Set(items).size, key).toBe(items.length);
+      for (const text of items) {
+        expect(text.split(/\s+/).length, `${key}: ${text}`).toBeLessThanOrEqual(MAX_WORDS);
+        for (const word of FORBIDDEN)
+          expect(text.toLowerCase(), `${key}: ${word}`).not.toContain(word);
+      }
+    }
+  });
+
+  it('asks for a move without naming it', () => {
+    expect(coach().message({ type: 'CARD_START' })).toMatchObject({
+      title: 'Вспомни эту позицию',
+      mascot: 'thinking',
+    });
+  });
+
+  it('praises a right answer and meets a wrong one softly', () => {
+    expect(coach().message({ type: 'CARD_CORRECT' })).toMatchObject({
+      mascot: 'happy',
+      tone: 'success',
+    });
+    expect(coach().message({ type: 'CARD_WRONG' })).toMatchObject({ tone: 'soft', effect: 'none' });
+  });
+
+  it('is proud when everything is repeated', () => {
+    expect(coach().message({ type: 'CARD_EMPTY' })).toMatchObject({
+      title: 'Всё повторено',
+      mascot: 'proud',
+    });
   });
 });

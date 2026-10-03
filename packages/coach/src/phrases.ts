@@ -197,3 +197,37 @@ export const GAME_PHRASES = {
 } as const satisfies Record<string, readonly string[]>;
 
 export type GamePhraseKey = keyof typeof GAME_PHRASES;
+
+/** Headings of the card that repeats a position from the learner's own game. */
+export const CARD_TITLES = {
+  start: 'Вспомни эту позицию',
+  correct: 'Запомнил!',
+  wrong: 'Запомним ещё раз',
+  empty: 'Всё повторено',
+} as const;
+
+/** The words of the card. They never name the move: the answer is for the learner to find. */
+export const CARD_PHRASES = {
+  start: [
+    'Эта позиция была в твоей партии. Что здесь можно сыграть лучше?',
+    'Мы уже встречали это место. Подумай, какой ход здесь сильнее.',
+    'Здесь партия когда-то повернулась. Найди ход, который держит позицию.',
+  ],
+  correct: [
+    'Именно так! Теперь эта позиция тебе знакома.',
+    'Отлично, ты вспомнил правильный ход. Карточка вернётся позже.',
+    'Верный ход, и никаких подсказок. Так знания и закрепляются.',
+  ],
+  wrong: [
+    'Ничего страшного, так и запоминают. Посмотри на ход на доске.',
+    'Это та самая позиция, где легко ошибиться. Карточка вернётся завтра.',
+    'Запомни этот ход: в следующий раз он придёт сам.',
+  ],
+  empty: [
+    'На сегодня повторять нечего. Сыграй партию, и появятся новые карточки.',
+    'Все карточки повторены. Гамбит гордится твоей памятью.',
+    'Пока всё выучено. Новые позиции появятся после разбора партии.',
+  ],
+} as const satisfies Record<string, readonly string[]>;
+
+export type CardPhraseKey = keyof typeof CARD_PHRASES;

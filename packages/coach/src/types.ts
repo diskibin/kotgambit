@@ -52,6 +52,11 @@ export type CoachEvent =
   | { type: 'GAME_RESIGN_ASK' }
   /** The engine did not answer in time, the position is saved. */
   | { type: 'GAME_BUSY' }
+  | { type: 'CARD_START' }
+  | { type: 'CARD_CORRECT' }
+  | { type: 'CARD_WRONG' }
+  /** Nothing is due: every card is repeated. */
+  | { type: 'CARD_EMPTY' }
   /** `bot` names the winner in the title of a loss: "Победила Лиса Алиса". */
   | {
       type: 'GAME_OVER';

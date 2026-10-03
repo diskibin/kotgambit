@@ -187,6 +187,19 @@ describe('buildReview', () => {
     );
   });
 
+  it('lists every mistake of the learner with the better move, for cards', () => {
+    const { mistakes } = buildReview(moves, positions, 'w');
+    expect(mistakes.map((m) => [m.ply, m.played.san, m.better.san, m.color])).toEqual([
+      [1, 'f3', 'e4', 'w'],
+      [3, 'g4', 'e4', 'w'],
+    ]);
+    expect(mistakes[0]?.fen).toBe(positions[0]?.fen);
+  });
+
+  it('leaves out the mistakes of the bot', () => {
+    expect(buildReview(moves, positions, 'b').mistakes).toEqual([]);
+  });
+
   it('gives an empty review for a game without moves', () => {
     const review = buildReview([], [position(0, 'w', { kind: 'cp', value: 0 }, 'e2e4')], 'w');
     expect(review).toMatchObject({

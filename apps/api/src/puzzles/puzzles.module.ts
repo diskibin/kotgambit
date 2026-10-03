@@ -9,5 +9,6 @@ import { PuzzlesService } from './puzzles.service.js';
   imports: [AuthModule, ProgressModule],
   controllers: [PuzzlesController],
   providers: [PuzzlesService, PuzzleThemesService],
+  exports: [PuzzleThemesService],
 })
 export class PuzzlesModule {}

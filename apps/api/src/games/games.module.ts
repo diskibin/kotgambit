@@ -10,5 +10,6 @@ import { GamesService } from './games.service.js';
   imports: [AuthModule, EngineModule, ProgressModule],
   controllers: [GamesController],
   providers: [GamesService, BotsService],
+  exports: [BotsService],
 })
 export class GamesModule {}

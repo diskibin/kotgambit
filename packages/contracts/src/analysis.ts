@@ -85,6 +85,16 @@ export const KeyMomentSchema = z.object({
 });
 export type KeyMoment = z.infer<typeof KeyMomentSchema>;
 
+/** A move of the learner that lost much, with what to play instead: the stuff of a card to repeat. */
+export const ReviewMistakeSchema = z.object({
+  ply: z.number().int().positive(),
+  fen: z.string(),
+  color: z.enum(['w', 'b']),
+  played: z.object({ uci: z.string().regex(UCI_MOVE), san: z.string() }),
+  better: z.object({ uci: z.string().regex(UCI_MOVE), san: z.string() }),
+});
+export type ReviewMistake = z.infer<typeof ReviewMistakeSchema>;
+
 export const GameReviewSchema = z.object({
   /** Accuracy from 0 to 100, `null` for a side that made no moves. */
   accuracy: z.object({ player: z.number().int().nullable(), bot: z.number().int().nullable() }),
@@ -101,6 +111,8 @@ export const GameReviewSchema = z.object({
   /** The quality of every half-move, in order. */
   qualities: z.array(MoveQualitySchema),
   keyMoments: z.array(KeyMomentSchema),
+  /** Every mistake and blunder of the learner, for making cards. Reviews made before this field have none. */
+  mistakes: z.array(ReviewMistakeSchema).default([]),
 });
 export type GameReview = z.infer<typeof GameReviewSchema>;
 

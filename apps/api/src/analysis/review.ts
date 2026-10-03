@@ -31,6 +31,8 @@ export interface ReviewMove {
 const MAX_WORST = 2;
 const MIN_HIGHLIGHT_GAIN = 8;
 const ROUND = 10;
+// A card per mistake, but not a hundred of them out of one long game
+const MAX_MISTAKES = 20;
 
 /** The chance that White wins in a position, in percent. */
 function whiteChance(position: PositionEval): number {
@@ -79,6 +81,7 @@ export function buildReview(
   const qualities: MoveQuality[] = [];
   const counts = { best: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 };
   const losses: { ply: number; drop: number; quality: MoveQuality }[] = [];
+  const mistakes: GameReview['mistakes'] = [];
 
   moves.forEach((move, index) => {
     const before = positions[index] as PositionEval;
@@ -93,6 +96,15 @@ export function buildReview(
       counts[quality] += 1;
       if (quality === 'mistake' || quality === 'blunder') {
         losses.push({ ply: index + 1, drop, quality });
+        if (before.bestUci) {
+          mistakes.push({
+            ply: index + 1,
+            fen: before.fen,
+            color: side,
+            played: { uci: move.uci, san: move.san },
+            better: { uci: before.bestUci, san: sanOf(before.fen, before.bestUci) },
+          });
+        }
       }
     }
   });
@@ -166,5 +178,6 @@ export function buildReview(
     chances: chances.map(rounded),
     qualities,
     keyMoments,
+    mistakes: mistakes.slice(0, MAX_MISTAKES),
   };
 }

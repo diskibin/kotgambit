@@ -23,6 +23,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ProgressService } from '../progress/progress.service.js';
 import { START_RATING, nextRating, outcomeOf, type AttemptOutcome } from './puzzle-rating.js';
 import { PuzzleThemesService } from './puzzle-themes.service.js';
+import { PUZZLE_MAX_SECONDS, PUZZLE_XP } from './puzzles.limits.js';
+import { dayKeyOf } from '../progress/streak.js';
 
 const RATING_WINDOW_STEP = 100;
 const MAX_RATING_WINDOW = 500;
@@ -278,6 +280,15 @@ export class PuzzlesService {
         },
       });
       ratingAfter = Math.round(next);
+      // Only a first run counts for the day, as only a first run counts for the rating
+      const elapsed = Math.round((Date.now() - attempt.startedAt.getTime()) / 1000);
+      await this.progress.addActivity(
+        tx,
+        attempt.userId,
+        dayKeyOf(new Date()),
+        Math.min(PUZZLE_MAX_SECONDS, elapsed),
+        PUZZLE_XP[outcome],
+      );
     }
 
     await tx.puzzleAttempt.update({

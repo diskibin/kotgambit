@@ -7,3 +7,4 @@ export * from './health.js';
 export * from './lessons.js';
 export * from './puzzles.js';
 export * from './analysis.js';
+export * from './profile.js';

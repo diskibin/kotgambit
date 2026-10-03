@@ -26,6 +26,8 @@ model User {
   puzzleAttempts PuzzleAttempt[]
   puzzleStats    UserPuzzleStats?
   games          Game[]
+  reviewCards    ReviewCard[]
+  achievements   UserAchievement[]
 
   @@map("users")
 }
@@ -253,8 +255,9 @@ model Game {
   startedAt  DateTime   @default(now()) @map("started_at")
   finishedAt DateTime?  @map("finished_at")
 
-  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   review GameReview?
+  cards  ReviewCard[]
 
   // The list of games to resume and the count of games a learner has open
   @@index([userId, status])
@@ -285,4 +288,48 @@ model GameReview {
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@map("game_reviews")
+}
+
+// A position from the learner's own mistake, repeated with growing gaps (a simplified SM-2, see srs.ts)
+model ReviewCard {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  gameId         String    @map("game_id") @db.Uuid
+  // The half-move of the game that was the mistake: one card per mistake
+  ply            Int
+  // The position before the mistake, the learner is to move
+  fen            String
+  // What the engine preferred and what was played, both in UCI
+  correct        String
+  playedUci      String    @map("played_uci")
+  playedSan      String    @map("played_san")
+  solver         String    @db.Char(1)
+  dueAt          DateTime  @map("due_at")
+  intervalDays   Int       @default(0) @map("interval_days")
+  ease           Float     @default(2.5)
+  repetitions    Int       @default(0)
+  lapses         Int       @default(0)
+  lastAnsweredAt DateTime? @map("last_answered_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  // Making cards twice from one review must not double them
+  @@unique([userId, gameId, ply])
+  // The next card to repeat: the learner's due ones, oldest first
+  @@index([userId, dueAt])
+  @@map("review_cards")
+}
+
+// The achievements a learner has reached. How far they are on the others is computed on read.
+model UserAchievement {
+  userId     String   @map("user_id") @db.Uuid
+  key        String
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+  @@map("user_achievements")
 }

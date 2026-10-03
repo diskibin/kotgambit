@@ -206,6 +206,15 @@ describe('puzzles', () => {
       expect(second).toMatchObject({ result: 'correct', solved: true, reply: null });
     });
 
+    it('adds XP and a little time to the day', async () => {
+      const puzzle = await next({ mode: 'theme', theme: 'mateIn1' });
+      await solve(puzzle);
+      const day = await prisma.dailyActivity.findFirstOrThrow({ where: {} });
+      expect(day.xp).toBe(5);
+      expect(day.seconds).toBeLessThanOrEqual(90);
+      expect(dayKeyOf(day.day)).toBe(today());
+    });
+
     it('does not count an illegal move and lets the learner go on', async () => {
       const puzzle = await next({ mode: 'theme', theme: 'mateIn1' });
       expect(await move(puzzle.attemptId, 'a1a8')).toEqual({ result: 'illegal' });

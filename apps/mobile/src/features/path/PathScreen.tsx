@@ -22,10 +22,12 @@ export function PathScreen({
   onOpenLesson,
   onOpenPuzzles,
   onOpenPlay,
+  onOpenAnalysis,
 }: {
   onOpenLesson: (id: string) => void;
   onOpenPuzzles: () => void;
   onOpenPlay: () => void;
+  onOpenAnalysis: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
@@ -62,6 +64,7 @@ export function PathScreen({
         <View style={{ flex: 1 }}>{progress.data && <DayBar progress={progress.data} />}</View>
         <Button variant="text" label={t('puzzles.title')} onPress={onOpenPuzzles} />
         <Button variant="text" label={t('play.title')} onPress={onOpenPlay} />
+        <Button variant="text" label={t('analysis.title')} onPress={onOpenAnalysis} />
         <Button variant="text" label={t('path.signOut')} onPress={() => void signOut()} />
       </View>
 

@@ -10,6 +10,8 @@ import { RecoverScreen } from './src/features/auth/RecoverScreen';
 import { SplashScreen } from './src/features/auth/SplashScreen';
 import { CompleteScreen } from './src/features/lessons/CompleteScreen';
 import { LessonScreen, type LessonResult } from './src/features/lessons/LessonScreen';
+import { AnalysisScreen } from './src/features/analysis/AnalysisScreen';
+import { ReviewScreen } from './src/features/analysis/ReviewScreen';
 import { PathScreen } from './src/features/path/PathScreen';
 import { BotsScreen } from './src/features/play/BotsScreen';
 import { GameScreen } from './src/features/play/GameScreen';
@@ -25,7 +27,9 @@ type Screen =
   | { name: 'puzzles' }
   | { name: 'puzzle'; request: PuzzleRequest }
   | { name: 'bots' }
-  | { name: 'game'; id: string };
+  | { name: 'game'; id: string }
+  | { name: 'analysis' }
+  | { name: 'review'; id: string };
 
 /** The signed-in app: the chapters, a lesson in focus mode, the finish screen and the puzzles. */
 function SignedIn() {
@@ -38,11 +42,18 @@ function SignedIn() {
       screen.name !== 'done' &&
       screen.name !== 'puzzles' &&
       screen.name !== 'puzzle' &&
-      screen.name !== 'bots'
+      screen.name !== 'bots' &&
+      screen.name !== 'analysis' &&
+      screen.name !== 'review'
     ) {
       return;
     }
-    const back: Screen = screen.name === 'puzzle' ? { name: 'puzzles' } : { name: 'path' };
+    const back: Screen =
+      screen.name === 'puzzle'
+        ? { name: 'puzzles' }
+        : screen.name === 'review'
+          ? { name: 'bots' }
+          : { name: 'path' };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       setScreen(back);
       return true;
@@ -50,6 +61,11 @@ function SignedIn() {
     return () => subscription.remove();
   }, [screen.name]);
 
+  if (screen.name === 'analysis')
+    return <AnalysisScreen onBack={() => setScreen({ name: 'path' })} />;
+  if (screen.name === 'review') {
+    return <ReviewScreen id={screen.id} onClose={() => setScreen({ name: 'bots' })} />;
+  }
   if (screen.name === 'bots') {
     return (
       <BotsScreen
@@ -67,6 +83,7 @@ function SignedIn() {
         id={screen.id}
         onClose={() => setScreen({ name: 'bots' })}
         onNewGame={(id) => setScreen({ name: 'game', id })}
+        onReview={(id) => setScreen({ name: 'review', id })}
       />
     );
   }
@@ -115,6 +132,7 @@ function SignedIn() {
       onOpenLesson={(id) => setScreen({ name: 'lesson', id })}
       onOpenPuzzles={() => setScreen({ name: 'puzzles' })}
       onOpenPlay={() => setScreen({ name: 'bots' })}
+      onOpenAnalysis={() => setScreen({ name: 'analysis' })}
     />
   );
 }

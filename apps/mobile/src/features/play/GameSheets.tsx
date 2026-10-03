@@ -82,12 +82,21 @@ interface OverSheetProps {
   result: GameResult;
   message: CoachMessage;
   onAgain: () => void;
+  onReview: () => void;
   onBots: () => void;
   onClose: () => void;
 }
 
 /** The end of a game: the cat and the bot react, the XP is told once, the next game is one press away. */
-export function OverSheet({ bot, result, message, onAgain, onBots, onClose }: OverSheetProps) {
+export function OverSheet({
+  bot,
+  result,
+  message,
+  onAgain,
+  onReview,
+  onBots,
+  onClose,
+}: OverSheetProps) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const win = result.outcome === 'win';
@@ -124,7 +133,8 @@ export function OverSheet({ bot, result, message, onAgain, onBots, onClose }: Ov
         label={t('play.game.over.again')}
         onPress={onAgain}
       />
-      <Button variant="secondary" label={t('play.game.over.toBots')} onPress={onBots} />
+      <Button variant="secondary" label={t('play.game.over.review')} onPress={onReview} />
+      <Button variant="text" label={t('play.game.over.toBots')} onPress={onBots} />
     </BottomSheet>
   );
 }

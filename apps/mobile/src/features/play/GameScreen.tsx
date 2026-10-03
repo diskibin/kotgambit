@@ -64,10 +64,11 @@ interface GameScreenProps {
   id: string;
   onClose: () => void;
   onNewGame: (gameId: string) => void;
+  onReview: (gameId: string) => void;
 }
 
 /** Reads the game from the server and hands it to the screen. */
-export function GameScreen({ id, onClose, onNewGame }: GameScreenProps) {
+export function GameScreen({ id, onClose, onNewGame, onReview }: GameScreenProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -87,7 +88,7 @@ export function GameScreen({ id, onClose, onNewGame }: GameScreenProps) {
 
   const bot = bots.data?.bots.find((candidate) => candidate.id === loaded?.botId);
   if (loaded?.id === id && bot)
-    return <GamePlay bot={bot} onClose={onClose} onNewGame={onNewGame} />;
+    return <GamePlay bot={bot} onClose={onClose} onNewGame={onNewGame} onReview={onReview} />;
 
   const failed = game.isError || bots.isError;
   return (
@@ -133,10 +134,12 @@ function GamePlay({
   bot,
   onClose,
   onNewGame,
+  onReview,
 }: {
   bot: BotProfile;
   onClose: () => void;
   onNewGame: (gameId: string) => void;
+  onReview: (gameId: string) => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
@@ -481,12 +484,19 @@ function GamePlay({
         </View>
 
         {over ? (
-          <Button
-            large
-            label={t('play.game.over.again')}
-            busy={creation.isLoading}
-            onPress={() => void playAgain()}
-          />
+          <View style={{ gap: space[2] }}>
+            <Button
+              large
+              label={t('play.game.over.again')}
+              busy={creation.isLoading}
+              onPress={() => void playAgain()}
+            />
+            <Button
+              variant="secondary"
+              label={t('play.game.over.review')}
+              onPress={() => onReview(game.id)}
+            />
+          </View>
         ) : (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space[2] }}>
             {game.learning && (
@@ -529,6 +539,7 @@ function GamePlay({
           result={result}
           message={message}
           onAgain={() => void playAgain()}
+          onReview={() => onReview(game.id)}
           onBots={onClose}
           onClose={() => setOverOpen(false)}
         />

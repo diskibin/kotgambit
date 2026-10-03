@@ -117,7 +117,7 @@ export function AnalysisPage() {
 
   return (
     <AppShell active="analysis" title={t('analysis.title')}>
-      <div className="grid max-w-[1200px] gap-8 laptop:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
+      <div className="grid gap-8 laptop:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
         <section aria-label={t('analysis.title')} className="flex flex-col gap-4">
           <div className="flex gap-3">
             <div

@@ -9,6 +9,12 @@
   --color-white: #ffffff;
 }
 
+/* Scrollbars in the colors of the product: a lilac thumb on the tint of the brand, thin and round */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-tint-depth) var(--color-brand-tint);
+}
+
 @layer base {
   body {
     margin: 0;

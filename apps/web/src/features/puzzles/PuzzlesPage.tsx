@@ -45,7 +45,7 @@ export function PuzzlesPage() {
 
   return (
     <AppShell active="tasks" title={t('puzzles.title')}>
-      <div className="flex max-w-[1200px] flex-col gap-8">
+      <div className="flex flex-col gap-8">
         {failed && (
           <div className="flex flex-col gap-3">
             <Banner>{t('puzzles.loadError')}</Banner>
@@ -152,13 +152,13 @@ export function PuzzlesPage() {
             <p className="m-0 text-[16px] font-semibold text-text-2">{t('puzzles.themes.none')}</p>
           )}
 
-          <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 tablet:grid-cols-2 laptop:grid-cols-4">
+          <ul className="m-0 grid list-none auto-rows-fr grid-cols-1 gap-4 p-0 tablet:grid-cols-2 laptop:grid-cols-4">
             {shown.map((theme) => (
               <li key={theme.key}>
                 <button
                   type="button"
                   onClick={() => open(`mode=theme&theme=${encodeURIComponent(theme.key)}`)}
-                  className="flex min-h-[132px] w-full flex-col items-start gap-3 rounded-card border-2 border-line bg-surface p-5 text-left"
+                  className="flex h-full min-h-[132px] w-full flex-col items-start gap-3 rounded-card border-2 border-line bg-surface p-5 text-left"
                 >
                   <span className="font-heading text-[18px] leading-6 font-bold">
                     {theme.title}
@@ -166,7 +166,7 @@ export function PuzzlesPage() {
                   <span className="text-[14px] font-bold text-text-2">
                     {t('puzzles.themes.solvedOf', { solved: theme.solved, count: theme.count })}
                   </span>
-                  <span className="flex w-full">
+                  <span className="mt-auto flex w-full">
                     <ProgressBar
                       value={theme.solved}
                       max={theme.count}

@@ -42,7 +42,7 @@ export function ProfilePage() {
 
   return (
     <AppShell active="profile" title={t('profile.title')}>
-      <div className="flex max-w-[1200px] flex-col gap-6">
+      <div className="flex flex-col gap-6">
         {profile.isError && (
           <div className="flex flex-col gap-3">
             <Banner>{t('profile.loadError')}</Banner>

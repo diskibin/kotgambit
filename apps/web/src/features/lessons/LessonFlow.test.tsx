@@ -111,7 +111,7 @@ describe('home', () => {
     expect(screen.getByRole('group', { name: /Цель дня: 0 из 10 минут/ })).toBeInTheDocument();
     expect(screen.getByText('серия начнётся сегодня')).toBeInTheDocument();
     expect(screen.getByText(/Начнём с первой главы/)).toBeInTheDocument();
-    expect(screen.getByText('0 из 2 глав · 0%')).toBeInTheDocument();
+    expect(screen.getByText('0 из 2 глав')).toBeInTheDocument();
     expect(screen.getByText('5 шагов · около 5 минут')).toBeInTheDocument();
   });
 
@@ -131,7 +131,7 @@ describe('home', () => {
     renderApp('/learn');
     expect(await screen.findByRole('img', { name: 'Звёзд: 2 из 3' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Повторить/ })).toBeInTheDocument();
-    expect(screen.getByText('1 из 2 глав · 50%')).toBeInTheDocument();
+    expect(screen.getByText('1 из 2 глав')).toBeInTheDocument();
   });
 });
 

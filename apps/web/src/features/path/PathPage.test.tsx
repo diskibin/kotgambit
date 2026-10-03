@@ -69,7 +69,7 @@ describe('the home screen', () => {
     );
     renderApp('/learn');
     expect(await screen.findByText('Раздел пройден')).toBeInTheDocument();
-    expect(screen.getByText('2 из 2 глав · 100%')).toBeInTheDocument();
+    expect(screen.getByText('2 из 2 глав')).toBeInTheDocument();
   });
 
   it('tells that the streak grew since the last visit', async () => {

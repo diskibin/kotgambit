@@ -36,6 +36,12 @@ export function DayBar({
       aria-label={t('dayBar.label', { done: doneMinutes, goal: goalMinutes, streak })}
       className="flex items-center gap-3"
     >
+      <div
+        className={`flex-col text-right text-[13px] leading-4 font-bold ${compact ? 'hidden' : 'flex'}`}
+      >
+        <span className="text-text">{minutes}</span>
+        <span className="text-flame-text">{streak}</span>
+      </div>
       <div aria-hidden="true" className="flex overflow-hidden rounded-[9px] border-2 border-edge">
         {Array.from({ length: CELLS }, (_, index) => (
           <span
@@ -49,10 +55,6 @@ export function DayBar({
             )}
           </span>
         ))}
-      </div>
-      <div className={`flex-col text-[13px] leading-4 font-bold ${compact ? 'hidden' : 'flex'}`}>
-        <span className="text-text">{minutes}</span>
-        <span className="text-flame-text">{streak}</span>
       </div>
     </div>
   );

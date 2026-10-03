@@ -1,6 +1,6 @@
 import { boardReducer, createBoardState, type BoardAction } from '@kotgambit/board-controller';
 import { createCoach, type CoachMessage } from '@kotgambit/coach';
-import type { CardAnswerResponse, ReviewCard } from '@kotgambit/contracts';
+import { apiErrorOf, type CardAnswerResponse, type ReviewCard } from '@kotgambit/contracts';
 import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
@@ -14,6 +14,7 @@ import { radius, screenPadding, space, typography } from '../../theme/theme';
 import { Board } from '../board/Board';
 import { useBoardSize } from '../lessons/StepFrame';
 import { Mascot } from '../mascot/Mascot';
+import { PremiumNudge } from '../premium/PremiumNudge';
 
 const CAT = 56;
 const TURN_MARKER = 28;
@@ -31,7 +32,13 @@ const TONES: Record<CoachMessage['tone'], ReplyTone> = {
 type Answered = Exclude<CardAnswerResponse, { result: 'illegal' }>;
 
 /** Repeating the positions of the learner's own mistakes, one card at a time. */
-export function CardsScreen({ onClose }: { onClose: () => void }) {
+export function CardsScreen({
+  onClose,
+  onPremium,
+}: {
+  onClose: () => void;
+  onPremium: () => void;
+}) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -39,7 +46,7 @@ export function CardsScreen({ onClose }: { onClose: () => void }) {
   const [nextCard] = useNextCardMutation();
   const [card, setCard] = useState<ReviewCard | null>(null);
   const [left, setLeft] = useState(0);
-  const [load, setLoad] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
+  const [load, setLoad] = useState<'loading' | 'ready' | 'empty' | 'premium' | 'error'>('loading');
   const requested = useRef(false);
 
   async function fetchCard() {
@@ -50,7 +57,7 @@ export function CardsScreen({ onClose }: { onClose: () => void }) {
       setCard(result.data.card);
       setLoad(result.data.card ? 'ready' : 'empty');
     } else {
-      setLoad('error');
+      setLoad(apiErrorOf(result.error)?.code === 'premium.required' ? 'premium' : 'error');
     }
   }
 
@@ -89,6 +96,7 @@ export function CardsScreen({ onClose }: { onClose: () => void }) {
     </ScrollView>
   );
 
+  if (load === 'premium') return frame(<PremiumNudge kind="cards" onPremium={onPremium} />);
   if (load === 'ready' && card) {
     return frame(<CardSolver key={card.id} card={card} onNext={() => void fetchCard()} />);
   }

@@ -27,6 +27,7 @@ import { Board } from '../board/Board';
 import { Piece } from '../board/Piece';
 import { useBoardSize } from '../lessons/StepFrame';
 import { Mascot } from '../mascot/Mascot';
+import { PremiumNudge } from '../premium/PremiumNudge';
 import { AnalysisResult } from './AnalysisResult';
 
 const PIECE_ORDER: readonly PieceType[] = ['k', 'q', 'r', 'b', 'n', 'p'];
@@ -56,7 +57,13 @@ function hintSquaresFor(
 }
 
 /** The position editor with the engine's look at the position under it. */
-export function AnalysisScreen({ onBack }: { onBack: () => void }) {
+export function AnalysisScreen({
+  onBack,
+  onPremium,
+}: {
+  onBack: () => void;
+  onPremium: () => void;
+}) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -85,6 +92,7 @@ export function AnalysisScreen({ onBack }: { onBack: () => void }) {
   const failed = current && analysis.isError;
   const serverError = failed ? apiErrorOf(analysis.error) : null;
   const busy = failed && statusOf(analysis.error) === HTTP_UNAVAILABLE;
+  const limited = serverError?.code === 'analysis.limit';
   const draftInvalid = fenDraft !== null && fromFen(fenDraft) === null;
   const arrows = result?.best
     ? [
@@ -169,7 +177,8 @@ export function AnalysisScreen({ onBack }: { onBack: () => void }) {
           </View>
         </View>
       )}
-      {failed && !problem && (
+      {limited && <PremiumNudge kind="analysis" compact onPremium={onPremium} />}
+      {failed && !problem && !limited && (
         <View style={{ gap: space[2] }}>
           <Banner>
             {busy
@@ -312,7 +321,7 @@ export function AnalysisScreen({ onBack }: { onBack: () => void }) {
       <Button
         large
         busy={loading}
-        disabled={problem !== null || loading}
+        disabled={problem !== null || loading || limited}
         label={loading ? t('analysis.analyzing') : t('analysis.analyze')}
         onPress={run}
       />

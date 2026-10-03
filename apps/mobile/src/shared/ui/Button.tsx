@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, shashka, size, typography } from '../../theme/theme';
 
-type Variant = 'primary' | 'success' | 'secondary' | 'caution' | 'text' | 'danger';
+type Variant = 'primary' | 'success' | 'secondary' | 'premium' | 'caution' | 'text' | 'danger';
 
 interface ButtonProps {
   label: string;
@@ -54,6 +54,8 @@ export function Button({
     primary: colors.brand,
     success: colors.mint,
     secondary: colors.surface,
+    // The sun plate says "this is the paid thing" (components.md)
+    premium: colors.sun,
     // Giving up: a calm coral plate, still a button of the same family
     caution: colors.coralTint,
   }[variant];
@@ -61,6 +63,7 @@ export function Button({
     primary: colors.onBrand,
     success: colors.onAccent,
     secondary: colors.text,
+    premium: colors.onAccent,
     caution: colors.coralText,
   }[variant];
 

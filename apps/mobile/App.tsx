@@ -1,3 +1,4 @@
+import type { CheckoutResponse } from '@kotgambit/contracts';
 import { useEffect, useState } from 'react';
 import { BackHandler, StatusBar } from 'react-native';
 import { Provider } from 'react-redux';
@@ -14,6 +15,9 @@ import { AnalysisScreen } from './src/features/analysis/AnalysisScreen';
 import { ReviewScreen } from './src/features/analysis/ReviewScreen';
 import { CardsScreen } from './src/features/profile/CardsScreen';
 import { ProfileScreen } from './src/features/profile/ProfileScreen';
+import { CheckoutScreen } from './src/features/premium/CheckoutScreen';
+import { PaymentStatusScreen } from './src/features/premium/PaymentStatusScreen';
+import { PremiumScreen } from './src/features/premium/PremiumScreen';
 import { PathScreen } from './src/features/path/PathScreen';
 import { BotsScreen } from './src/features/play/BotsScreen';
 import { GameScreen } from './src/features/play/GameScreen';
@@ -33,7 +37,10 @@ type Screen =
   | { name: 'analysis' }
   | { name: 'review'; id: string }
   | { name: 'profile' }
-  | { name: 'cards' };
+  | { name: 'cards' }
+  | { name: 'premium' }
+  | { name: 'checkout'; checkout: CheckoutResponse }
+  | { name: 'payment'; paymentId: string };
 
 /** The signed-in app: the chapters, a lesson in focus mode, the finish screen and the puzzles. */
 function SignedIn() {
@@ -50,7 +57,9 @@ function SignedIn() {
       screen.name !== 'analysis' &&
       screen.name !== 'review' &&
       screen.name !== 'profile' &&
-      screen.name !== 'cards'
+      screen.name !== 'cards' &&
+      screen.name !== 'premium' &&
+      screen.name !== 'payment'
     ) {
       return;
     }
@@ -61,7 +70,9 @@ function SignedIn() {
           ? { name: 'bots' }
           : screen.name === 'cards'
             ? { name: 'profile' }
-            : { name: 'path' };
+            : screen.name === 'payment'
+              ? { name: 'premium' }
+              : { name: 'path' };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       setScreen(back);
       return true;
@@ -69,6 +80,34 @@ function SignedIn() {
     return () => subscription.remove();
   }, [screen.name]);
 
+  if (screen.name === 'premium') {
+    return (
+      <PremiumScreen
+        onBack={() => setScreen({ name: 'path' })}
+        onCheckout={(checkout) => setScreen({ name: 'checkout', checkout })}
+      />
+    );
+  }
+  // The payment page is in focus mode and asks before leaving on its own
+  if (screen.name === 'checkout') {
+    return (
+      <CheckoutScreen
+        key={screen.checkout.paymentId}
+        checkout={screen.checkout}
+        onReturn={() => setScreen({ name: 'payment', paymentId: screen.checkout.paymentId })}
+        onClose={() => setScreen({ name: 'payment', paymentId: screen.checkout.paymentId })}
+      />
+    );
+  }
+  if (screen.name === 'payment') {
+    return (
+      <PaymentStatusScreen
+        paymentId={screen.paymentId}
+        onDone={() => setScreen({ name: 'path' })}
+        onRetry={() => setScreen({ name: 'premium' })}
+      />
+    );
+  }
   if (screen.name === 'profile') {
     return (
       <ProfileScreen
@@ -79,16 +118,27 @@ function SignedIn() {
     );
   }
   if (screen.name === 'cards') {
-    return <CardsScreen onClose={() => setScreen({ name: 'profile' })} />;
+    return (
+      <CardsScreen
+        onClose={() => setScreen({ name: 'profile' })}
+        onPremium={() => setScreen({ name: 'premium' })}
+      />
+    );
   }
   if (screen.name === 'analysis')
-    return <AnalysisScreen onBack={() => setScreen({ name: 'path' })} />;
+    return (
+      <AnalysisScreen
+        onBack={() => setScreen({ name: 'path' })}
+        onPremium={() => setScreen({ name: 'premium' })}
+      />
+    );
   if (screen.name === 'review') {
     return (
       <ReviewScreen
         id={screen.id}
         onClose={() => setScreen({ name: 'bots' })}
         onCards={() => setScreen({ name: 'cards' })}
+        onPremium={() => setScreen({ name: 'premium' })}
       />
     );
   }
@@ -128,6 +178,7 @@ function SignedIn() {
         key={`${screen.request.mode}:${screen.request.theme ?? ''}`}
         request={screen.request}
         onClose={() => setScreen({ name: 'puzzles' })}
+        onPremium={() => setScreen({ name: 'premium' })}
       />
     );
   }
@@ -160,6 +211,7 @@ function SignedIn() {
       onOpenPlay={() => setScreen({ name: 'bots' })}
       onOpenAnalysis={() => setScreen({ name: 'analysis' })}
       onOpenProfile={() => setScreen({ name: 'profile' })}
+      onOpenPremium={() => setScreen({ name: 'premium' })}
     />
   );
 }

@@ -11,13 +11,14 @@ import { IconButton } from '../../shared/ui/IconButton';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, screenPadding, space, typography } from '../../theme/theme';
 import { Mascot } from '../mascot/Mascot';
+import { PremiumNudge } from '../premium/PremiumNudge';
 import { PuzzleSolver } from './PuzzleSolver';
 import type { PuzzleRequest } from './PuzzlesScreen';
 
 const HTTP_UNAVAILABLE = 503;
 const HTTP_NOT_FOUND = 404;
 
-type Load = 'loading' | 'ready' | 'none' | 'busy' | 'error';
+type Load = 'loading' | 'ready' | 'none' | 'busy' | 'limit' | 'error';
 
 function statusOf(error: unknown): number | null {
   return typeof error === 'object' && error !== null && 'status' in error
@@ -36,9 +37,11 @@ const pill = (background: string) => ({
 export function PuzzleScreen({
   request,
   onClose,
+  onPremium,
 }: {
   request: PuzzleRequest;
   onClose: () => void;
+  onPremium: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
@@ -63,8 +66,17 @@ export function PuzzleScreen({
       return;
     }
     const status = statusOf(result.error);
-    setServerMessage(apiErrorOf(result.error)?.message ?? '');
-    setLoad(status === HTTP_NOT_FOUND ? 'none' : status === HTTP_UNAVAILABLE ? 'busy' : 'error');
+    const problem = apiErrorOf(result.error);
+    setServerMessage(problem?.message ?? '');
+    setLoad(
+      problem?.code === 'puzzle.limit'
+        ? 'limit'
+        : status === HTTP_NOT_FOUND
+          ? 'none'
+          : status === HTTP_UNAVAILABLE
+            ? 'busy'
+            : 'error',
+    );
   }
 
   /** "Next puzzle" and "Try again": the screen shows that it is working before the answer comes. */
@@ -124,6 +136,23 @@ export function PuzzleScreen({
     );
   }
 
+  if (load === 'limit') {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          gap: space[3],
+          padding: screenPadding,
+          backgroundColor: colors.bg,
+        }}
+      >
+        <PremiumNudge kind="puzzles" onPremium={onPremium} />
+        <Button variant="secondary" label={t('puzzles.mistakes.back')} onPress={onClose} />
+      </View>
+    );
+  }
+
   const noneForReview = load === 'none' && request.mode === 'review';
   const title = {
     loading: t('puzzles.solve.starting'),
@@ -133,6 +162,7 @@ export function PuzzleScreen({
     busy: t('puzzles.busy.title'),
     error: t('puzzles.solve.loadError'),
     ready: '',
+    limit: '',
   }[load];
   const text = noneForReview
     ? t('puzzles.mistakes.emptyText')

@@ -2,6 +2,25 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Android 11 and later: without this the app cannot see which banking apps are installed,
+         and the payment pages cannot open them (PLAN.md 6.8). The schemes of the banks and of the SBP
+         are an assumption to check against the YooKassa documentation on real devices. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="sberpay" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="bank100000000111" />
+        </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"

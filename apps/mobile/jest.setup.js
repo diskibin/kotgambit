@@ -21,3 +21,15 @@ jest.mock('react-native-keychain', () => {
     }),
   };
 });
+
+// The WebView is native, a plain view stands in for it and keeps its props for the tests to call
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const WebView = React.forwardRef((props, ref) => {
+    React.useImperativeHandle(ref, () => ({ reload: jest.fn() }));
+    globalThis.__webview = props;
+    return React.createElement(View, { testID: 'webview' });
+  });
+  return { __esModule: true, WebView, default: WebView };
+});

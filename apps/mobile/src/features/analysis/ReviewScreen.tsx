@@ -186,10 +186,12 @@ export function ReviewScreen({
   id,
   onClose,
   onCards,
+  onPremium,
 }: {
   id: string;
   onClose: () => void;
   onCards: () => void;
+  onPremium: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
@@ -335,7 +337,31 @@ export function ReviewScreen({
         ))}
       </View>
 
-      {result.mistakes.length > 0 && (
+      {!data.full && (
+        <View
+          style={{
+            alignItems: 'center',
+            gap: space[2],
+            padding: space[4],
+            borderRadius: radius.card,
+            borderWidth: 2,
+            borderStyle: 'dashed',
+            borderColor: colors.sunDepth,
+            backgroundColor: colors.sunTint,
+          }}
+        >
+          <Text style={[typography.caption, { color: colors.sunText }]}>
+            {t('limits.review.chip')}
+          </Text>
+          <Text style={[typography.h3, { color: colors.text }]}>{t('limits.review.title')}</Text>
+          <Text style={[typography.small, { color: colors.text2, textAlign: 'center' }]}>
+            {t('limits.review.text')}
+          </Text>
+          <Button variant="premium" label={t('limits.review.cta')} onPress={onPremium} />
+        </View>
+      )}
+
+      {data.full && result.mistakes.length > 0 && (
         <View style={{ gap: space[2] }}>
           <Button
             variant="secondary"

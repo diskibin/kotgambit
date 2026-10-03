@@ -1,4 +1,5 @@
 export * from './coach.js';
+export { describePositionProblem } from './problems.js';
 export {
   GAME_PHRASES,
   GAME_TITLES,

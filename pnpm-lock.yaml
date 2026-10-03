@@ -202,6 +202,9 @@ importers:
       '@kotgambit/chess-core':
         specifier: workspace:*
         version: link:../../packages/chess-core
+      '@kotgambit/coach':
+        specifier: workspace:*
+        version: link:../../packages/coach
       '@kotgambit/content-schema':
         specifier: workspace:*
         version: link:../../packages/content-schema
@@ -662,6 +665,9 @@ importers:
 
   packages/coach:
     dependencies:
+      '@kotgambit/chess-core':
+        specifier: workspace:*
+        version: link:../chess-core
       '@kotgambit/mascot':
         specifier: workspace:*
         version: link:../mascot

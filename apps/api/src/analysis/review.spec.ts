@@ -1,12 +1,6 @@
 import { STARTING_FEN, playGame } from '@kotgambit/chess-core';
 import { describe, expect, it } from 'vitest';
-import {
-  describeProblem,
-  describeVerdict,
-  explainMove,
-  lineToSan,
-  pluralMoves,
-} from './explain.js';
+import { describeVerdict, explainMove, lineToSan, pluralMoves } from './explain.js';
 import { buildReview, type PositionEval, type ReviewMove } from './review.js';
 
 const FOOLS_MATE = ['f2f3', 'e7e5', 'g2g4', 'd8h4'];
@@ -113,19 +107,6 @@ describe('lineToSan', () => {
   it('writes the moves of a line and stops at the limit or at a move that is not legal', () => {
     expect(lineToSan(STARTING_FEN, ['e2e4', 'e7e5', 'g1f3'], 2)).toEqual(['e4', 'e5']);
     expect(lineToSan(STARTING_FEN, ['e2e4', 'e2e4', 'g1f3'], 3)).toEqual(['e4']);
-  });
-});
-
-describe('describeProblem', () => {
-  it('uses the words of the design for a missing king', () => {
-    expect(describeProblem({ kind: 'no-king', color: 'b' })).toBe(
-      'У чёрных нет короля. Поставь чёрного короля, например на e8, и анализ заработает.',
-    );
-  });
-
-  it('says what to do about the other problems', () => {
-    expect(describeProblem({ kind: 'pawn-on-edge', square: 'a8' })).toContain('a8');
-    expect(describeProblem({ kind: 'kings-touch' })).toContain('рядом');
   });
 });
 

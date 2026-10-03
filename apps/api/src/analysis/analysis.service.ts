@@ -13,7 +13,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { AppError } from '../common/app-error.js';
 import { Priority } from '../engine/engine-pool.js';
 import { EngineService } from '../engine/engine.service.js';
-import { describeProblem, describeVerdict, explainMove, lineToSan } from './explain.js';
+import { describePositionProblem } from '@kotgambit/coach';
+import { describeVerdict, explainMove, lineToSan } from './explain.js';
 
 /** A position the learner built has no move counters, an engine and chess.js need them. */
 export function normalizeFen(fen: string): string {
@@ -50,7 +51,7 @@ export class AnalysisService {
         'analysis.invalid_position',
         HttpStatus.UNPROCESSABLE_ENTITY,
         details,
-        describeProblem(problem),
+        describePositionProblem(problem),
       );
     }
     const fen = normalizeFen(rawFen);

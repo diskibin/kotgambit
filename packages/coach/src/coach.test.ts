@@ -5,6 +5,7 @@ import {
   PUZZLE_PHRASES,
   PUZZLE_TITLES,
   createCoach,
+  describePositionProblem,
   type CoachEvent,
 } from './index.js';
 
@@ -341,5 +342,18 @@ describe('game messages', () => {
     const c = createCoach(() => 0);
     const first = c.message({ type: 'GAME_MOVE' }).text;
     expect(c.message({ type: 'GAME_MOVE' }).text).not.toBe(first);
+  });
+});
+
+describe('describePositionProblem', () => {
+  it('uses the words of the design for a missing king', () => {
+    expect(describePositionProblem({ kind: 'no-king', color: 'b' })).toBe(
+      'У чёрных нет короля. Поставь чёрного короля, например на e8, и анализ заработает.',
+    );
+  });
+
+  it('says what to do about the other problems', () => {
+    expect(describePositionProblem({ kind: 'pawn-on-edge', square: 'a8' })).toContain('a8');
+    expect(describePositionProblem({ kind: 'kings-touch' })).toContain('рядом');
   });
 });

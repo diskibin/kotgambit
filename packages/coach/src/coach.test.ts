@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { PHRASES, PUZZLE_PHRASES, PUZZLE_TITLES, createCoach, type CoachEvent } from './index.js';
+import {
+  GAME_PHRASES,
+  PHRASES,
+  PUZZLE_PHRASES,
+  PUZZLE_TITLES,
+  createCoach,
+  type CoachEvent,
+} from './index.js';
 
 const MAX_WORDS = 16;
 // Words that would break the cat's voice: scolding, guilt, pressure, sarcasm
@@ -235,5 +242,91 @@ describe('puzzle messages', () => {
     const c = coach();
     const texts = Array.from({ length: 10 }, () => c.message({ type: 'PUZZLE_WRONG' }).text);
     texts.slice(1).forEach((text, index) => expect(text).not.toBe(texts[index]));
+  });
+});
+
+describe('game phrases', () => {
+  const texts = Object.entries(GAME_PHRASES).flatMap(([key, items]) =>
+    items.map((text) => ({ key, text })),
+  );
+
+  it('has different variants for every situation that repeats', () => {
+    for (const [key, items] of Object.entries(GAME_PHRASES)) {
+      expect(new Set(items).size, key).toBe(items.length);
+      // The resign dialog and the busy card use the design's text, there is nothing to rotate
+      if (key !== 'resign' && key !== 'busy') expect(items.length, key).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('keeps every line short and free of scolding and pressure', () => {
+    for (const { key, text } of texts) {
+      expect(text.split(/\s+/).length, `${key}: ${text}`).toBeLessThanOrEqual(MAX_WORDS);
+      for (const word of FORBIDDEN)
+        expect(text.toLowerCase(), `${key}: ${word}`).not.toContain(word);
+    }
+  });
+});
+
+describe('game messages', () => {
+  const coach = () => createCoach(() => 0);
+
+  it('celebrates a win with confetti', () => {
+    expect(
+      coach().message({ type: 'GAME_OVER', outcome: 'win', reason: 'checkmate' }),
+    ).toMatchObject({
+      title: 'Мат! Ты победил',
+      mascot: 'cheer',
+      tone: 'celebrate',
+      effect: 'confetti',
+    });
+  });
+
+  it('meets a loss and a resignation with a soft voice and no red', () => {
+    for (const reason of ['checkmate', 'resignation'] as const) {
+      expect(coach().message({ type: 'GAME_OVER', outcome: 'loss', reason })).toMatchObject({
+        title: 'Партия окончена',
+        mascot: 'oops',
+        tone: 'soft',
+        effect: 'none',
+      });
+    }
+  });
+
+  it('uses the words of the design for a resignation', () => {
+    expect(
+      coach().message({ type: 'GAME_OVER', outcome: 'loss', reason: 'resignation' }).text,
+    ).toBe('Ничего страшного! Разбор покажет, где можно было сыграть сильнее.');
+    expect(coach().message({ type: 'GAME_RESIGN_ASK' })).toMatchObject({
+      title: 'Сдаться?',
+      text: 'Партия закончится поражением. Её всё равно можно будет разобрать вместе с Гамбитом.',
+    });
+  });
+
+  it('names a stalemate and other draws', () => {
+    expect(coach().message({ type: 'GAME_OVER', outcome: 'draw', reason: 'stalemate' }).title).toBe(
+      'Пат — ничья',
+    );
+    expect(
+      coach().message({ type: 'GAME_OVER', outcome: 'draw', reason: 'threefold-repetition' }).title,
+    ).toBe('Ничья');
+  });
+
+  it('says the position is saved when the engine is busy', () => {
+    expect(coach().message({ type: 'GAME_BUSY' })).toMatchObject({
+      title: 'Гамбит задумался',
+      text: 'Подожди пару секунд и попробуй снова. Позиция сохранена.',
+    });
+  });
+
+  it('shows the hint move with a hint cat', () => {
+    const message = coach().message({ type: 'GAME_HINT', san: 'Nc3' });
+    expect(message).toMatchObject({ mascot: 'hint', tone: 'hint' });
+    expect(message.text).toContain('Ход: Nc3.');
+  });
+
+  it('does not repeat a line twice in a row', () => {
+    const c = createCoach(() => 0);
+    const first = c.message({ type: 'GAME_MOVE' }).text;
+    expect(c.message({ type: 'GAME_MOVE' }).text).not.toBe(first);
   });
 });

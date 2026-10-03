@@ -1,8 +1,11 @@
 import {
+  GAME_PHRASES,
+  GAME_TITLES,
   PHRASES,
   PUZZLE_PHRASES,
   PUZZLE_TITLES,
   puzzleHintTitle,
+  type GamePhraseKey,
   type PhraseKey,
   type PuzzlePhraseKey,
 } from './phrases.js';
@@ -11,6 +14,8 @@ import {
   STREAK_NOTICE,
   type CoachEvent,
   type CoachMessage,
+  type GameEndReason,
+  type GameOutcome,
   type Phrase,
 } from './types.js';
 
@@ -27,6 +32,7 @@ export interface Coach {
  */
 export function createCoach(random: () => number = Math.random): Coach {
   const last = new Map<PhraseKey, number>();
+  const lastGameText = new Map<GamePhraseKey, number>();
 
   function pick(key: PhraseKey): Phrase {
     const variants: readonly Phrase[] = PHRASES[key];
@@ -47,6 +53,44 @@ export function createCoach(random: () => number = Math.random): Coach {
     const index = pool[Math.floor(random() * pool.length)] ?? 0;
     lastText.set(key, index);
     return variants[index] as string;
+  }
+
+  function pickGameText(key: GamePhraseKey): string {
+    const variants: readonly string[] = GAME_PHRASES[key];
+    const previous = lastGameText.get(key);
+    const pool = variants.map((_, index) => index).filter((index) => index !== previous);
+    const index = pool[Math.floor(random() * pool.length)] ?? 0;
+    lastGameText.set(key, index);
+    return variants[index] as string;
+  }
+
+  function game(
+    title: string,
+    key: GamePhraseKey,
+    look: Pick<CoachMessage, 'mascot' | 'tone' | 'effect'>,
+    suffix = '',
+  ): CoachMessage {
+    return { title, text: `${pickGameText(key)}${suffix}`, ...look };
+  }
+
+  function gameOver(outcome: GameOutcome, reason: GameEndReason): CoachMessage {
+    if (outcome === 'win') {
+      return game(GAME_TITLES.win, 'win', {
+        mascot: 'cheer',
+        tone: 'celebrate',
+        effect: 'confetti',
+      });
+    }
+    if (outcome === 'loss') {
+      const key = reason === 'resignation' ? 'resigned' : 'loss';
+      return game(GAME_TITLES.over, key, { mascot: 'oops', tone: 'soft', effect: 'none' });
+    }
+    const stalemate = reason === 'stalemate';
+    return game(
+      stalemate ? GAME_TITLES.stalemate : GAME_TITLES.draw,
+      stalemate ? 'stalemate' : 'draw',
+      { mascot: 'thinking', tone: 'neutral', effect: 'none' },
+    );
   }
 
   return {
@@ -160,6 +204,49 @@ export function createCoach(random: () => number = Math.random): Coach {
             tone: 'demo',
             effect: 'none',
           };
+        case 'GAME_START':
+          return game(GAME_TITLES.start, 'start', {
+            mascot: 'idle',
+            tone: 'neutral',
+            effect: 'none',
+          });
+        case 'GAME_MOVE':
+          return game(GAME_TITLES.move, 'move', {
+            mascot: 'idle',
+            tone: 'neutral',
+            effect: 'none',
+          });
+        case 'GAME_CHECK':
+          return game(GAME_TITLES.check, 'check', { mascot: 'hint', tone: 'hint', effect: 'none' });
+        case 'GAME_PROMOTION':
+          return game(GAME_TITLES.promotion, 'promotion', {
+            mascot: 'happy',
+            tone: 'success',
+            effect: 'none',
+          });
+        case 'GAME_HINT':
+          return game(
+            GAME_TITLES.hint,
+            'hint',
+            { mascot: 'hint', tone: 'hint', effect: 'none' },
+            ` Ход: ${event.san}.`,
+          );
+        case 'GAME_UNDO':
+          return game(GAME_TITLES.undo, 'undo', { mascot: 'idle', tone: 'soft', effect: 'none' });
+        case 'GAME_RESIGN_ASK':
+          return game(GAME_TITLES.resign, 'resign', {
+            mascot: 'oops',
+            tone: 'soft',
+            effect: 'none',
+          });
+        case 'GAME_BUSY':
+          return game(GAME_TITLES.busy, 'busy', {
+            mascot: 'thinking',
+            tone: 'soft',
+            effect: 'none',
+          });
+        case 'GAME_OVER':
+          return gameOver(event.outcome, event.reason);
       }
     },
   };

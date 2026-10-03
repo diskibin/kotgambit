@@ -39,7 +39,29 @@ export type CoachEvent =
   /** `themes` are the Russian names of the puzzle's ideas, shown by the second level. */
   | { type: 'PUZZLE_HINT'; level: 1 | 2 | 3; themes?: readonly string[] }
   /** The learner asked to see the solution. */
-  | { type: 'PUZZLE_SOLUTION' };
+  | { type: 'PUZZLE_SOLUTION' }
+  | { type: 'GAME_START' }
+  /** The learner has moved and the bot is thinking. */
+  | { type: 'GAME_MOVE' }
+  /** The learner's king is under attack. */
+  | { type: 'GAME_CHECK' }
+  | { type: 'GAME_PROMOTION' }
+  /** `san` is the move the hint points at, written the way a player reads it. */
+  | { type: 'GAME_HINT'; san: string }
+  | { type: 'GAME_UNDO' }
+  | { type: 'GAME_RESIGN_ASK' }
+  /** The engine did not answer in time, the position is saved. */
+  | { type: 'GAME_BUSY' }
+  | { type: 'GAME_OVER'; outcome: GameOutcome; reason: GameEndReason };
+
+export type GameOutcome = 'win' | 'loss' | 'draw';
+export type GameEndReason =
+  | 'checkmate'
+  | 'stalemate'
+  | 'insufficient-material'
+  | 'fifty-moves'
+  | 'threefold-repetition'
+  | 'resignation';
 
 export interface Phrase {
   title: string;

@@ -10,3 +10,4 @@ export * from './analysis.js';
 export * from './profile.js';
 export * from './billing.js';
 export * from './settings.js';
+export * from './wardrobe.js';

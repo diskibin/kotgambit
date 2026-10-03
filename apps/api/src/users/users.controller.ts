@@ -1,4 +1,9 @@
-import { UpdateSettingsRequestSchema, type Settings, type User } from '@kotgambit/contracts';
+import {
+  UpdateSettingsRequestSchema,
+  type AccessoryKey,
+  type Settings,
+  type User,
+} from '@kotgambit/contracts';
 import {
   Body,
   Controller,
@@ -41,6 +46,7 @@ export class UsersController {
       email: user.email,
       displayName: user.displayName,
       emailVerified: user.emailVerifiedAt !== null,
+      accessory: user.accessory as AccessoryKey,
     };
   }
 

@@ -17,6 +17,7 @@ const USER = {
   email: 'cat@example.com',
   displayName: null,
   emailVerified: false,
+  accessory: 'none',
 };
 const AUTH = { accessToken: 'fresh-token', expiresIn: 900, user: USER };
 
@@ -731,6 +732,17 @@ describe('profile and card endpoints', () => {
           achievements: [{ key: 'streak-3', current: 3, target: 3, unlocked: true }],
           themes: [{ key: 'pin', title: 'Связка', accuracy: 31, attempts: 8 }],
           cards: SUMMARY,
+          wardrobe: {
+            selected: 'none',
+            items: [
+              { key: 'none', unlocked: true },
+              { key: 'scarf', unlocked: true },
+              { key: 'glasses', unlocked: false },
+              { key: 'crown', unlocked: false },
+              { key: 'hat', unlocked: false },
+              { key: 'medal', unlocked: false },
+            ],
+          },
         });
       }),
     );

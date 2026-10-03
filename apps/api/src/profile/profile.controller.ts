@@ -1,5 +1,5 @@
-import type { Profile } from '@kotgambit/contracts';
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { SetAccessoryRequestSchema, type Profile, type Wardrobe } from '@kotgambit/contracts';
+import { Body, Controller, Get, Put, Query, UseGuards } from '@nestjs/common';
 import { z } from 'zod';
 import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { CurrentUserId } from '../auth/current-user.decorator.js';
@@ -25,5 +25,14 @@ export class ProfileController {
     @Query(new ZodValidationPipe(ProfileQuerySchema)) query: z.output<typeof ProfileQuerySchema>,
   ): Promise<Profile> {
     return this.profile.profile(userId, query.localDate);
+  }
+
+  @Put('accessory')
+  setAccessory(
+    @CurrentUserId() userId: string,
+    @Body(new ZodValidationPipe(SetAccessoryRequestSchema))
+    body: z.output<typeof SetAccessoryRequestSchema>,
+  ): Promise<Wardrobe> {
+    return this.profile.setAccessory(userId, body.accessory);
   }
 }

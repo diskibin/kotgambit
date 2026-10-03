@@ -30,6 +30,7 @@ export const ERROR_MESSAGES = {
   'review.not_ready': 'Разбор будет готов, когда партия закончится.',
   'review.not_found': 'Разбор этой партии ещё не начинали.',
   'card.not_found': 'Эту карточку уже не найти.',
+  'wardrobe.locked': 'Эту вещь Гамбит пока не может надеть. Её нужно заслужить.',
   'billing.unavailable': 'Оплата пока недоступна. Загляни чуть позже.',
   'billing.payment_not_found': 'Такого платежа не нашлось.',
   'billing.no_subscription': 'У тебя пока нет подписки.',

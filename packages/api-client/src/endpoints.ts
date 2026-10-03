@@ -1,6 +1,7 @@
 import {
   ActiveGameSchema,
   SettingsSchema,
+  WardrobeSchema,
   CheckoutResponseSchema,
   EntitlementsSchema,
   PaymentStatusSchema,
@@ -33,7 +34,9 @@ import {
   UserSchema,
   type ActiveGame,
   type Settings,
+  type SetAccessoryRequest,
   type UpdateSettingsRequest,
+  type Wardrobe,
   type CheckoutRequest,
   type CheckoutResponse,
   type Entitlements,
@@ -349,6 +352,12 @@ export function endpoints(build: Builder) {
       responseSchema: SettingsSchema,
       // The goal changes the day bar and the name changes the profile and the avatar
       invalidatesTags: ['Settings', 'Progress', 'Me'],
+    }),
+    // Puts an item of the wardrobe on the cat: the profile shows what is open, the profile of the account says what is worn
+    setAccessory: build.mutation<Wardrobe, SetAccessoryRequest>({
+      query: (body) => ({ url: '/profile/accessory', method: 'PUT', body }),
+      responseSchema: WardrobeSchema,
+      invalidatesTags: ['Me', 'Progress'],
     }),
     // Final: the screen asks the learner to type the word first, and signs out afterwards
     deleteAccount: build.mutation<undefined, void>({

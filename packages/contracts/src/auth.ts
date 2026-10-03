@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AccessoryKeySchema } from './wardrobe.js';
 
 /**
  * Clients that cannot use the httpOnly refresh cookie (the mobile app) send this header
@@ -37,6 +38,8 @@ export const UserSchema = z.object({
   email: z.email(),
   displayName: z.string().nullable(),
   emailVerified: z.boolean(),
+  /** What the cat wears, everywhere in the product. */
+  accessory: AccessoryKeySchema,
 });
 export type User = z.infer<typeof UserSchema>;
 

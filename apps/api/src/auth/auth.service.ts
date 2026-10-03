@@ -1,4 +1,9 @@
-import type { AuthResponse, LoginRequest, RegisterRequest } from '@kotgambit/contracts';
+import type {
+  AccessoryKey,
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+} from '@kotgambit/contracts';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { AppError } from '../common/app-error.js';
@@ -24,6 +29,7 @@ type UserRecord = {
   email: string;
   displayName: string | null;
   emailVerifiedAt: Date | null;
+  accessory: string;
 };
 
 // The contract normalizes the email on the way in, so these are the parsed values
@@ -133,6 +139,7 @@ export class AuthService {
           email: user.email,
           displayName: user.displayName,
           emailVerified: user.emailVerifiedAt !== null,
+          accessory: user.accessory as AccessoryKey,
         },
       },
       refreshToken,

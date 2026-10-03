@@ -1,4 +1,10 @@
-import { ApiErrorSchema, AuthResponseSchema, SettingsSchema } from '@kotgambit/contracts';
+import {
+  ApiErrorSchema,
+  AuthResponseSchema,
+  ProfileSchema,
+  SettingsSchema,
+  WardrobeSchema,
+} from '@kotgambit/contracts';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestApp } from '../../test/create-app.js';
@@ -42,7 +48,7 @@ describe('the settings and the account', () => {
     userId = body.user.id;
   });
 
-  const call = (method: 'GET' | 'PATCH' | 'DELETE', url: string, body?: unknown) =>
+  const call = (method: 'GET' | 'PATCH' | 'PUT' | 'DELETE', url: string, body?: unknown) =>
     app.inject({
       method,
       url,
@@ -136,6 +142,56 @@ describe('the settings and the account', () => {
       await vi.waitFor(() => expect(mail.outbox.length).toBeGreaterThan(1));
       await call('DELETE', '/users/me');
       expect(await prisma.user.count()).toBe(1);
+    });
+  });
+
+  describe('the wardrobe of the cat', () => {
+    const openKeys = async () =>
+      ProfileSchema.parse((await call('GET', '/profile')).json())
+        .wardrobe.items.filter((item) => item.unlocked)
+        .map((item) => item.key);
+
+    it('starts with the plain cat and nothing else open', async () => {
+      const profile = ProfileSchema.parse((await call('GET', '/profile')).json());
+      expect(profile.wardrobe.selected).toBe('none');
+      expect(await openKeys()).toEqual(['none']);
+      expect((await call('GET', '/users/me')).json()).toMatchObject({ accessory: 'none' });
+    });
+
+    it('refuses an item that is not earned yet', async () => {
+      const res = await call('PUT', '/profile/accessory', { accessory: 'crown' });
+      expect(res.statusCode).toBe(403);
+      expect(ApiErrorSchema.parse(res.json()).code).toBe('wardrobe.locked');
+      expect((await call('GET', '/users/me')).json()).toMatchObject({ accessory: 'none' });
+    });
+
+    it('refuses a name that is not in the wardrobe', async () => {
+      expect((await call('PUT', '/profile/accessory', { accessory: 'cape' })).statusCode).toBe(400);
+    });
+
+    it('puts on an item after it is earned, and the cat wears it everywhere', async () => {
+      await prisma.userPuzzleStats.create({ data: { userId, solved: 100 } });
+      expect(await openKeys()).toEqual(['none', 'glasses']);
+      const res = await call('PUT', '/profile/accessory', { accessory: 'glasses' });
+      expect(res.statusCode).toBe(200);
+      expect(WardrobeSchema.parse(res.json()).selected).toBe('glasses');
+      expect((await call('GET', '/users/me')).json()).toMatchObject({ accessory: 'glasses' });
+    });
+
+    it('takes the item off again by choosing the plain cat', async () => {
+      await prisma.userPuzzleStats.create({ data: { userId, solved: 100 } });
+      await call('PUT', '/profile/accessory', { accessory: 'glasses' });
+      const res = await call('PUT', '/profile/accessory', { accessory: 'none' });
+      expect(WardrobeSchema.parse(res.json()).selected).toBe('none');
+    });
+
+    it('needs a signed-in user', async () => {
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/profile/accessory',
+        payload: { accessory: 'none' },
+      });
+      expect(res.statusCode).toBe(401);
     });
   });
 });

@@ -1,5 +1,6 @@
-import type { Profile } from '@kotgambit/contracts';
-import { Injectable } from '@nestjs/common';
+import type { AccessoryKey, Profile, Wardrobe } from '@kotgambit/contracts';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { AppError } from '../common/app-error.js';
 import { CardsService } from '../cards/cards.service.js';
 import { BotsService } from '../games/bots.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -8,6 +9,7 @@ import { evaluateAchievements, type AchievementStats } from '../progress/achieve
 import { levelOf } from '../progress/levels.js';
 import { ProgressService } from '../progress/progress.service.js';
 import { bestStreak, computeStreak, dayKeyOf, shiftDay } from '../progress/streak.js';
+import { buildWardrobe } from './wardrobe.js';
 
 const SECONDS_IN_MINUTE = 60;
 const WEEK_DAYS = 7;
@@ -59,6 +61,9 @@ export class ProfileService {
       winsAgainstBear: games.filter((g) => g.outcome === 'win' && g.botId === bear?.id).length,
     };
 
+    const achievements = await this.achievements(userId, stats);
+    const puzzlesSolved = puzzleStats?.solved ?? 0;
+
     return {
       displayName: user.displayName,
       memberSince: dayKeyOf(user.createdAt),
@@ -83,10 +88,25 @@ export class ProfileService {
           today: day === today,
         };
       }),
-      achievements: await this.achievements(userId, stats),
+      achievements,
       themes: await this.themeAccuracy(userId),
       cards: await this.cards.summary(userId),
+      wardrobe: buildWardrobe(user.accessory as AccessoryKey, {
+        achievements,
+        puzzlesSolved,
+        bestStreakDays: stats.bestStreakDays,
+      }),
     };
+  }
+
+  /** Puts an item on the cat. Only an opened one can be worn: the rules are the server's, never the client's. */
+  async setAccessory(userId: string, accessory: AccessoryKey): Promise<Wardrobe> {
+    const { wardrobe } = await this.profile(userId, undefined);
+    if (!wardrobe.items.some((item) => item.key === accessory && item.unlocked)) {
+      throw new AppError('wardrobe.locked', HttpStatus.FORBIDDEN);
+    }
+    await this.prisma.user.update({ where: { id: userId }, data: { accessory } });
+    return (await this.profile(userId, undefined)).wardrobe;
   }
 
   /** Lessons finished, and whether the whole Basics track is among them. */

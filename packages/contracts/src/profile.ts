@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WardrobeSchema } from './wardrobe.js';
 
 const UCI_MOVE = /^[a-h][1-8][a-h][1-8][nbrq]?$/;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -57,6 +58,7 @@ export const ProfileSchema = z.object({
   /** Themes with enough attempts to say something, the weakest first. */
   themes: z.array(ThemeAccuracySchema),
   cards: CardSummarySchema,
+  wardrobe: WardrobeSchema,
 });
 export type Profile = z.infer<typeof ProfileSchema>;
 

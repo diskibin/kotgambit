@@ -16,6 +16,8 @@ model User {
   emailVerifiedAt  DateTime? @map("email_verified_at")
   // Daily goal in minutes, the learner picks it in onboarding and settings
   dailyGoalMinutes Int       @default(10) @map("daily_goal_minutes")
+  // What the cat wears (a key of the wardrobe), `none` is the plain cat. Only an opened item can be chosen
+  accessory        String    @default("none")
   createdAt        DateTime  @default(now()) @map("created_at")
 
   credential     Credential?

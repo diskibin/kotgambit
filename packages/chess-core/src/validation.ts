@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js';
-import type { Color, Square } from './types.js';
+import type { Color, PieceType, PlacedPiece, Square } from './types.js';
 
 /**
  * Why a position cannot be on a board, in the order the editor tells it. `where` is a square the
@@ -20,13 +20,13 @@ const BOARD_SIZE = 8;
 const MAX_PIECES = 16;
 const MAX_PAWNS = 8;
 
-interface Placed {
-  color: Color;
-  type: string;
-  square: Square;
-}
+type Placed = PlacedPiece;
 
-function parsePlacement(placement: string): Placed[] | null {
+/**
+ * The pieces of the first field of a FEN, without checking that the position can happen: the editor
+ * needs to load and show a position that is not legal yet. `null` for a string that is not a placement.
+ */
+export function parsePlacement(placement: string): PlacedPiece[] | null {
   const rows = placement.split('/');
   if (rows.length !== BOARD_SIZE) return null;
   const pieces: Placed[] = [];
@@ -39,7 +39,7 @@ function parsePlacement(placement: string): Placed[] | null {
         if (file >= BOARD_SIZE) return null;
         pieces.push({
           color: char === char.toUpperCase() ? 'w' : 'b',
-          type: char.toLowerCase(),
+          type: char.toLowerCase() as PieceType,
           square: `${FILES[file]}${BOARD_SIZE - rowIndex}`,
         });
         file += 1;

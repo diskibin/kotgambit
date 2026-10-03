@@ -4,6 +4,7 @@ import {
   gameAccuracy,
   moveAccuracy,
   outlook,
+  parsePlacement,
   positionProblem,
   whiteScore,
   winPercent,
@@ -147,5 +148,21 @@ describe('positionProblem', () => {
     expect(positionProblem('8/8/8 w')).toEqual({ kind: 'malformed' });
     expect(positionProblem('4k3/8/8/8/8/8/8/4K3 x')).toEqual({ kind: 'malformed' });
     expect(positionProblem('4k4/8/8/8/8/8/8/4K3 w')).toEqual({ kind: 'malformed' });
+  });
+});
+
+describe('parsePlacement', () => {
+  it('lists the pieces with their squares, also of a position that cannot happen', () => {
+    expect(parsePlacement('4k3/8/8/8/8/8/8/R3K3')).toEqual([
+      { square: 'e8', color: 'b', type: 'k' },
+      { square: 'a1', color: 'w', type: 'r' },
+      { square: 'e1', color: 'w', type: 'k' },
+    ]);
+    expect(parsePlacement('8/8/8/8/8/8/8/8')).toEqual([]);
+  });
+
+  it('is null for a string that is not a placement', () => {
+    expect(parsePlacement('nonsense')).toBeNull();
+    expect(parsePlacement('9/8/8/8/8/8/8/8')).toBeNull();
   });
 });

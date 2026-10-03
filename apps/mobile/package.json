@@ -11,18 +11,18 @@
     "test": "jest"
   },
   "dependencies": {
+    "@kotgambit/analysis-editor": "workspace:*",
     "@kotgambit/api-client": "workspace:*",
     "@kotgambit/board-controller": "workspace:*",
     "@kotgambit/chess-core": "workspace:*",
     "@kotgambit/coach": "workspace:*",
     "@kotgambit/content-schema": "workspace:*",
     "@kotgambit/contracts": "workspace:*",
+    "@kotgambit/game-player": "workspace:*",
     "@kotgambit/lesson-player": "workspace:*",
     "@kotgambit/locales": "workspace:*",
     "@kotgambit/mascot": "workspace:*",
     "@kotgambit/puzzle-player": "workspace:*",
-    "@kotgambit/analysis-editor": "workspace:*",
-    "@kotgambit/game-player": "workspace:*",
     "@react-native/new-app-screen": "0.87.1",
     "@reduxjs/toolkit": "^2.13.0",
     "i18next": "^26.4.2",
@@ -32,6 +32,7 @@
     "react-native-keychain": "^10.0.0",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-svg": "^15.15.5",
+    "react-native-webview": "14.0.1",
     "react-redux": "^9.3.0"
   },
   "devDependencies": {

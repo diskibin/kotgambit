@@ -43,6 +43,8 @@ export const CheckoutResponseSchema = z.object({
   paymentId: z.uuid(),
   /** The provider's page where the learner pays. Not logged anywhere. */
   confirmationUrl: z.string().url(),
+  /** Where the provider sends the learner back to. The app watches for it to close the payment page. */
+  returnUrl: z.string().url(),
 });
 export type CheckoutResponse = z.infer<typeof CheckoutResponseSchema>;
 

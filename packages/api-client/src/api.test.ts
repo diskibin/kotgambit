@@ -820,6 +820,7 @@ describe('billing endpoints', () => {
         return HttpResponse.json({
           paymentId: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
           confirmationUrl: 'https://yoomoney.ru/pay/abc',
+          returnUrl: 'https://kotgambit.example/billing/return?paymentId=x&client=mobile',
         });
       }),
     );

@@ -188,8 +188,12 @@ describe('billing', () => {
 
   describe('paying', () => {
     it('creates a payment at the provider with the price, the return page and the consent', async () => {
-      const { paymentId, confirmationUrl } = await checkout('year', true);
+      const { paymentId, confirmationUrl, returnUrl } = await checkout('year', true);
       expect(confirmationUrl).toMatch(/^https:\/\/pay\.example\//);
+      // The app watches for this address to close the payment page
+      expect(returnUrl).toBe(
+        `http://localhost:5173/billing/return?paymentId=${paymentId}&client=web`,
+      );
       const [sent] = provider.created;
       expect(sent).toMatchObject({
         amountKopecks: 199_000,

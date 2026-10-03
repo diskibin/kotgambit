@@ -129,10 +129,11 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
       },
     });
     try {
+      const returnUrl = `${this.config.webUrl}/billing/return?paymentId=${payment.id}&client=${request.client}`;
       const created = await provider.create({
         amountKopecks,
         description: `Кот Гамбит, Премиум ${PLAN_TITLES[request.plan]}`,
-        returnUrl: `${this.config.webUrl}/billing/return?paymentId=${payment.id}&client=${request.client}`,
+        returnUrl,
         idempotencyKey: payment.idempotencyKey,
         savePaymentMethod: request.autoRenew,
         metadata: { paymentId: payment.id },
@@ -142,7 +143,7 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
         where: { id: payment.id },
         data: { providerPaymentId: created.id },
       });
-      return { paymentId: payment.id, confirmationUrl: created.confirmationUrl };
+      return { paymentId: payment.id, confirmationUrl: created.confirmationUrl, returnUrl };
     } catch (error) {
       await this.prisma.payment.update({ where: { id: payment.id }, data: { status: 'canceled' } });
       this.logger.error(error instanceof Error ? error.message : 'Payment could not be created');

@@ -17,6 +17,17 @@ const PROFILE = {
   achievements: [],
   themes: [],
   cards: { due: 0, total: 0 },
+  wardrobe: {
+    selected: 'none',
+    items: [
+      { key: 'none', unlocked: true },
+      { key: 'scarf', unlocked: true },
+      { key: 'glasses', unlocked: false },
+      { key: 'crown', unlocked: false },
+      { key: 'hat', unlocked: false },
+      { key: 'medal', unlocked: false },
+    ],
+  },
 };
 
 let patches: unknown[];

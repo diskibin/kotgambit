@@ -152,6 +152,7 @@ test('signing out revokes the session and clears the Keystore', async () => {
         achievements: [],
         themes: [],
         cards: { due: 0, total: 0 },
+        wardrobe: { selected: 'none', items: [{ key: 'none', unlocked: true }] },
       }),
     'POST /auth/logout': async (request) => {
       logoutBody = await request.json();

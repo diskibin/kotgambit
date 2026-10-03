@@ -12,6 +12,7 @@ import { SlidersIcon } from '../../shared/ui/icons';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, screenPadding, shashka, space, typography } from '../../theme/theme';
 import { Mascot } from '../mascot/Mascot';
+import { WardrobeRow } from './WardrobeRow';
 
 const AVATAR = 92;
 const CAT = 80;
@@ -359,6 +360,8 @@ export function ProfileScreen({
             </Text>
             {data.cards.due > 0 && <Button label={t('profile.cards.start')} onPress={onCards} />}
           </View>
+
+          <WardrobeRow wardrobe={data.wardrobe} />
 
           <Button variant="premium" label={t('premium.title')} onPress={onPremium} />
           <Button variant="secondary" label={t('path.signOut')} onPress={() => void signOut()} />

@@ -5,6 +5,7 @@ export const USER = {
   email: 'cat@example.com',
   displayName: null,
   emailVerified: false,
+  accessory: 'none',
 };
 
 export const AUTH = {

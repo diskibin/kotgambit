@@ -10,6 +10,7 @@ import {
 import { Animated, Easing } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 import { useReducedMotion } from '../../shared/useReducedMotion';
+import { useWornAccessory } from './useWornAccessory';
 
 const DEFAULT_SIZE = 160;
 const VIEW_BOX_SIZE = 200;
@@ -51,15 +52,17 @@ function renderNode(node: ResolvedNode, key: number): ReactNode {
 export function Mascot({
   mood,
   size = DEFAULT_SIZE,
-  accessory = 'none',
+  accessory,
   dark = false,
   animate = false,
 }: MascotProps) {
   const reducedMotion = useReducedMotion();
+  // Without a choice of its own, the cat wears what the learner put on it in the wardrobe
+  const worn = useWornAccessory();
   const [offset] = useState(() => new Animated.Value(0));
   const tree = useMemo(
-    () => resolveMascot({ mood, accessory, dark, size }),
-    [mood, accessory, dark, size],
+    () => resolveMascot({ mood, accessory: accessory ?? worn, dark, size }),
+    [mood, accessory, worn, dark, size],
   );
 
   useEffect(() => {

@@ -37,6 +37,17 @@ const PROFILE = {
     { key: 'mateIn1', title: 'Мат в 1 ход', accuracy: 82, attempts: 12 },
   ],
   cards: { due: 2, total: 3 },
+  wardrobe: {
+    selected: 'none',
+    items: [
+      { key: 'none', unlocked: true },
+      { key: 'scarf', unlocked: true },
+      { key: 'glasses', unlocked: false },
+      { key: 'crown', unlocked: false },
+      { key: 'hat', unlocked: false },
+      { key: 'medal', unlocked: false },
+    ],
+  },
 };
 
 let answers: string[];
@@ -142,6 +153,32 @@ describe('the profile', () => {
       await screen.findByText('Не получилось загрузить профиль. Попробуй ещё раз.'),
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Повторить' })).toBeOnTheScreen();
+  });
+});
+
+describe('the wardrobe', () => {
+  it('tells how much is open and opens the wardrobe in a sheet', async () => {
+    await openProfile();
+    fireEvent.press(
+      await screen.findByRole('button', { name: /Гардероб Гамбита\. Открыто 2 из 6/ }),
+    );
+    expect(await screen.findByRole('radio', { name: 'Бабочка. Надето' })).toBeSelected();
+    expect(
+      screen.getByRole('radio', { name: 'Корона. пройти «Основы», ещё закрыто' }),
+    ).toBeDisabled();
+  });
+
+  it('puts an open item on the cat', async () => {
+    let sent: unknown;
+    await openProfile({
+      'PUT /profile/accessory': async (request) => {
+        sent = await request.json();
+        return json({ ...PROFILE.wardrobe, selected: 'scarf' });
+      },
+    });
+    fireEvent.press(await screen.findByRole('button', { name: /Гардероб Гамбита/ }));
+    fireEvent.press(await screen.findByRole('radio', { name: 'Шарф. за серию 3 дня' }));
+    await waitFor(() => expect(sent).toEqual({ accessory: 'scarf' }));
   });
 });
 

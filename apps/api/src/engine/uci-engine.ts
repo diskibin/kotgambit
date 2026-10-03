@@ -10,6 +10,33 @@ export interface AnalyzeRequest {
   depth?: number;
   movetimeMs?: number;
   multipv?: number;
+  /** Plays weaker than the engine can. Left out, the search uses full strength, so analysis never inherits a bot's settings. */
+  strength?: EngineStrength;
+}
+
+/** Either `skillLevel` (0-20, for play below Stockfish's Elo floor) or `elo`. */
+export interface EngineStrength {
+  skillLevel?: number;
+  elo?: number;
+}
+
+const FULL_STRENGTH_KEY = 'full';
+
+function strengthKey(strength: EngineStrength | undefined): string {
+  if (strength?.skillLevel !== undefined) return `skill ${strength.skillLevel}`;
+  if (strength?.elo !== undefined) return `elo ${strength.elo}`;
+  return FULL_STRENGTH_KEY;
+}
+
+function strengthCommands(strength: EngineStrength | undefined): string[] {
+  const set = (name: string, value: string | number) => `setoption name ${name} value ${value}`;
+  if (strength?.skillLevel !== undefined) {
+    return [set('UCI_LimitStrength', 'false'), set('Skill Level', strength.skillLevel)];
+  }
+  if (strength?.elo !== undefined) {
+    return [set('Skill Level', 20), set('UCI_LimitStrength', 'true'), set('UCI_Elo', strength.elo)];
+  }
+  return [set('UCI_LimitStrength', 'false'), set('Skill Level', 20)];
 }
 
 export interface Analysis {
@@ -36,6 +63,8 @@ const STOP_GRACE_MS = 1000;
 export class UciEngine {
   private proc: EngineProcess | null = null;
   private busy = false;
+  // What the running process is set to, so that the options are sent only when they change
+  private appliedStrength = FULL_STRENGTH_KEY;
   private closed = false;
   private readonly lineListeners = new Set<(line: string) => void>();
   private readonly exitListeners = new Set<() => void>();
@@ -66,6 +95,7 @@ export class UciEngine {
     if (this.proc) return this.proc;
     const proc = this.spawnProcess();
     this.proc = proc;
+    this.appliedStrength = FULL_STRENGTH_KEY;
     proc.onLine((line) => this.lineListeners.forEach((listener) => listener(line)));
     proc.onExit(() => {
       // A late exit of a process we already dropped must not take down its replacement
@@ -126,6 +156,11 @@ export class UciEngine {
         proc.write('stop');
       },
     );
+    const wanted = strengthKey(request.strength);
+    if (wanted !== this.appliedStrength) {
+      strengthCommands(request.strength).forEach((command) => proc.write(command));
+      this.appliedStrength = wanted;
+    }
     proc.write(`setoption name MultiPV value ${request.multipv ?? 1}`);
     proc.write(`position fen ${request.fen}`);
     proc.write(`go ${limits.join(' ')}`);

@@ -59,6 +59,19 @@ describe.skipIf(!ENGINE_PATH)('UciEngine with a real Stockfish', () => {
     expect(result.bestMove).not.toBeNull();
   });
 
+  it('accepts the strength settings of every bot level and goes back to full strength', async () => {
+    const engine = newEngine();
+    for (const strength of [{ skillLevel: 0 }, { skillLevel: 3 }, { elo: 1320 }, { elo: 2400 }]) {
+      const result = await engine.analyze(
+        { fen: START, depth: 4, multipv: 3, strength },
+        TIMEOUT_MS,
+      );
+      expect(result.bestMove).toMatch(/^[a-h][1-8][a-h][1-8]$/);
+    }
+    const full = await engine.analyze({ fen: MATE_IN_ONE, depth: 6 }, TIMEOUT_MS);
+    expect(full.bestMove).toBe('b1b8');
+  });
+
   it('serves several requests at once through a pool', async () => {
     const pool = new EnginePool([newEngine(), newEngine()], {
       maxQueue: 10,

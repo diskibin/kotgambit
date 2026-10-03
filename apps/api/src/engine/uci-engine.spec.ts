@@ -69,6 +69,35 @@ describe('UciEngine', () => {
     expect(proc.sent).toContain('setoption name MultiPV value 2');
   });
 
+  it('limits the strength by Elo and restores full strength for the next plain search', async () => {
+    const proc = scriptedEngine(FINISHED_SEARCH);
+    const engine = engineWith(proc);
+    await engine.analyze({ fen: START, depth: 3, strength: { elo: 1500 } }, 1000);
+    expect(proc.sent).toContain('setoption name UCI_LimitStrength value true');
+    expect(proc.sent).toContain('setoption name UCI_Elo value 1500');
+
+    proc.sent.length = 0;
+    await engine.analyze({ fen: START, depth: 3 }, 1000);
+    expect(proc.sent).toContain('setoption name UCI_LimitStrength value false');
+    expect(proc.sent).toContain('setoption name Skill Level value 20');
+  });
+
+  it('limits the strength by skill level below the Elo floor', async () => {
+    const proc = scriptedEngine(FINISHED_SEARCH);
+    await engineWith(proc).analyze({ fen: START, depth: 1, strength: { skillLevel: 0 } }, 1000);
+    expect(proc.sent).toContain('setoption name Skill Level value 0');
+    expect(proc.sent).not.toContain('setoption name UCI_Elo value 0');
+  });
+
+  it('does not repeat strength options that are already set', async () => {
+    const proc = scriptedEngine(FINISHED_SEARCH);
+    const engine = engineWith(proc);
+    await engine.analyze({ fen: START, depth: 3, strength: { elo: 1500 } }, 1000);
+    proc.sent.length = 0;
+    await engine.analyze({ fen: START, depth: 3, strength: { elo: 1500 } }, 1000);
+    expect(proc.sent.filter((line) => line.includes('UCI_Elo'))).toEqual([]);
+  });
+
   it('reports no move for a finished game', async () => {
     const proc = scriptedEngine((_command, say) => say('bestmove (none)'));
     const result = await engineWith(proc).analyze({ fen: START, depth: 1 }, 1000);

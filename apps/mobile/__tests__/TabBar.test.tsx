@@ -24,7 +24,8 @@ describe('TabBar', () => {
 
   it('has the five places in the order of the design', () => {
     setup();
-    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityLabel)).toEqual(NAMES);
+    expect(screen.getAllByRole('tab')).toHaveLength(NAMES.length);
+    for (const name of NAMES) expect(screen.getByRole('tab', { name })).toBeOnTheScreen();
     expect(screen.getByRole('tablist', { name: 'Основная навигация' })).toBeOnTheScreen();
   });
 

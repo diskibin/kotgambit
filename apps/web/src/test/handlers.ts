@@ -30,10 +30,30 @@ export const LESSONS = [
   },
 ];
 
+export const DAILY = {
+  puzzleId: 'p-1',
+  fen: '6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1',
+  lastMove: 'g7g6',
+  solver: 'w',
+  title: 'Мат в 1 ход',
+  solved: false,
+};
+
 /** The home screen asks for the catalog and the day bar as soon as someone is signed in. */
 export function homeHandlers(lessons: unknown[] = LESSONS) {
   return [
     http.get(`${API_URL}/lessons`, () => HttpResponse.json({ lessons })),
     http.get(`${API_URL}/progress/summary`, () => HttpResponse.json(PROGRESS)),
+    http.get(`${API_URL}/puzzles/daily`, () => HttpResponse.json(DAILY)),
+    http.get(`${API_URL}/billing/subscription`, () =>
+      HttpResponse.json({
+        premium: false,
+        status: 'none',
+        plan: null,
+        currentPeriodEnd: null,
+        autoRenew: false,
+        cardLast4: null,
+      }),
+    ),
   ];
 }

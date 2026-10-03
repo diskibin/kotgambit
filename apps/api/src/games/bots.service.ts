@@ -26,13 +26,18 @@ export class BotsService {
 
   /** What a client may see: the strength settings stay on the server. */
   profiles(): BotProfile[] {
-    return this.bots.map(({ id, kind, name, level, character, greeting }) => ({
-      id,
-      kind,
-      name,
-      level,
-      character,
-      greeting,
-    }));
+    return this.bots.map(
+      ({ id, kind, name, instrumental, gender, level, character, summary, greeting }) => ({
+        id,
+        kind,
+        name,
+        instrumental,
+        gender,
+        level,
+        character,
+        summary,
+        greeting,
+      }),
+    );
   }
 }

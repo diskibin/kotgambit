@@ -9,8 +9,12 @@ export const BotProfileSchema = z.object({
   id: z.string(),
   kind: BotKindSchema,
   name: z.string(),
+  /** The name after "с": "Лисой Алисой". */
+  instrumental: z.string(),
+  gender: z.enum(['f', 'm']),
   level: z.number().int().min(1).max(6),
   character: z.string(),
+  summary: z.string(),
   greeting: z.string(),
 });
 export type BotProfile = z.infer<typeof BotProfileSchema>;

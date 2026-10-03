@@ -597,8 +597,11 @@ describe('game endpoints', () => {
       id: 'alisa',
       kind: 'fox',
       name: 'Лиса Алиса',
+      instrumental: 'Лисой Алисой',
+      gender: 'f',
       level: 3,
       character: 'Хитрая, любит ловушки.',
+      summary: 'Хитрая, любит ловушки',
       greeting: 'Сыграем?',
     };
     server.use(http.get(`${BASE_URL}/bots`, () => HttpResponse.json({ bots: [fox] })));

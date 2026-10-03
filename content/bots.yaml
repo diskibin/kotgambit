@@ -5,8 +5,11 @@ bots:
   - id: misha
     kind: mouse
     name: Мышонок Миша
+    instrumental: Мышонком Мишей
+    gender: m
     level: 1
     character: Только учится. Часто оставляет фигуры под боем.
+    summary: Только учится, ходит наугад
     greeting: Привет! Я только учусь, не ругайся.
     strength:
       skillLevel: 0
@@ -18,8 +21,11 @@ bots:
   - id: timofey
     kind: hamster
     name: Хомяк Тимофей
+    instrumental: Хомяком Тимофеем
+    gender: m
     level: 2
     character: Любит собирать фигуры и не любит меняться.
+    summary: Любит забирать всё подряд
     greeting: Все фигуры — мои! Ну, почти.
     strength:
       skillLevel: 3
@@ -31,8 +37,11 @@ bots:
   - id: alisa
     kind: fox
     name: Лиса Алиса
+    instrumental: Лисой Алисой
+    gender: f
     level: 3
     character: Хитрая, любит ловушки.
+    summary: Хитрая, любит ловушки
     greeting: Сыграем? Осторожно с конём на d4!
     strength:
       elo: 1350
@@ -43,8 +52,11 @@ bots:
   - id: sofya
     kind: owl
     name: Сова Софья
+    instrumental: Совой Софьей
+    gender: f
     level: 4
     character: Думает долго и играет аккуратно.
+    summary: Думает на пару ходов вперёд
     greeting: Не спеши. Я тоже не буду.
     strength:
       elo: 1600
@@ -55,8 +67,11 @@ bots:
   - id: grigoriy
     kind: wolf
     name: Волк Григорий
+    instrumental: Волком Григорием
+    gender: m
     level: 5
     character: Смело атакует короля.
+    summary: Атакует без устали
     greeting: Береги короля, я иду в атаку!
     strength:
       elo: 1900
@@ -67,8 +82,11 @@ bots:
   - id: mikhail
     kind: bear
     name: Медведь Михаил
+    instrumental: Медведем Михаилом
+    gender: m
     level: 6
     character: Самый сильный. Почти не ошибается.
+    summary: Самый сильный
     greeting: Готов к серьёзной партии?
     strength:
       elo: 2400

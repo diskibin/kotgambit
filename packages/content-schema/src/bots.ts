@@ -40,9 +40,15 @@ export const BotSchema = z.object({
   id: z.string().regex(/^[a-z]+$/),
   kind: z.enum(BOT_KINDS),
   name: z.string().min(1),
+  /** The name after "с" ("Играть с Лисой Алисой"), Russian cannot build it from the name. */
+  instrumental: z.string().min(1),
+  /** For the verb of "Победила Лиса Алиса". */
+  gender: z.enum(['f', 'm']),
   level: z.number().int().min(1).max(6),
-  /** The card's text. */
+  /** The text of the card on the website. */
   character: z.string().min(1),
+  /** The shorter line of the list in the app. */
+  summary: z.string().min(1),
   greeting: z.string().min(1),
   strength: BotStrengthSchema,
 });
@@ -64,7 +70,7 @@ export function validateBots(file: BotsFile): string[] {
     if (previous && previous.level >= bot.level) {
       problems.push(`${bot.id}: bots must go from the weakest to the strongest`);
     }
-    for (const text of [bot.name, bot.character, bot.greeting]) {
+    for (const text of [bot.name, bot.instrumental, bot.character, bot.summary, bot.greeting]) {
       const found = FORBIDDEN_WORDS.find((word) => text.toLowerCase().includes(word));
       if (found) problems.push(`${bot.id}: the word "${found}" does not fit the cat's voice`);
     }

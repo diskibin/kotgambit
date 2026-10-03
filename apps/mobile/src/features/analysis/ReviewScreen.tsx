@@ -12,7 +12,13 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
-import { useBotsQuery, useGameQuery, useReviewQuery, useStartReviewMutation } from '../../app/api';
+import {
+  useBotsQuery,
+  useGameQuery,
+  useMakeCardsMutation,
+  useReviewQuery,
+  useStartReviewMutation,
+} from '../../app/api';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { ProgressBar } from '../../shared/ui/ProgressBar';
@@ -176,13 +182,22 @@ function Moment({ moment, orientation }: { moment: KeyMoment; orientation: 'w' |
 }
 
 /** The look back at a finished game: the accuracy, the graph and the moments worth a card. */
-export function ReviewScreen({ id, onClose }: { id: string; onClose: () => void }) {
+export function ReviewScreen({
+  id,
+  onClose,
+  onCards,
+}: {
+  id: string;
+  onClose: () => void;
+  onCards: () => void;
+}) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const game = useGameQuery(id);
   const bots = useBotsQuery();
   const [startReview] = useStartReviewMutation();
+  const [makeCards, cards] = useMakeCardsMutation();
   const started = useRef(false);
   const ready = game.data?.status === 'finished';
   const review = useReviewPolling(id, ready);
@@ -319,6 +334,28 @@ export function ReviewScreen({ id, onClose }: { id: string; onClose: () => void 
           <Moment key={moment.ply} moment={moment} orientation={game.data?.userColor ?? 'w'} />
         ))}
       </View>
+
+      {result.mistakes.length > 0 && (
+        <View style={{ gap: space[2] }}>
+          <Button
+            variant="secondary"
+            label={t('review.makeCards.button')}
+            disabled={cards.isLoading}
+            onPress={() => void makeCards(id)}
+          />
+          {cards.data && (
+            <>
+              <Text style={[typography.small, { color: colors.text }]}>
+                {cards.data.created === 0
+                  ? t('review.makeCards.already')
+                  : t('review.makeCards.created', { count: cards.data.created })}
+              </Text>
+              <Button label={t('review.makeCards.practice')} onPress={onCards} />
+            </>
+          )}
+          {cards.isError && <Banner>{t('review.makeCards.error')}</Banner>}
+        </View>
+      )}
     </>,
   );
 }

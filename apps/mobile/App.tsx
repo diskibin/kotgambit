@@ -12,6 +12,8 @@ import { CompleteScreen } from './src/features/lessons/CompleteScreen';
 import { LessonScreen, type LessonResult } from './src/features/lessons/LessonScreen';
 import { AnalysisScreen } from './src/features/analysis/AnalysisScreen';
 import { ReviewScreen } from './src/features/analysis/ReviewScreen';
+import { CardsScreen } from './src/features/profile/CardsScreen';
+import { ProfileScreen } from './src/features/profile/ProfileScreen';
 import { PathScreen } from './src/features/path/PathScreen';
 import { BotsScreen } from './src/features/play/BotsScreen';
 import { GameScreen } from './src/features/play/GameScreen';
@@ -29,7 +31,9 @@ type Screen =
   | { name: 'bots' }
   | { name: 'game'; id: string }
   | { name: 'analysis' }
-  | { name: 'review'; id: string };
+  | { name: 'review'; id: string }
+  | { name: 'profile' }
+  | { name: 'cards' };
 
 /** The signed-in app: the chapters, a lesson in focus mode, the finish screen and the puzzles. */
 function SignedIn() {
@@ -44,7 +48,9 @@ function SignedIn() {
       screen.name !== 'puzzle' &&
       screen.name !== 'bots' &&
       screen.name !== 'analysis' &&
-      screen.name !== 'review'
+      screen.name !== 'review' &&
+      screen.name !== 'profile' &&
+      screen.name !== 'cards'
     ) {
       return;
     }
@@ -53,7 +59,9 @@ function SignedIn() {
         ? { name: 'puzzles' }
         : screen.name === 'review'
           ? { name: 'bots' }
-          : { name: 'path' };
+          : screen.name === 'cards'
+            ? { name: 'profile' }
+            : { name: 'path' };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       setScreen(back);
       return true;
@@ -61,10 +69,28 @@ function SignedIn() {
     return () => subscription.remove();
   }, [screen.name]);
 
+  if (screen.name === 'profile') {
+    return (
+      <ProfileScreen
+        onBack={() => setScreen({ name: 'path' })}
+        onCards={() => setScreen({ name: 'cards' })}
+        onTheme={(theme) => setScreen({ name: 'puzzle', request: { mode: 'theme', theme } })}
+      />
+    );
+  }
+  if (screen.name === 'cards') {
+    return <CardsScreen onClose={() => setScreen({ name: 'profile' })} />;
+  }
   if (screen.name === 'analysis')
     return <AnalysisScreen onBack={() => setScreen({ name: 'path' })} />;
   if (screen.name === 'review') {
-    return <ReviewScreen id={screen.id} onClose={() => setScreen({ name: 'bots' })} />;
+    return (
+      <ReviewScreen
+        id={screen.id}
+        onClose={() => setScreen({ name: 'bots' })}
+        onCards={() => setScreen({ name: 'cards' })}
+      />
+    );
   }
   if (screen.name === 'bots') {
     return (
@@ -133,6 +159,7 @@ function SignedIn() {
       onOpenPuzzles={() => setScreen({ name: 'puzzles' })}
       onOpenPlay={() => setScreen({ name: 'bots' })}
       onOpenAnalysis={() => setScreen({ name: 'analysis' })}
+      onOpenProfile={() => setScreen({ name: 'profile' })}
     />
   );
 }

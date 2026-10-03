@@ -23,11 +23,13 @@ export function PathScreen({
   onOpenPuzzles,
   onOpenPlay,
   onOpenAnalysis,
+  onOpenProfile,
 }: {
   onOpenLesson: (id: string) => void;
   onOpenPuzzles: () => void;
   onOpenPlay: () => void;
   onOpenAnalysis: () => void;
+  onOpenProfile: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
@@ -65,6 +67,7 @@ export function PathScreen({
         <Button variant="text" label={t('puzzles.title')} onPress={onOpenPuzzles} />
         <Button variant="text" label={t('play.title')} onPress={onOpenPlay} />
         <Button variant="text" label={t('analysis.title')} onPress={onOpenAnalysis} />
+        <Button variant="text" label={t('profile.title')} onPress={onOpenProfile} />
         <Button variant="text" label={t('path.signOut')} onPress={() => void signOut()} />
       </View>
 

@@ -1,5 +1,7 @@
 import {
   ActiveGameSchema,
+  PositionAnalysisSchema,
+  ReviewStatusSchema,
   AuthResponseSchema,
   BotListSchema,
   CatalogResponseSchema,
@@ -19,6 +21,8 @@ import {
   PuzzleThemeListSchema,
   UserSchema,
   type ActiveGame,
+  type PositionAnalysis,
+  type ReviewStatus,
   type AuthResponse,
   type BotList,
   type CatalogResponse,
@@ -224,6 +228,23 @@ export function endpoints(build: Builder) {
       query: (gameId) => ({ url: `/games/${encodeURIComponent(gameId)}/resign`, method: 'POST' }),
       responseSchema: GameSchema,
       invalidatesTags: (result) => finishedGameTags(result),
+    }),
+    // Looking at a position changes nothing on the server, but each look is a search of the engine,
+    // so it is a mutation: it must run when asked, not when a component mounts
+    analyzePosition: build.mutation<PositionAnalysis, string>({
+      query: (fen) => ({ url: '/analysis/position', method: 'POST', body: { fen } }),
+      responseSchema: PositionAnalysisSchema,
+    }),
+    startReview: build.mutation<ReviewStatus, string>({
+      query: (gameId) => ({ url: `/games/${encodeURIComponent(gameId)}/review`, method: 'POST' }),
+      responseSchema: ReviewStatusSchema,
+      invalidatesTags: ['Reviews'],
+    }),
+    // The screen polls it with `pollingInterval` while the status is pending or running
+    review: build.query<ReviewStatus, string>({
+      query: (gameId) => `/games/${encodeURIComponent(gameId)}/review`,
+      responseSchema: ReviewStatusSchema,
+      providesTags: ['Reviews'],
     }),
     me: build.query<User, void>({
       query: () => '/users/me',

@@ -617,3 +617,95 @@ describe('game endpoints', () => {
     expect(result.data?.bots[0]?.name).toBe('Лиса Алиса');
   });
 });
+
+describe('analysis and review endpoints', () => {
+  const GAME_ID = '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11';
+  const REVIEW = {
+    accuracy: { player: 64, bot: 91 },
+    counts: { best: 3, good: 2, inaccuracy: 0, mistake: 0, blunder: 2 },
+    chances: [50, 55],
+    qualities: ['best'],
+    keyMoments: [],
+  };
+  const ANALYSIS = {
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    turn: 'w',
+    score: { kind: 'cp', value: 25 },
+    leader: 'equal',
+    headline: 'Примерно равно',
+    detail: 'Материал равный.',
+    outlook: { white: 40, draw: 30, black: 30 },
+    best: { uci: 'e2e4', san: 'e4', explanation: 'Лучший ход по оценке движка.' },
+    lines: [{ score: { kind: 'cp', value: 25 }, uci: ['e2e4'], san: ['e4'] }],
+    depth: 14,
+  };
+
+  it('sends the position as it is and validates the answer', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/analysis/position`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(ANALYSIS);
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.analyzePosition.initiate('4k3/8/8/8/8/8/8/4K3 w'),
+    );
+    expect(body).toEqual({ fen: '4k3/8/8/8/8/8/8/4K3 w' });
+    expect(result).toMatchObject({ data: { headline: 'Примерно равно' } });
+  });
+
+  it('hands over the reason a position was refused', async () => {
+    server.use(
+      http.post(`${BASE_URL}/analysis/position`, () =>
+        HttpResponse.json(
+          {
+            code: 'analysis.invalid_position',
+            message: 'У чёрных нет короля.',
+            details: { problem: 'no-king', color: 'b' },
+          },
+          { status: 422 },
+        ),
+      ),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.analyzePosition.initiate('8/8/8/8/8/8/8/4K3 w'),
+    );
+    expect(result.error).toMatchObject({
+      status: 422,
+      data: { code: 'analysis.invalid_position', details: { problem: 'no-king' } },
+    });
+  });
+
+  it('starts a review and reads its progress and result', async () => {
+    let status = 'running';
+    server.use(
+      http.post(`${BASE_URL}/games/${GAME_ID}/review`, () =>
+        HttpResponse.json({ status: 'pending', done: 0, total: 5, review: null }),
+      ),
+      http.get(`${BASE_URL}/games/${GAME_ID}/review`, () =>
+        HttpResponse.json(
+          status === 'done'
+            ? { status, done: 5, total: 5, review: REVIEW }
+            : { status, done: 2, total: 5, review: null },
+        ),
+      ),
+    );
+    const { api, store } = setup();
+    const subscription = store.dispatch(api.endpoints.review.initiate(GAME_ID));
+    expect(await subscription).toMatchObject({ data: { status: 'running', done: 2 } });
+
+    status = 'done';
+    await store.dispatch(api.endpoints.startReview.initiate(GAME_ID));
+    // Starting invalidates the review, which is read again
+    await vi.waitFor(() => {
+      expect(api.endpoints.review.select(GAME_ID)(store.getState()).data).toMatchObject({
+        status: 'done',
+        review: { accuracy: { player: 64 } },
+      });
+    });
+    subscription.unsubscribe();
+  });
+});

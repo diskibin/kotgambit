@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
+import { BillingModule } from './billing/billing.module.js';
 import { CardsModule } from './cards/cards.module.js';
 import { AnalysisModule } from './analysis/analysis.module.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -43,6 +44,7 @@ const REDACTED_PATHS = [
     PuzzlesModule,
     GamesModule,
     AnalysisModule,
+    BillingModule,
     CardsModule,
     ProfileModule,
     LoggerModule.forRootAsync({

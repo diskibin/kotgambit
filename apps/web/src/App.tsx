@@ -1,6 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router';
+import { Route, Routes } from 'react-router';
 import { useMeQuery } from './app/api';
-import { useAppSelector } from './app/hooks';
 import { AnalysisPage } from './features/analysis/AnalysisPage';
 import { ReviewPage } from './features/analysis/ReviewPage';
 import { CardsPage } from './features/profile/CardsPage';
@@ -19,14 +18,12 @@ import { PathPage } from './features/path/PathPage';
 import { PuzzlePage } from './features/puzzles/PuzzlePage';
 import { PuzzlesPage } from './features/puzzles/PuzzlesPage';
 import { SandboxPage } from './features/sandbox/SandboxPage';
+import { LandingPage } from './features/landing/LandingPage';
+import { OnboardingPage } from './features/onboarding/OnboardingPage';
+import { ApplyOnboarding } from './features/onboarding/ApplyOnboarding';
+import { NotFoundPage } from './features/system/NotFoundPage';
+import { OfflineBanner } from './features/system/OfflineBanner';
 import { ThemeSync } from './features/theme/ThemeSync';
-
-/** The address of the site itself and of anything unknown: the chapters for a learner, the sign-in for a visitor. */
-function HomeRedirect() {
-  const status = useAppSelector((state) => state.auth.status);
-  if (status === 'unknown') return null;
-  return <Navigate to={status === 'authenticated' ? '/learn' : '/login'} replace />;
-}
 
 export function App() {
   // Restores the session after a reload: a 401 makes the base query try the refresh cookie first
@@ -35,7 +32,12 @@ export function App() {
   return (
     <>
       <ThemeSync />
+      <ApplyOnboarding />
+      <OfflineBanner />
       <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/onboarding/:step" element={<OnboardingPage />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/reset" element={<RecoverPage />} />
@@ -55,7 +57,7 @@ export function App() {
         <Route path="/play/:id" element={<GamePage />} />
         <Route path="/sandbox" element={<SandboxPage />} />
         <Route path="/learn" element={<PathPage />} />
-        <Route path="*" element={<HomeRedirect />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
   );

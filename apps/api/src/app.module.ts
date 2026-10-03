@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { AuthModule } from './auth/auth.module.js';
 import { CONFIG, ConfigModule, type AppConfig } from './config/config.module.js';
 import { EngineModule } from './engine/engine.module.js';
+import { GamesModule } from './games/games.module.js';
 import { HealthController } from './health/health.controller.js';
 import { ReadyController } from './health/ready.controller.js';
 import { LessonsModule } from './lessons/lessons.module.js';
@@ -37,6 +38,7 @@ const REDACTED_PATHS = [
     LessonsModule,
     EngineModule,
     PuzzlesModule,
+    GamesModule,
     LoggerModule.forRootAsync({
       inject: [CONFIG],
       useFactory: (config: AppConfig) => ({

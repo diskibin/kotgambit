@@ -72,3 +72,18 @@
     opacity: 0.85;
   }
 }
+
+/* The same softening as the system setting, for the learner who asked for it in the settings */
+:root[data-reduce-motion='true'] *,
+:root[data-reduce-motion='true'] *::before,
+:root[data-reduce-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+:root[data-reduce-motion='true'] .confetti-bit {
+  animation: none;
+  translate: 0 30vh;
+  opacity: 0.85;
+}

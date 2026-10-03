@@ -3,10 +3,14 @@ import { lessonSessionReducer } from '@kotgambit/lesson-player';
 import { puzzleSessionReducer } from '@kotgambit/puzzle-player';
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
+import { DEFAULT_PREFERENCES, type Preferences } from '@kotgambit/preferences';
+import { loadPreferences, persistPreferences } from '../features/settings/preferencesStorage';
+import { uiSlice } from '../features/settings/ui.slice';
 import { themeSlice } from '../features/theme/theme.slice';
 import { api, sessionBridge } from './api';
 
-export function makeStore() {
+/** `preferences` are what the learner chose on this device earlier, tests start from the defaults. */
+export function makeStore(preferences: Preferences = DEFAULT_PREFERENCES) {
   const listener = createListenerMiddleware();
 
   // Sign-in and sign-up both end with a token, sign-out with none
@@ -33,6 +37,15 @@ export function makeStore() {
       lessonSession: lessonSessionReducer,
       puzzleSession: puzzleSessionReducer,
       theme: themeSlice.reducer,
+      ui: uiSlice.reducer,
+    },
+    preloadedState: {
+      theme: { preference: preferences.theme },
+      ui: {
+        boardTheme: preferences.boardTheme,
+        coordinates: preferences.coordinates,
+        reduceMotion: preferences.reduceMotion,
+      },
     },
     middleware: (getDefault) => getDefault().prepend(listener.middleware).concat(api.middleware),
   });
@@ -43,7 +56,8 @@ export function makeStore() {
   return store;
 }
 
-export const store = makeStore();
+export const store = makeStore(loadPreferences());
+persistPreferences(store);
 
 export type AppStore = ReturnType<typeof makeStore>;
 export type RootState = ReturnType<AppStore['getState']>;

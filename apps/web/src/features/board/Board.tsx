@@ -21,6 +21,8 @@ import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from
 import { useTranslation } from 'react-i18next';
 import { Arrows, type BoardArrow } from './Arrows';
 import './board.css';
+import { boardThemeStyle } from '../settings/boardThemes';
+import { useUiPreferences } from '../settings/useUiPreferences';
 import { pieceUrl } from './pieceAssets';
 
 // Dragging starts only after the pointer travels this far, so that a plain tap stays a tap
@@ -86,7 +88,7 @@ export function Board({
   state,
   dispatch,
   hintSquares = [],
-  coords = true,
+  coords: coordsOverride,
   disabled = false,
   arrows = [],
   marked = [],
@@ -95,6 +97,9 @@ export function Board({
   lastMove: lastMoveOverride,
 }: BoardProps) {
   const { t } = useTranslation();
+  const preferences = useUiPreferences();
+  // A board that is told to show or hide its letters obeys, the others follow the settings
+  const coords = coordsOverride ?? preferences.coordinates;
   const boardRef = useRef<HTMLDivElement>(null);
   const buttons = useRef(new Map<Square, HTMLButtonElement>());
   const pending = useRef<PendingDrag | null>(null);
@@ -224,6 +229,7 @@ export function Board({
       ref={boardRef}
       role="group"
       aria-label={t('board.label')}
+      style={boardThemeStyle(preferences.boardTheme)}
       className="board-container relative aspect-square w-full max-w-board touch-none select-none rounded-card border-2 border-edge shadow-shashka-lg"
       onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}

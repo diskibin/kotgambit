@@ -801,3 +801,97 @@ describe('profile and card endpoints', () => {
     expect(result.data).toEqual({ created: 2, summary: SUMMARY });
   });
 });
+
+describe('billing endpoints', () => {
+  const VIEW = {
+    premium: true,
+    status: 'active',
+    plan: 'year',
+    currentPeriodEnd: '2027-10-03T12:00:00.000Z',
+    autoRenew: true,
+    cardLast4: '4477',
+  };
+
+  it('starts a payment with the plan, the client and the consent, and gets the page to pay on', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/billing/checkout`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({
+          paymentId: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+          confirmationUrl: 'https://yoomoney.ru/pay/abc',
+        });
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.checkout.initiate({ plan: 'year', client: 'mobile', autoRenew: true }),
+    );
+    expect(body).toEqual({ plan: 'year', client: 'mobile', autoRenew: true });
+    expect(result.data?.confirmationUrl).toBe('https://yoomoney.ru/pay/abc');
+  });
+
+  it('reads the status of a payment, which the server alone decides', async () => {
+    server.use(
+      http.get(`${BASE_URL}/billing/payments/:id`, () =>
+        HttpResponse.json({
+          paymentId: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+          status: 'succeeded',
+          subscription: VIEW,
+        }),
+      ),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.payment.initiate('3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11'),
+    );
+    expect(result.data).toMatchObject({ status: 'succeeded', subscription: { premium: true } });
+  });
+
+  it('reads the subscription again after a cancellation', async () => {
+    let reads = 0;
+    server.use(
+      http.get(`${BASE_URL}/billing/subscription`, () => {
+        reads += 1;
+        return HttpResponse.json(VIEW);
+      }),
+      http.post(`${BASE_URL}/billing/cancel`, () =>
+        HttpResponse.json({ ...VIEW, status: 'canceled', autoRenew: false }),
+      ),
+    );
+    const { api, store } = setup();
+    const subscription = store.dispatch(api.endpoints.subscription.initiate());
+    await subscription;
+    await store.dispatch(api.endpoints.cancelSubscription.initiate());
+    await vi.waitFor(() => expect(reads).toBe(2));
+    subscription.unsubscribe();
+  });
+
+  it('reads the plans and the limits of the day', async () => {
+    server.use(
+      http.get(`${BASE_URL}/billing/plans`, () =>
+        HttpResponse.json({
+          available: true,
+          plans: [
+            { key: 'year', priceRub: 1990 },
+            { key: 'month', priceRub: 299 },
+          ],
+        }),
+      ),
+      http.get(`${BASE_URL}/entitlements`, () =>
+        HttpResponse.json({
+          premium: false,
+          puzzles: { limit: 10, left: 4 },
+          analysis: { limit: 3, left: 1 },
+          fullReview: false,
+          cards: false,
+        }),
+      ),
+    );
+    const { api, store } = setup();
+    expect((await store.dispatch(api.endpoints.plans.initiate())).data?.plans).toHaveLength(2);
+    expect((await store.dispatch(api.endpoints.entitlements.initiate())).data?.puzzles.left).toBe(
+      4,
+    );
+  });
+});

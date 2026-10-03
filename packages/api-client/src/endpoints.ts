@@ -1,5 +1,10 @@
 import {
   ActiveGameSchema,
+  CheckoutResponseSchema,
+  EntitlementsSchema,
+  PaymentStatusSchema,
+  PlansResponseSchema,
+  SubscriptionViewSchema,
   CardAnswerResponseSchema,
   CardSummarySchema,
   MakeCardsResponseSchema,
@@ -26,6 +31,12 @@ import {
   PuzzleThemeListSchema,
   UserSchema,
   type ActiveGame,
+  type CheckoutRequest,
+  type CheckoutResponse,
+  type Entitlements,
+  type PaymentStatus,
+  type PlansResponse,
+  type SubscriptionView,
   type CardAnswerResponse,
   type CardSummary,
   type MakeCardsResponse,
@@ -289,6 +300,41 @@ export function endpoints(build: Builder) {
       }),
       responseSchema: MakeCardsResponseSchema,
       invalidatesTags: ['Cards'],
+    }),
+    plans: build.query<PlansResponse, void>({
+      query: () => '/billing/plans',
+      responseSchema: PlansResponseSchema,
+    }),
+    subscription: build.query<SubscriptionView, void>({
+      query: () => '/billing/subscription',
+      responseSchema: SubscriptionViewSchema,
+      providesTags: ['Billing'],
+    }),
+    // What the learner may do and what is left of today's limits, the screens show it before they ask
+    entitlements: build.query<Entitlements, void>({
+      query: () => '/entitlements',
+      responseSchema: EntitlementsSchema,
+      providesTags: ['Billing', 'Puzzles'],
+    }),
+    // Starting a payment creates one at the provider, so it is a mutation
+    checkout: build.mutation<CheckoutResponse, CheckoutRequest>({
+      query: (body) => ({ url: '/billing/checkout', method: 'POST', body }),
+      responseSchema: CheckoutResponseSchema,
+    }),
+    // Polled by the page the learner comes back to. Only the server's answer counts, never the return itself
+    payment: build.query<PaymentStatus, string>({
+      query: (paymentId) => `/billing/payments/${encodeURIComponent(paymentId)}`,
+      responseSchema: PaymentStatusSchema,
+    }),
+    cancelSubscription: build.mutation<SubscriptionView, void>({
+      query: () => ({ url: '/billing/cancel', method: 'POST' }),
+      responseSchema: SubscriptionViewSchema,
+      invalidatesTags: ['Billing'],
+    }),
+    resumeSubscription: build.mutation<SubscriptionView, void>({
+      query: () => ({ url: '/billing/resume', method: 'POST' }),
+      responseSchema: SubscriptionViewSchema,
+      invalidatesTags: ['Billing'],
     }),
     me: build.query<User, void>({
       query: () => '/users/me',

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CreateGameRequestSchema,
+  GameMoveRequestSchema,
+  GameMoveResponseSchema,
   NextPuzzleRequestSchema,
   PuzzleHintResponseSchema,
   PuzzleMoveResponseSchema,
@@ -222,5 +225,25 @@ describe('puzzle schemas', () => {
     ).toBe(true);
     expect(PuzzleHintResponseSchema.safeParse({ level: 1, move: 'e6e7' }).success).toBe(false);
     expect(PuzzleHintResponseSchema.safeParse({ level: 4 }).success).toBe(false);
+  });
+});
+
+describe('game schemas', () => {
+  it('turns the learning mode on by default', () => {
+    expect(CreateGameRequestSchema.parse({ botId: 'alisa', color: 'random' }).learning).toBe(true);
+  });
+
+  it('refuses an unknown color', () => {
+    expect(CreateGameRequestSchema.safeParse({ botId: 'alisa', color: 'red' }).success).toBe(false);
+  });
+
+  it('tells an illegal move apart from an accepted one', () => {
+    expect(GameMoveResponseSchema.parse({ result: 'illegal' })).toEqual({ result: 'illegal' });
+    expect(GameMoveResponseSchema.safeParse({ result: 'ok' }).success).toBe(false);
+  });
+
+  it('takes a promotion in the move', () => {
+    expect(GameMoveRequestSchema.safeParse({ move: 'e7e8q' }).success).toBe(true);
+    expect(GameMoveRequestSchema.safeParse({ move: 'e7e8k' }).success).toBe(false);
   });
 });

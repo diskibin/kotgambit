@@ -1,8 +1,13 @@
 import {
+  ActiveGameSchema,
   AuthResponseSchema,
+  BotListSchema,
   CatalogResponseSchema,
   CompleteLessonResponseSchema,
   DailyPuzzleSchema,
+  GameHintResponseSchema,
+  GameMoveResponseSchema,
+  GameSchema,
   LessonDetailSchema,
   ProgressSummarySchema,
   HealthResponseSchema,
@@ -13,11 +18,17 @@ import {
   PuzzleStatsSchema,
   PuzzleThemeListSchema,
   UserSchema,
+  type ActiveGame,
   type AuthResponse,
+  type BotList,
   type CatalogResponse,
   type CompleteLessonRequest,
   type CompleteLessonResponse,
+  type CreateGameRequest,
   type DailyPuzzle,
+  type Game,
+  type GameHintResponse,
+  type GameMoveResponse,
   type LessonDetail,
   type NextPuzzleRequest,
   type ProgressSummary,
@@ -42,6 +53,14 @@ import type { KotGambitBaseQuery } from './baseQuery.js';
 import type { REDUCER_PATH, TagType } from './tags.js';
 
 type Builder = EndpointBuilder<KotGambitBaseQuery, TagType, typeof REDUCER_PATH>;
+
+function finishedGameTags(game: Game | undefined): ('Games' | 'Progress')[] {
+  return game?.status === 'finished' ? ['Games', 'Progress'] : [];
+}
+
+function movedGameTags(response: GameMoveResponse | undefined): ('Games' | 'Progress')[] {
+  return finishedGameTags(response?.result === 'ok' ? response.game : undefined);
+}
 
 /**
  * The endpoints shared by web and mobile. Each app passes them to its own `createApi`
@@ -156,6 +175,50 @@ export function endpoints(build: Builder) {
       query: (localDate) => `/puzzles/daily?localDate=${localDate}`,
       responseSchema: DailyPuzzleSchema,
       providesTags: ['Puzzles'],
+    }),
+    bots: build.query<BotList, void>({
+      query: () => '/bots',
+      responseSchema: BotListSchema,
+    }),
+    // Starting a game changes the server, so it is a mutation, like starting a puzzle
+    createGame: build.mutation<Game, CreateGameRequest>({
+      query: (body) => ({ url: '/games', method: 'POST', body }),
+      responseSchema: GameSchema,
+      invalidatesTags: ['Games'],
+    }),
+    activeGame: build.query<ActiveGame, void>({
+      query: () => '/games/active',
+      responseSchema: ActiveGameSchema,
+      providesTags: ['Games'],
+    }),
+    gameMove: build.mutation<GameMoveResponse, { gameId: string; move: string }>({
+      query: ({ gameId, move }) => ({
+        url: `/games/${encodeURIComponent(gameId)}/moves`,
+        method: 'POST',
+        body: { move },
+      }),
+      responseSchema: GameMoveResponseSchema,
+      // The end of a game brings XP to the day, which the path and the profile show
+      invalidatesTags: (result) => movedGameTags(result),
+    }),
+    // The bot's move when it did not come with the learner's, the engine was busy
+    gameBotMove: build.mutation<GameMoveResponse, string>({
+      query: (gameId) => ({ url: `/games/${encodeURIComponent(gameId)}/bot-move`, method: 'POST' }),
+      responseSchema: GameMoveResponseSchema,
+      invalidatesTags: (result) => movedGameTags(result),
+    }),
+    gameHint: build.mutation<GameHintResponse, string>({
+      query: (gameId) => ({ url: `/games/${encodeURIComponent(gameId)}/hint`, method: 'POST' }),
+      responseSchema: GameHintResponseSchema,
+    }),
+    gameUndo: build.mutation<Game, string>({
+      query: (gameId) => ({ url: `/games/${encodeURIComponent(gameId)}/undo`, method: 'POST' }),
+      responseSchema: GameSchema,
+    }),
+    gameResign: build.mutation<Game, string>({
+      query: (gameId) => ({ url: `/games/${encodeURIComponent(gameId)}/resign`, method: 'POST' }),
+      responseSchema: GameSchema,
+      invalidatesTags: (result) => finishedGameTags(result),
     }),
     me: build.query<User, void>({
       query: () => '/users/me',

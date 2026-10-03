@@ -480,3 +480,130 @@ describe('puzzle endpoints', () => {
     expect(daily.data?.title).toBe('Мат в 2 хода');
   });
 });
+
+describe('game endpoints', () => {
+  const GAME = {
+    id: '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11',
+    botId: 'alisa',
+    userColor: 'w',
+    learning: true,
+    status: 'active',
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    turn: 'w',
+    moves: [],
+    inCheck: false,
+    hintsLeft: 3,
+    result: null,
+  };
+  const FINISHED = {
+    ...GAME,
+    status: 'finished',
+    result: { outcome: 'win', reason: 'checkmate', xp: 30 },
+  };
+
+  it('starts a game with the chosen bot and color', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/games`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(GAME, { status: 201 });
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.createGame.initiate({ botId: 'alisa', color: 'random' }),
+    );
+    expect(body).toEqual({ botId: 'alisa', color: 'random' });
+    expect(result).toMatchObject({ data: { id: GAME.id, turn: 'w' } });
+  });
+
+  it('refuses an answer that does not fit the contract', async () => {
+    server.use(http.post(`${BASE_URL}/games`, () => HttpResponse.json({ id: 'x' })));
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.createGame.initiate({ botId: 'alisa', color: 'w' }),
+    );
+    expect(result.error).toBeDefined();
+  });
+
+  it('reads the open game again once a game is over', async () => {
+    let activeCalls = 0;
+    server.use(
+      http.get(`${BASE_URL}/games/active`, () => {
+        activeCalls += 1;
+        return HttpResponse.json({ game: activeCalls === 1 ? GAME : null });
+      }),
+      http.post(`${BASE_URL}/games/:id/moves`, () =>
+        HttpResponse.json({ result: 'ok', game: FINISHED, botMove: null }),
+      ),
+    );
+    const { api, store } = setup();
+    const subscription = store.dispatch(api.endpoints.activeGame.initiate());
+    await subscription;
+    await store.dispatch(api.endpoints.gameMove.initiate({ gameId: GAME.id, move: 'd8h4' }));
+    await vi.waitFor(() => expect(activeCalls).toBe(2));
+    subscription.unsubscribe();
+  });
+
+  it('keeps the open game as it is after a move that did not end it', async () => {
+    let activeCalls = 0;
+    server.use(
+      http.get(`${BASE_URL}/games/active`, () => {
+        activeCalls += 1;
+        return HttpResponse.json({ game: GAME });
+      }),
+      http.post(`${BASE_URL}/games/:id/moves`, () =>
+        HttpResponse.json({ result: 'ok', game: GAME, botMove: { uci: 'e7e5', san: 'e5' } }),
+      ),
+    );
+    const { api, store } = setup();
+    const subscription = store.dispatch(api.endpoints.activeGame.initiate());
+    await subscription;
+    await store.dispatch(api.endpoints.gameMove.initiate({ gameId: GAME.id, move: 'e2e4' }));
+    expect(activeCalls).toBe(1);
+    subscription.unsubscribe();
+  });
+
+  it('asks for the bot move, a hint, an undo and a resignation on their own routes', async () => {
+    const urls: string[] = [];
+    const answer =
+      (body: Record<string, unknown>) =>
+      ({ request }: { request: Request }) => {
+        urls.push(new URL(request.url).pathname);
+        return HttpResponse.json(body);
+      };
+    const resigned = { ...FINISHED, result: { outcome: 'loss', reason: 'resignation', xp: 10 } };
+    server.use(
+      http.post(
+        `${BASE_URL}/games/:id/bot-move`,
+        answer({ result: 'ok', game: GAME, botMove: null }),
+      ),
+      http.post(`${BASE_URL}/games/:id/hint`, answer({ move: 'e2e4', hintsLeft: 2 })),
+      http.post(`${BASE_URL}/games/:id/undo`, answer(GAME)),
+      http.post(`${BASE_URL}/games/:id/resign`, answer(resigned)),
+    );
+    const { api, store } = setup();
+    await store.dispatch(api.endpoints.gameBotMove.initiate(GAME.id));
+    await store.dispatch(api.endpoints.gameHint.initiate(GAME.id));
+    await store.dispatch(api.endpoints.gameUndo.initiate(GAME.id));
+    await store.dispatch(api.endpoints.gameResign.initiate(GAME.id));
+    expect(urls).toEqual(
+      ['bot-move', 'hint', 'undo', 'resign'].map((end) => `/games/${GAME.id}/${end}`),
+    );
+  });
+
+  it('lists the bots', async () => {
+    const fox = {
+      id: 'alisa',
+      kind: 'fox',
+      name: 'Лиса Алиса',
+      level: 3,
+      character: 'Хитрая, любит ловушки.',
+      greeting: 'Сыграем?',
+    };
+    server.use(http.get(`${BASE_URL}/bots`, () => HttpResponse.json({ bots: [fox] })));
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.bots.initiate());
+    expect(result.data?.bots[0]?.name).toBe('Лиса Алиса');
+  });
+});

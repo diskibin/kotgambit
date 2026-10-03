@@ -21,6 +21,7 @@
     "@kotgambit/locales": "workspace:*",
     "@kotgambit/mascot": "workspace:*",
     "@kotgambit/puzzle-player": "workspace:*",
+    "@kotgambit/game-player": "workspace:*",
     "@react-native/new-app-screen": "0.87.1",
     "@reduxjs/toolkit": "^2.13.0",
     "i18next": "^26.4.2",

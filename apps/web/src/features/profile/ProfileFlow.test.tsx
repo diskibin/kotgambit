@@ -26,6 +26,15 @@ const PROFILE = {
     { day: '2026-10-02', done: true, today: false },
     { day: '2026-10-03', done: true, today: true },
   ],
+  month: [
+    { day: '2026-10-01', done: true, today: false },
+    { day: '2026-10-02', done: true, today: false },
+    { day: '2026-10-03', done: false, today: true },
+  ],
+  ratingHistory: [
+    { day: '2026-09-26', rating: 800 },
+    { day: '2026-10-03', rating: 1040 },
+  ],
   achievements: [
     { key: 'first-lesson', current: 1, target: 1, unlocked: true },
     { key: 'first-mate', current: 1, target: 1, unlocked: true },
@@ -178,6 +187,34 @@ describe('the profile', () => {
       await screen.findByText('Не получилось загрузить профиль. Попробуй ещё раз.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Повторить' })).toBeInTheDocument();
+  });
+});
+
+describe('the month and the rating', () => {
+  it('shows the calendar of the month with the days of the goal', async () => {
+    renderApp('/profile');
+    expect(await screen.findByRole('heading', { name: 'Октябрь' })).toBeInTheDocument();
+    expect(screen.getByLabelText('2: цель выполнена')).toBeInTheDocument();
+    expect(screen.getByLabelText('3: без цели, сегодня')).toBeInTheDocument();
+    expect(screen.getByText('Лучшая серия: 9 дней')).toBeInTheDocument();
+  });
+
+  it('shows the rating over the weeks with the change in words', async () => {
+    renderApp('/profile');
+    expect(await screen.findByText('+240 за 8 недель')).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: 'Рейтинг в задачах по неделям: с 800 до 1040' }),
+    ).toBeInTheDocument();
+  });
+
+  it('asks for the first puzzles when there is no rating line yet', async () => {
+    server.use(
+      http.get(`${API_URL}/profile`, () => HttpResponse.json({ ...PROFILE, ratingHistory: [] })),
+    );
+    renderApp('/profile');
+    expect(
+      await screen.findByText('Решай задачи, и здесь появится, как растёт твой рейтинг.'),
+    ).toBeInTheDocument();
   });
 });
 

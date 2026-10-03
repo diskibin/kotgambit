@@ -9,6 +9,7 @@ import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { LockIcon } from '../../shared/ui/icons';
 import { Mascot } from '../mascot/Mascot';
+import { MonthCalendar, RatingGraph } from './Progress';
 import { Wardrobe } from './Wardrobe';
 import { useScheme } from '../theme/useScheme';
 
@@ -178,6 +179,11 @@ export function ProfilePage() {
                   ))}
                 </ol>
               </section>
+
+              <div className="grid gap-6 desktop:grid-cols-2">
+                <MonthCalendar profile={data} />
+                <RatingGraph history={data.ratingHistory} />
+              </div>
 
               <section className="flex flex-col gap-3">
                 <div className="flex items-baseline justify-between">

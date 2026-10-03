@@ -25,6 +25,15 @@ const PROFILE = {
     { day: '2026-10-02', done: true, today: false },
     { day: '2026-10-03', done: true, today: true },
   ],
+  month: [
+    { day: '2026-10-01', done: true, today: false },
+    { day: '2026-10-02', done: true, today: false },
+    { day: '2026-10-03', done: false, today: true },
+  ],
+  ratingHistory: [
+    { day: '2026-09-26', rating: 800 },
+    { day: '2026-10-03', rating: 1040 },
+  ],
   achievements: [
     { key: 'first-lesson', current: 1, target: 1, unlocked: true },
     { key: 'first-mate', current: 1, target: 1, unlocked: true },

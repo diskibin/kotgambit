@@ -149,6 +149,8 @@ test('signing out revokes the session and clears the Keystore', async () => {
         puzzles: { rating: 1000, solved: 0 },
         games: { played: 0, wins: 0, draws: 0, losses: 0 },
         week: [],
+        month: [],
+        ratingHistory: [],
         achievements: [],
         themes: [],
         cards: { due: 0, total: 0 },

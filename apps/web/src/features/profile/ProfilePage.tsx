@@ -110,6 +110,9 @@ export function ProfilePage() {
                   </Button>
                 )}
               </div>
+              <Button variant="secondary" fullWidth onClick={() => void navigate('/settings')}>
+                {t('settings.title')}
+              </Button>
               <Button variant="secondary" fullWidth onClick={() => void logout()}>
                 {t('path.signOut')}
               </Button>

@@ -5,6 +5,7 @@ import { AnalysisPage } from './features/analysis/AnalysisPage';
 import { ReviewPage } from './features/analysis/ReviewPage';
 import { CardsPage } from './features/profile/CardsPage';
 import { ProfilePage } from './features/profile/ProfilePage';
+import { SettingsPage } from './features/settings/SettingsPage';
 import { BillingReturnPage } from './features/premium/BillingReturnPage';
 import { PremiumPage } from './features/premium/PremiumPage';
 import { AuthPage } from './features/auth/AuthPage';
@@ -45,6 +46,7 @@ export function App() {
         <Route path="/puzzles/solve" element={<PuzzlePage />} />
         <Route path="/analysis" element={<AnalysisPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/billing/return" element={<BillingReturnPage />} />
         <Route path="/cards" element={<CardsPage />} />

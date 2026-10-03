@@ -336,6 +336,8 @@ export const ru = {
       learningChip: 'Режим обучения',
       flip: 'Перевернуть доску',
       moves: 'Ходы',
+      movesSheet: 'Ходы партии',
+      closeSheet: 'Закрыть',
       allMoves: 'Все ходы',
       noMoves: 'Ходов пока нет',
       opponent: 'Уровень {{level}} · {{color}}',

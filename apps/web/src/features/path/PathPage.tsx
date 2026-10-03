@@ -50,6 +50,9 @@ export function PathPage() {
           <Button variant="text" onClick={() => void navigate('/puzzles')}>
             {t('puzzles.title')}
           </Button>
+          <Button variant="text" onClick={() => void navigate('/play')}>
+            {t('play.title')}
+          </Button>
           <Button variant="text" onClick={() => void logout()}>
             {t('path.signOut')}
           </Button>

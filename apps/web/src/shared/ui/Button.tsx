@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type Variant = 'primary' | 'success' | 'secondary' | 'text' | 'danger';
+type Variant = 'primary' | 'success' | 'secondary' | 'caution' | 'text' | 'danger';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -18,6 +18,8 @@ const VARIANTS: Record<Variant, string> = {
   primary: `${SHASHKA} bg-brand text-on-brand`,
   success: `${SHASHKA} bg-mint text-on-accent`,
   secondary: `${SHASHKA} bg-surface text-text`,
+  // Giving up: a calm coral plate, still a button of the same family
+  caution: `${SHASHKA} bg-coral-tint text-coral-text`,
   text: 'text-brand-text',
   // Leaving or deleting: quiet, coral text, never the main button
   danger: 'text-coral-text',

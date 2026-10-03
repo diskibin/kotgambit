@@ -1,3 +1,4 @@
+import { gameSessionReducer } from '@kotgambit/game-player';
 import { lessonSessionReducer } from '@kotgambit/lesson-player';
 import { puzzleSessionReducer } from '@kotgambit/puzzle-player';
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
@@ -28,6 +29,7 @@ export function makeStore() {
     reducer: {
       [api.reducerPath]: api.reducer,
       auth: authSlice.reducer,
+      gameSession: gameSessionReducer,
       lessonSession: lessonSessionReducer,
       puzzleSession: puzzleSessionReducer,
       theme: themeSlice.reducer,

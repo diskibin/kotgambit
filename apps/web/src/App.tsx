@@ -5,6 +5,8 @@ import { RecoverPage } from './features/auth/RecoverPage';
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
 import { CompletePage } from './features/lessons/CompletePage';
 import { LessonPage } from './features/lessons/LessonPage';
+import { BotsPage } from './features/play/BotsPage';
+import { GamePage } from './features/play/GamePage';
 import { PathPage } from './features/path/PathPage';
 import { PuzzlePage } from './features/puzzles/PuzzlePage';
 import { PuzzlesPage } from './features/puzzles/PuzzlesPage';
@@ -27,6 +29,8 @@ export function App() {
         <Route path="/lesson/:id/done" element={<CompletePage />} />
         <Route path="/puzzles" element={<PuzzlesPage />} />
         <Route path="/puzzles/solve" element={<PuzzlePage />} />
+        <Route path="/play" element={<BotsPage />} />
+        <Route path="/play/:id" element={<GamePage />} />
         <Route path="/sandbox" element={<SandboxPage />} />
         <Route path="*" element={<PathPage />} />
       </Routes>

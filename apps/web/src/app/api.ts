@@ -40,6 +40,11 @@ export const api = createApi({
 
 export const {
   useActiveGameQuery,
+  useAnswerCardMutation,
+  useCardSummaryQuery,
+  useMakeCardsMutation,
+  useNextCardMutation,
+  useProfileQuery,
   useAnalyzePositionMutation,
   useBotsQuery,
   useCreateGameMutation,

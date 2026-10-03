@@ -12,7 +12,13 @@ import type { TFunction } from 'i18next';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router';
-import { useBotsQuery, useGameQuery, useReviewQuery, useStartReviewMutation } from '../../app/api';
+import {
+  useBotsQuery,
+  useGameQuery,
+  useMakeCardsMutation,
+  useReviewQuery,
+  useStartReviewMutation,
+} from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
@@ -134,6 +140,7 @@ export function ReviewPage() {
   const game = useGameQuery(id, { skip: !signedIn });
   const bots = useBotsQuery(undefined, { skip: !signedIn });
   const [startReview] = useStartReviewMutation();
+  const [makeCards, cards] = useMakeCardsMutation();
   const started = useRef(false);
   const ready = signedIn && game.data?.status === 'finished';
   const review = useReviewPolling(id, ready);
@@ -369,6 +376,31 @@ export function ReviewPage() {
               );
             })}
           </div>
+
+          {result.mistakes.length > 0 && (
+            <div className="flex flex-col gap-3 rounded-card border-2 border-dashed border-line p-4">
+              <Button
+                variant="secondary"
+                disabled={cards.isLoading}
+                onClick={() => void makeCards(id)}
+              >
+                {t('review.makeCards.button')}
+              </Button>
+              {cards.data && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-[15px] font-semibold">
+                    {cards.data.created === 0
+                      ? t('review.makeCards.already')
+                      : t('review.makeCards.created', { count: cards.data.created })}
+                  </span>
+                  <Button onClick={() => void navigate('/cards')}>
+                    {t('review.makeCards.practice')}
+                  </Button>
+                </div>
+              )}
+              {cards.isError && <Banner>{t('review.makeCards.error')}</Banner>}
+            </div>
+          )}
         </section>
       </div>
     </Shell>

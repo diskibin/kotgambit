@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router';
 import { useMeQuery } from './app/api';
 import { AnalysisPage } from './features/analysis/AnalysisPage';
 import { ReviewPage } from './features/analysis/ReviewPage';
+import { CardsPage } from './features/profile/CardsPage';
+import { ProfilePage } from './features/profile/ProfilePage';
 import { AuthPage } from './features/auth/AuthPage';
 import { RecoverPage } from './features/auth/RecoverPage';
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
@@ -32,6 +34,8 @@ export function App() {
         <Route path="/puzzles" element={<PuzzlesPage />} />
         <Route path="/puzzles/solve" element={<PuzzlePage />} />
         <Route path="/analysis" element={<AnalysisPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/cards" element={<CardsPage />} />
         <Route path="/review/:id" element={<ReviewPage />} />
         <Route path="/play" element={<BotsPage />} />
         <Route path="/play/:id" element={<GamePage />} />

@@ -1,3 +1,4 @@
+import { AppShell } from '../../shared/ui/AppShell';
 import { createBoardState } from '@kotgambit/board-controller';
 import { STARTING_FEN, playGame } from '@kotgambit/chess-core';
 import type { Game, GameReview, KeyMoment } from '@kotgambit/contracts';
@@ -9,7 +10,7 @@ import {
   type Quality,
 } from '@kotgambit/game-player';
 import type { TFunction } from 'i18next';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import {
@@ -177,14 +178,14 @@ export function ReviewPage() {
 
   if (game.isError || review.isError) {
     return (
-      <Shell title={t('review.title')} onClose={() => void navigate('/play')}>
+      <AppShell active="play" title={t('review.title')}>
         <Banner>{t('review.loadError')}</Banner>
-      </Shell>
+      </AppShell>
     );
   }
   if (!data || (data.status !== 'done' && data.status !== 'failed')) {
     return (
-      <Shell title={t('review.title')} onClose={() => void navigate('/play')}>
+      <AppShell active="play" title={t('review.title')}>
         <div
           role="status"
           className="mx-auto flex max-w-[480px] flex-col items-center gap-4 rounded-card border-2 border-edge bg-surface p-8 text-center shadow-shashka"
@@ -200,19 +201,19 @@ export function ReviewPage() {
             />
           )}
         </div>
-      </Shell>
+      </AppShell>
     );
   }
   if (data.status === 'failed' || !result) {
     return (
-      <Shell title={t('review.title')} onClose={() => void navigate('/play')}>
+      <AppShell active="play" title={t('review.title')}>
         <div className="mx-auto flex max-w-[480px] flex-col items-center gap-4 text-center">
           <Mascot mood="oops" size={140} dark={scheme === 'dark'} />
           <h2 className="m-0 font-heading text-[22px] font-bold">{t('review.failed.title')}</h2>
           <p className="m-0 text-[16px] font-semibold text-text-2">{t('review.failed.text')}</p>
           <Button onClick={retry}>{t('review.failed.retry')}</Button>
         </div>
-      </Shell>
+      </AppShell>
     );
   }
 
@@ -237,7 +238,7 @@ export function ReviewPage() {
   const total = moves.length;
 
   return (
-    <Shell title={t('review.title')} onClose={() => void navigate('/play')}>
+    <AppShell active="play" title={t('review.title')}>
       <div className="grid gap-8 laptop:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <section className="flex flex-col gap-3">
           {game.data && bot && (
@@ -419,29 +420,6 @@ export function ReviewPage() {
           )}
         </section>
       </div>
-    </Shell>
-  );
-}
-
-function Shell({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: ReactNode;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="min-h-screen bg-bg text-text">
-      <header className="flex min-h-[88px] flex-wrap items-center justify-between gap-4 border-b-2 border-line px-4 tablet:px-10">
-        <h1 className="m-0 font-heading text-[24px] font-bold">{title}</h1>
-        <Button variant="text" onClick={onClose}>
-          {t('play.game.close')}
-        </Button>
-      </header>
-      <main className="mx-auto max-w-[1200px] px-4 py-8 pr-6 tablet:px-10">{children}</main>
-    </div>
+    </AppShell>
   );
 }

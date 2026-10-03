@@ -55,7 +55,7 @@ export function VerifyEmailPage() {
             </p>
           </div>
           <Chip tone="mint">{t('verify.done.chip')}</Chip>
-          <Button variant="success" large fullWidth onClick={() => void navigate('/')}>
+          <Button variant="success" large fullWidth onClick={() => void navigate('/learn')}>
             {t('verify.done.action')}
           </Button>
         </>

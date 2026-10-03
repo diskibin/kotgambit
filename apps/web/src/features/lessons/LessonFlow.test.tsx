@@ -96,14 +96,14 @@ const click = async (user: ReturnType<typeof userEvent.setup>, name: string | Re
 const square = (name: string) => screen.findByRole('button', { name: new RegExp(` ${name}(,|$)`) });
 
 async function startLesson(user: ReturnType<typeof userEvent.setup>) {
-  renderApp('/');
+  renderApp('/learn');
   await click(user, 'Начать');
   await screen.findByRole('heading', { name: 'Теория' });
 }
 
 describe('home', () => {
   it('shows the chapters, the day bar and a greeting from the cat', async () => {
-    renderApp('/');
+    renderApp('/learn');
     expect(
       await screen.findByRole('heading', { name: 'Доска и фигуры', level: 3 }),
     ).toBeInTheDocument();
@@ -117,7 +117,7 @@ describe('home', () => {
 
   it('sends a visitor who is not signed in to the sign-in screen', async () => {
     server.use(http.post(`${API_URL}/auth/refresh`, () => new HttpResponse(null, { status: 401 })));
-    renderApp('/');
+    renderApp('/learn');
     expect(await screen.findByRole('tab', { name: 'Вход', selected: true })).toBeInTheDocument();
   });
 
@@ -128,7 +128,7 @@ describe('home', () => {
         { ...LESSONS[1], status: 'available' },
       ]),
     );
-    renderApp('/');
+    renderApp('/learn');
     expect(await screen.findByRole('img', { name: 'Звёзд: 2 из 3' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Повторить/ })).toBeInTheDocument();
     expect(screen.getByText('1 из 2 глав · 50%')).toBeInTheDocument();
@@ -278,7 +278,7 @@ describe('lesson', () => {
       ),
     );
     const user = userEvent.setup();
-    renderApp('/');
+    renderApp('/learn');
     await click(user, 'Начать');
     expect(
       await screen.findByText('Эта глава откроется, когда ты закончишь предыдущую.'),

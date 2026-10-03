@@ -9,7 +9,14 @@ const SECONDS_IN_MINUTE = 60;
  * "День конём": ten board squares, one for every tenth of the daily goal, with the knight standing
  * on the last filled one. It replaces the flame, the XP counter and the ring (README, rules of the style).
  */
-export function DayBar({ progress }: { progress: ProgressSummary }) {
+export function DayBar({
+  progress,
+  compact = false,
+}: {
+  progress: ProgressSummary;
+  /** The phone size of the design: smaller squares and no words, the group still says everything to a screen reader. */
+  compact?: boolean;
+}) {
   const { t } = useTranslation();
   const { todaySeconds, goalSeconds, streakDays } = progress;
   const goalMinutes = Math.round(goalSeconds / SECONDS_IN_MINUTE);
@@ -33,15 +40,17 @@ export function DayBar({ progress }: { progress: ProgressSummary }) {
         {Array.from({ length: CELLS }, (_, index) => (
           <span
             key={index}
-            className={`flex h-7 w-6 items-center justify-center ${
+            className={`flex items-center justify-center ${compact ? 'h-[18px] w-4' : 'h-7 w-6'} ${
               index < filled ? (index % 2 === 0 ? 'bg-board-a' : 'bg-board-b') : 'bg-surface'
             }`}
           >
-            {index === filled - 1 && <img src={pieceUrl('w', 'n')} alt="" className="size-6" />}
+            {index === filled - 1 && (
+              <img src={pieceUrl('w', 'n')} alt="" className={compact ? 'size-4' : 'size-6'} />
+            )}
           </span>
         ))}
       </div>
-      <div className="flex flex-col text-[13px] leading-4 font-bold">
+      <div className={`flex-col text-[13px] leading-4 font-bold ${compact ? 'hidden' : 'flex'}`}>
         <span className="text-text">{minutes}</span>
         <span className="text-flame-text">{streak}</span>
       </div>

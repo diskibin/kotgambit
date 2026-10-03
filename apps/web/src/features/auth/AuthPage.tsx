@@ -54,7 +54,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   const loading = loginState.isLoading || registerState.isLoading;
   const isLogin = mode === 'login';
 
-  if (status === 'authenticated') return <Navigate to="/" replace />;
+  if (status === 'authenticated') return <Navigate to="/learn" replace />;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();

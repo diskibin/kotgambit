@@ -1,5 +1,6 @@
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import { useMeQuery } from './app/api';
+import { useAppSelector } from './app/hooks';
 import { AnalysisPage } from './features/analysis/AnalysisPage';
 import { ReviewPage } from './features/analysis/ReviewPage';
 import { CardsPage } from './features/profile/CardsPage';
@@ -18,6 +19,13 @@ import { PuzzlePage } from './features/puzzles/PuzzlePage';
 import { PuzzlesPage } from './features/puzzles/PuzzlesPage';
 import { SandboxPage } from './features/sandbox/SandboxPage';
 import { ThemeSync } from './features/theme/ThemeSync';
+
+/** The address of the site itself and of anything unknown: the chapters for a learner, the sign-in for a visitor. */
+function HomeRedirect() {
+  const status = useAppSelector((state) => state.auth.status);
+  if (status === 'unknown') return null;
+  return <Navigate to={status === 'authenticated' ? '/learn' : '/login'} replace />;
+}
 
 export function App() {
   // Restores the session after a reload: a 401 makes the base query try the refresh cookie first
@@ -44,7 +52,8 @@ export function App() {
         <Route path="/play" element={<BotsPage />} />
         <Route path="/play/:id" element={<GamePage />} />
         <Route path="/sandbox" element={<SandboxPage />} />
-        <Route path="*" element={<PathPage />} />
+        <Route path="/learn" element={<PathPage />} />
+        <Route path="*" element={<HomeRedirect />} />
       </Routes>
     </>
   );

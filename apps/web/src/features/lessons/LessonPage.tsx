@@ -105,7 +105,7 @@ function LessonScreen({ id }: { id: string }) {
           {apiErrorOf(error)?.message ?? t('lesson.loadError')}
         </p>
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => void navigate('/')}>
+          <Button variant="secondary" onClick={() => void navigate('/learn')}>
             {t('lesson.complete.home')}
           </Button>
           <Button onClick={() => void refetch()}>{t('lesson.retryLoad')}</Button>
@@ -163,7 +163,7 @@ function LessonScreen({ id }: { id: string }) {
           <Button large fullWidth onClick={() => setExiting(false)} data-autofocus>
             {t('lesson.exit.stay')}
           </Button>
-          <Button variant="danger" onClick={() => void navigate('/')}>
+          <Button variant="danger" onClick={() => void navigate('/learn')}>
             {t('lesson.exit.leave')}
           </Button>
         </Dialog>

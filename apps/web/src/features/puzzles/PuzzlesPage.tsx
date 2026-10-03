@@ -1,3 +1,4 @@
+import { AppShell } from '../../shared/ui/AppShell';
 import { THEME_GROUPS, themeGroup, type ThemeGroup } from '@kotgambit/puzzle-player';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,15 +44,8 @@ export function PuzzlesPage() {
   const failed = [daily, stats, themes].some((query) => query.isError);
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      <header className="flex min-h-[88px] flex-wrap items-center justify-between gap-4 border-b-2 border-line px-4 tablet:px-10">
-        <h1 className="m-0 font-heading text-[24px] font-bold">{t('puzzles.title')}</h1>
-        <Button variant="text" onClick={() => void navigate('/')}>
-          {t('lesson.complete.home')}
-        </Button>
-      </header>
-
-      <main className="mx-auto flex max-w-[1200px] flex-col gap-8 px-4 py-8 pr-6 tablet:px-10">
+    <AppShell active="tasks" title={t('puzzles.title')}>
+      <div className="flex max-w-[1200px] flex-col gap-8">
         {failed && (
           <div className="flex flex-col gap-3">
             <Banner>{t('puzzles.loadError')}</Banner>
@@ -184,7 +178,7 @@ export function PuzzlesPage() {
             ))}
           </ul>
         </section>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

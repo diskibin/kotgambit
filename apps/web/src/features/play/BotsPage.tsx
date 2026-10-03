@@ -1,3 +1,4 @@
+import { AppShell } from '../../shared/ui/AppShell';
 import { apiErrorOf, type BotProfile, type CreateGameRequest } from '@kotgambit/contracts';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -64,15 +65,8 @@ export function BotsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      <header className="flex min-h-[88px] flex-wrap items-center justify-between gap-4 border-b-2 border-line px-4 tablet:px-10">
-        <h1 className="m-0 font-heading text-[24px] font-bold">{t('play.title')}</h1>
-        <Button variant="text" onClick={() => void navigate('/')}>
-          {t('lesson.complete.home')}
-        </Button>
-      </header>
-
-      <main className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 py-8 pr-6 tablet:px-10">
+    <AppShell active="play" title={t('play.title')}>
+      <div className="flex max-w-[1200px] flex-col gap-6">
         {bots.isError && (
           <div className="flex flex-col gap-3">
             <Banner>{t('play.loadError')}</Banner>
@@ -212,7 +206,7 @@ export function BotsPage() {
             </aside>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

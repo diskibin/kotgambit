@@ -27,7 +27,7 @@ export function CompletePage() {
   );
 
   // The result lives in the navigation state, so a reload has nothing to show
-  if (!result || !message) return <Navigate to="/" replace />;
+  if (!result || !message) return <Navigate to="/learn" replace />;
 
   const tiles = [
     { label: t('lesson.complete.xp'), value: t('lesson.complete.xpValue', { xp: result.xp }) },

@@ -62,7 +62,7 @@ export function CardsPage() {
 
   if (status === 'anonymous') return <Navigate to="/login" replace />;
 
-  const leave = () => void navigate('/');
+  const leave = () => void navigate('/learn');
 
   return (
     <div className="flex min-h-screen flex-col bg-bg text-text">

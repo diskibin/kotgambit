@@ -1,3 +1,4 @@
+import { AppShell } from '../../shared/ui/AppShell';
 import { createBoardState } from '@kotgambit/board-controller';
 import {
   editorReducer,
@@ -13,7 +14,7 @@ import { describePositionProblem } from '@kotgambit/coach';
 import { apiErrorOf } from '@kotgambit/contracts';
 import { useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useNavigate } from 'react-router';
+import { Navigate } from 'react-router';
 import { useAnalyzePositionMutation } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { Banner } from '../../shared/ui/Banner';
@@ -53,7 +54,6 @@ function hintSquaresFor(
 /** The position editor with the engine's look at the position under it. */
 export function AnalysisPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const scheme = useScheme();
   const status = useAppSelector((state) => state.auth.status);
   const [editor, dispatch] = useReducer(editorReducer, undefined, initialEditorState);
@@ -116,15 +116,8 @@ export function AnalysisPage() {
     editor.tool.piece.type === piece.type;
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      <header className="flex min-h-[88px] flex-wrap items-center justify-between gap-4 border-b-2 border-line px-4 tablet:px-10">
-        <h1 className="m-0 font-heading text-[24px] font-bold">{t('analysis.title')}</h1>
-        <Button variant="text" onClick={() => void navigate('/')}>
-          {t('lesson.complete.home')}
-        </Button>
-      </header>
-
-      <main className="mx-auto grid max-w-[1200px] gap-8 px-4 py-8 pr-6 tablet:px-10 laptop:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
+    <AppShell active="analysis" title={t('analysis.title')}>
+      <div className="grid max-w-[1200px] gap-8 laptop:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
         <section aria-label={t('analysis.title')} className="flex flex-col gap-4">
           <div className="flex gap-3">
             <div
@@ -323,7 +316,7 @@ export function AnalysisPage() {
             </p>
           )}
         </section>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

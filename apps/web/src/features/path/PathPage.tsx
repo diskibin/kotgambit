@@ -1,9 +1,9 @@
+import { AppShell } from '../../shared/ui/AppShell';
 import { TRACKS } from '@kotgambit/content-schema';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
-import { useLessonsQuery, useLogoutMutation, useProgressQuery } from '../../app/api';
+import { useLessonsQuery } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
-import { localDateKey } from '../../shared/localDate';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { ProgressBar } from '../../shared/ui/ProgressBar';
@@ -11,7 +11,6 @@ import { pieceUrl } from '../board/pieceAssets';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
 import { ChapterCard } from './ChapterCard';
-import { DayBar } from './DayBar';
 
 const PERCENT = 100;
 
@@ -23,8 +22,6 @@ export function PathPage() {
   const status = useAppSelector((state) => state.auth.status);
   const signedIn = status === 'authenticated';
   const lessons = useLessonsQuery(undefined, { skip: !signedIn });
-  const progress = useProgressQuery(localDateKey(), { skip: !signedIn });
-  const [logout] = useLogoutMutation();
 
   if (status === 'anonymous') return <Navigate to="/login" replace />;
 
@@ -42,33 +39,8 @@ export function PathPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      <header className="flex min-h-[88px] flex-wrap items-center justify-between gap-4 border-b-2 border-line px-4 tablet:px-10">
-        <h1 className="m-0 font-heading text-[24px] font-bold">{t('path.title')}</h1>
-        <div className="flex items-center gap-5">
-          {progress.data && <DayBar progress={progress.data} />}
-          <Button variant="text" onClick={() => void navigate('/puzzles')}>
-            {t('puzzles.title')}
-          </Button>
-          <Button variant="text" onClick={() => void navigate('/play')}>
-            {t('play.title')}
-          </Button>
-          <Button variant="text" onClick={() => void navigate('/analysis')}>
-            {t('analysis.title')}
-          </Button>
-          <Button variant="text" onClick={() => void navigate('/profile')}>
-            {t('profile.title')}
-          </Button>
-          <Button variant="text" onClick={() => void navigate('/premium')}>
-            {t('premium.title')}
-          </Button>
-          <Button variant="text" onClick={() => void logout()}>
-            {t('path.signOut')}
-          </Button>
-        </div>
-      </header>
-
-      <main className="mx-auto flex max-w-[1200px] flex-col gap-10 px-4 py-8 pr-6 tablet:px-10">
+    <AppShell active="path" title={t('path.title')}>
+      <div className="flex max-w-[1200px] flex-col gap-10">
         {lessons.isError && (
           <div className="flex flex-col gap-3">
             <Banner>{t('path.loadError')}</Banner>
@@ -139,7 +111,7 @@ export function PathPage() {
             </p>
           </aside>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

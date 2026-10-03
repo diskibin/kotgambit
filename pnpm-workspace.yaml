@@ -7,8 +7,13 @@ allowBuilds:
   '@prisma/engines': true
   '@swc/core': true
   argon2: true
+  # Optional native speed-ups (ssh2 and cpu-features come with Testcontainers) and a version check
+  # of protobufjs: none of them is needed, so their build scripts stay off
+  cpu-features: false
   esbuild: true
   prisma: true
+  protobufjs: false
+  ssh2: false
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.11.6'
   - '@turbo/darwin-arm64@2.11.6'

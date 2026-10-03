@@ -9,6 +9,7 @@ import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { LockIcon } from '../../shared/ui/icons';
 import { Mascot } from '../mascot/Mascot';
+import { Wardrobe } from './Wardrobe';
 import { useScheme } from '../theme/useScheme';
 
 function Tile({ label, value, sub }: { label: string; value: string; sub: string }) {
@@ -57,66 +58,69 @@ export function ProfilePage() {
 
         {data && (
           <div className="grid gap-8 laptop:grid-cols-[360px_minmax(0,1fr)]">
-            <section className="flex flex-col items-center gap-3 rounded-card border-2 border-edge bg-surface p-6 shadow-shashka">
-              <div className="relative flex size-[200px] items-center justify-center rounded-full bg-brand-tint">
-                <Mascot mood="proud" size={170} dark={scheme === 'dark'} animate />
-                <span className="absolute right-2 bottom-2 rounded-pill border-2 border-edge bg-sun px-3 py-1 text-[14px] font-extrabold text-on-accent">
-                  {t('profile.level', { level: data.level.level })}
-                </span>
-              </div>
-              <h2 className="m-0 font-heading text-[22px] font-bold">
-                {data.displayName ?? t('profile.guest')}
-              </h2>
-              <p className="m-0 text-[15px] font-semibold text-text-2">
-                {t('profile.memberSince', {
-                  month: monthGenitive(data.memberSince),
-                  year: yearOf(data.memberSince),
-                })}
-              </p>
-              <div className="flex w-full flex-col gap-1">
-                <span className="text-[14px] font-bold text-text-2">
-                  {t('profile.toNext', {
-                    next: data.level.level + 1,
-                    xp: data.level.xpInLevel,
-                    total: data.level.xpForNext,
-                  })}
-                </span>
-                <div
-                  role="progressbar"
-                  aria-label={t('profile.levelBar', { level: data.level.level })}
-                  aria-valuemin={0}
-                  aria-valuemax={data.level.xpForNext}
-                  aria-valuenow={data.level.xpInLevel}
-                  className="h-4 overflow-hidden rounded-pill border-2 border-edge bg-surface"
-                >
-                  <div
-                    style={{
-                      width: `${levelPercent(data.level.xpInLevel, data.level.xpForNext)}%`,
-                    }}
-                    className="h-full bg-sun"
-                  />
+            <div className="flex flex-col gap-6">
+              <section className="flex flex-col items-center gap-3 rounded-card border-2 border-edge bg-surface p-6 shadow-shashka">
+                <div className="relative flex size-[200px] items-center justify-center rounded-full bg-brand-tint">
+                  <Mascot mood="proud" size={170} dark={scheme === 'dark'} animate />
+                  <span className="absolute right-2 bottom-2 rounded-pill border-2 border-edge bg-sun px-3 py-1 text-[14px] font-extrabold text-on-accent">
+                    {t('profile.level', { level: data.level.level })}
+                  </span>
                 </div>
-              </div>
-              <div className="flex w-full flex-col gap-2 border-t-2 border-line pt-3">
-                <strong className="text-[16px]">{t('profile.cards.title')}</strong>
-                <span className="text-[14px] font-semibold text-text-2">
-                  {data.cards.total === 0
-                    ? t('profile.cards.none')
-                    : t('profile.cards.due', { count: data.cards.due })}
-                </span>
-                {data.cards.due > 0 && (
-                  <Button variant="secondary" onClick={() => void navigate('/cards')}>
-                    {t('profile.cards.start')}
-                  </Button>
-                )}
-              </div>
-              <Button variant="secondary" fullWidth onClick={() => void navigate('/settings')}>
-                {t('settings.title')}
-              </Button>
-              <Button variant="secondary" fullWidth onClick={() => void logout()}>
-                {t('path.signOut')}
-              </Button>
-            </section>
+                <h2 className="m-0 font-heading text-[22px] font-bold">
+                  {data.displayName ?? t('profile.guest')}
+                </h2>
+                <p className="m-0 text-[15px] font-semibold text-text-2">
+                  {t('profile.memberSince', {
+                    month: monthGenitive(data.memberSince),
+                    year: yearOf(data.memberSince),
+                  })}
+                </p>
+                <div className="flex w-full flex-col gap-1">
+                  <span className="text-[14px] font-bold text-text-2">
+                    {t('profile.toNext', {
+                      next: data.level.level + 1,
+                      xp: data.level.xpInLevel,
+                      total: data.level.xpForNext,
+                    })}
+                  </span>
+                  <div
+                    role="progressbar"
+                    aria-label={t('profile.levelBar', { level: data.level.level })}
+                    aria-valuemin={0}
+                    aria-valuemax={data.level.xpForNext}
+                    aria-valuenow={data.level.xpInLevel}
+                    className="h-4 overflow-hidden rounded-pill border-2 border-edge bg-surface"
+                  >
+                    <div
+                      style={{
+                        width: `${levelPercent(data.level.xpInLevel, data.level.xpForNext)}%`,
+                      }}
+                      className="h-full bg-sun"
+                    />
+                  </div>
+                </div>
+                <div className="flex w-full flex-col gap-2 border-t-2 border-line pt-3">
+                  <strong className="text-[16px]">{t('profile.cards.title')}</strong>
+                  <span className="text-[14px] font-semibold text-text-2">
+                    {data.cards.total === 0
+                      ? t('profile.cards.none')
+                      : t('profile.cards.due', { count: data.cards.due })}
+                  </span>
+                  {data.cards.due > 0 && (
+                    <Button variant="secondary" onClick={() => void navigate('/cards')}>
+                      {t('profile.cards.start')}
+                    </Button>
+                  )}
+                </div>
+                <Button variant="secondary" fullWidth onClick={() => void navigate('/settings')}>
+                  {t('settings.title')}
+                </Button>
+                <Button variant="secondary" fullWidth onClick={() => void logout()}>
+                  {t('path.signOut')}
+                </Button>
+              </section>
+              <Wardrobe wardrobe={data.wardrobe} />
+            </div>
 
             <div className="flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-3 desktop:grid-cols-4">

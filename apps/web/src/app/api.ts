@@ -42,6 +42,7 @@ export const {
   useActiveGameQuery,
   useDeleteAccountMutation,
   useSettingsQuery,
+  useSetAccessoryMutation,
   useUpdateSettingsMutation,
   useCancelSubscriptionMutation,
   useCheckoutMutation,

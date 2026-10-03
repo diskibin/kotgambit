@@ -1,5 +1,6 @@
 import { resolveMascot, type Accessory, type Mood, type ResolvedNode } from '@kotgambit/mascot';
 import { createElement, type ReactNode } from 'react';
+import { useWornAccessory } from './useWornAccessory';
 import './mascot.css';
 
 const DEFAULT_SIZE = 160;
@@ -27,11 +28,13 @@ function renderNode(node: ResolvedNode, key: number): ReactNode {
 export function Mascot({
   mood,
   size = DEFAULT_SIZE,
-  accessory = 'none',
+  accessory,
   dark = false,
   animate = false,
 }: MascotProps) {
-  const tree = resolveMascot({ mood, accessory, dark, size });
+  // Without a choice of its own, the cat wears what the learner put on it in the wardrobe
+  const worn = useWornAccessory();
+  const tree = resolveMascot({ mood, accessory: accessory ?? worn, dark, size });
   return (
     <svg
       width={size}

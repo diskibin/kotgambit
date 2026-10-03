@@ -38,6 +38,17 @@ const PROFILE = {
     { key: 'mateIn1', title: 'Мат в 1 ход', accuracy: 82, attempts: 12 },
   ],
   cards: { due: 2, total: 3 },
+  wardrobe: {
+    selected: 'none',
+    items: [
+      { key: 'none', unlocked: true },
+      { key: 'scarf', unlocked: true },
+      { key: 'glasses', unlocked: false },
+      { key: 'crown', unlocked: false },
+      { key: 'hat', unlocked: false },
+      { key: 'medal', unlocked: false },
+    ],
+  },
 };
 
 const server = setupServer();
@@ -167,6 +178,37 @@ describe('the profile', () => {
       await screen.findByText('Не получилось загрузить профиль. Попробуй ещё раз.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Повторить' })).toBeInTheDocument();
+  });
+});
+
+describe('the wardrobe', () => {
+  it('counts what is open and shows the cat in what it wears', async () => {
+    renderApp('/profile');
+    expect(await screen.findByText('2 из 6')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Бабочка. Надето' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Шарф. за серию 3 дня' })).toBeEnabled();
+  });
+
+  it('keeps the closed items closed and says what opens them', async () => {
+    renderApp('/profile');
+    const crown = await screen.findByRole('radio', {
+      name: 'Корона. пройти «Основы», ещё закрыто',
+    });
+    expect(crown).toBeDisabled();
+  });
+
+  it('puts an open item on the cat', async () => {
+    const user = userEvent.setup();
+    let sent: unknown;
+    server.use(
+      http.put(`${API_URL}/profile/accessory`, async ({ request }) => {
+        sent = await request.json();
+        return HttpResponse.json({ ...PROFILE.wardrobe, selected: 'scarf' });
+      }),
+    );
+    renderApp('/profile');
+    await user.click(await screen.findByRole('radio', { name: 'Шарф. за серию 3 дня' }));
+    await waitFor(() => expect(sent).toEqual({ accessory: 'scarf' }));
   });
 });
 

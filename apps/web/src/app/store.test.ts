@@ -10,6 +10,7 @@ const USER = {
   email: 'cat@example.com',
   displayName: null,
   emailVerified: false,
+  accessory: 'none',
 };
 const CREDENTIALS = { email: 'cat@example.com', password: 'secret' };
 

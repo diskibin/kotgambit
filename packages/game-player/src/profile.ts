@@ -36,3 +36,9 @@ export function weekdayShort(day: string): string {
 export function levelPercent(xpInLevel: number, xpForNext: number): number {
   return xpForNext > 0 ? Math.min(100, Math.round((xpInLevel / xpForNext) * 100)) : 0;
 }
+
+/** A day the way it is written in a sentence: "3 октября 2026". Takes a date or an ISO time, the UTC day counts. */
+export function formatDay(iso: string): string {
+  const day = iso.slice(0, 10);
+  return `${parse(day).getUTCDate()} ${monthGenitive(day)} ${yearOf(day)}`;
+}

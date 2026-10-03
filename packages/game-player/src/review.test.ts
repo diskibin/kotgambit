@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   QUALITY_MARKS,
   chancesGraph,
+  formatDay,
   formatLine,
   formatScore,
   graphPath,
@@ -118,5 +119,13 @@ describe('profile helpers', () => {
     expect(levelPercent(0, 100)).toBe(0);
     expect(levelPercent(500, 400)).toBe(100);
     expect(levelPercent(5, 0)).toBe(0);
+  });
+});
+
+describe('formatDay', () => {
+  it('writes a day or an ISO time as day, month in the genitive and year', () => {
+    expect(formatDay('2026-10-03')).toBe('3 октября 2026');
+    expect(formatDay('2027-10-03T12:00:00.000Z')).toBe('3 октября 2027');
+    expect(formatDay('2026-01-31')).toBe('31 января 2026');
   });
 });

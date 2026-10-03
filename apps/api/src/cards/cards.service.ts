@@ -8,6 +8,7 @@ import {
 } from '@kotgambit/contracts';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AppError } from '../common/app-error.js';
+import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ProgressService } from '../progress/progress.service.js';
 import { dueAfter, nextSchedule } from '../progress/srs.js';
@@ -19,6 +20,7 @@ export class CardsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly progress: ProgressService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async summary(userId: string): Promise<CardSummary> {
@@ -34,6 +36,7 @@ export class CardsService {
    * left alone, so pressing the button twice makes no duplicates.
    */
   async makeFromGame(userId: string, gameId: string): Promise<MakeCardsResponse> {
+    await this.entitlements.requirePremium(userId);
     const game = await this.prisma.game.findFirst({ where: { id: gameId, userId } });
     if (!game) throw new AppError('game.not_found', HttpStatus.NOT_FOUND);
     const row = await this.prisma.gameReview.findUnique({ where: { gameId } });
@@ -63,6 +66,7 @@ export class CardsService {
 
   /** The card that has waited longest, or none when everything is repeated for now. */
   async next(userId: string): Promise<NextCard> {
+    await this.entitlements.requirePremium(userId);
     const card = await this.prisma.reviewCard.findFirst({
       where: { userId, dueAt: { lte: new Date() } },
       orderBy: { dueAt: 'asc' },
@@ -82,6 +86,7 @@ export class CardsService {
   }
 
   async answer(userId: string, id: string, move: string): Promise<CardAnswerResponse> {
+    await this.entitlements.requirePremium(userId);
     const card = await this.prisma.reviewCard.findFirst({ where: { id, userId } });
     if (!card) throw new AppError('card.not_found', HttpStatus.NOT_FOUND);
     if (!applyMove(card.fen, move).ok) return { result: 'illegal' };

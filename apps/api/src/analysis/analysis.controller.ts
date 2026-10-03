@@ -22,6 +22,7 @@ import { CurrentUserId } from '../auth/current-user.decorator.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { toHttpError } from '../engine/engine-errors.js';
 import { RateLimit, RateLimitGuard } from '../rate-limit/rate-limit.guard.js';
+import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import { AnalysisService } from './analysis.service.js';
 import { ANALYSIS_LIMITS } from './analysis.limits.js';
 import { ReviewService } from './review.service.js';
@@ -38,17 +39,23 @@ export class AnalysisController {
   constructor(
     private readonly analysis: AnalysisService,
     private readonly reviews: ReviewService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   @Post('analysis/position')
   @HttpCode(HttpStatus.OK)
   @RateLimit(ANALYSIS_LIMITS.positionPerUser)
   async position(
+    @CurrentUserId() userId: string,
     @Body(new ZodValidationPipe(PositionAnalysisRequestSchema)) body: PositionBody,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<PositionAnalysis> {
+    await this.entitlements.assertAnalysisAllowed(userId);
     try {
-      return await this.analysis.analyzePosition(body.fen);
+      const result = await this.analysis.analyzePosition(body.fen);
+      // Counted after the answer, so that a busy engine or a refused position does not use up the day
+      await this.entitlements.recordAnalysis(userId);
+      return result;
     } catch (error) {
       throw toHttpError(error, reply, this.logger);
     }

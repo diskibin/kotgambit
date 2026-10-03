@@ -10,6 +10,7 @@ import {
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestApp } from '../../test/create-app.js';
+import { grantPremium } from '../../test/premium.js';
 import type { MemoryMailTransport } from '../../test/memory-mail.transport.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 import { dayKeyOf } from '../progress/streak.js';
@@ -78,6 +79,7 @@ describe('review cards', () => {
     await prisma.user.deleteMany();
     mail.clear();
     ({ token, id: userId } = await register('cat@example.com'));
+    await grantPremium(prisma, userId);
   });
 
   const call = (method: 'GET' | 'POST', url: string, body?: unknown, as = token) =>
@@ -152,6 +154,7 @@ describe('review cards', () => {
     it('keeps games to their owner', async () => {
       const game = await reviewedGame();
       const other = await register('other@example.com');
+      await grantPremium(prisma, other.id);
       expect((await make(game.id, other.token)).statusCode).toBe(404);
     });
   });
@@ -232,6 +235,7 @@ describe('review cards', () => {
       const card = (await next()).card;
       if (!card) throw new Error('no card');
       const other = await register('other@example.com');
+      await grantPremium(prisma, other.id);
       const res = await call('POST', `/cards/${card.id}/answer`, { move: 'e2e4' }, other.token);
       expect(res.statusCode).toBe(404);
       expect(ApiErrorSchema.parse(res.json()).code).toBe('card.not_found');

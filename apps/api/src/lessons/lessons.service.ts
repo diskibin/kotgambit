@@ -9,6 +9,7 @@ import { StepSchema, type Step } from '@kotgambit/content-schema';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { AppError } from '../common/app-error.js';
+import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import type { Lesson as LessonRow } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ProgressService } from '../progress/progress.service.js';
@@ -35,19 +36,24 @@ export class LessonsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly progress: ProgressService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   /**
    * Summaries of all chapters with the learner's status. A chapter opens when the one before it in
    * the same track is finished, and stays open for repetition afterwards.
    */
-  private summarize(lessons: LessonRow[], done: Map<string, Progress>): LessonSummary[] {
+  private summarize(
+    lessons: LessonRow[],
+    done: Map<string, Progress>,
+    premium: boolean,
+  ): LessonSummary[] {
     return lessons.map((lesson, index) => {
       const previous = lessons[index - 1];
       const unlocked = !previous || previous.track !== lesson.track || done.has(previous.id);
       const result = done.get(lesson.id);
       const status =
-        lesson.access !== 'free'
+        lesson.access !== 'free' && !premium
           ? 'premium'
           : result
             ? 'completed'
@@ -72,12 +78,13 @@ export class LessonsService {
   private async load(
     userId: string,
   ): Promise<{ lessons: LessonRow[]; summaries: LessonSummary[] }> {
-    const [lessons, progress] = await Promise.all([
+    const [lessons, progress, premium] = await Promise.all([
       this.prisma.lesson.findMany({ orderBy: [{ track: 'asc' }, { order: 'asc' }] }),
       this.prisma.lessonProgress.findMany({ where: { userId } }),
+      this.entitlements.isPremium(userId),
     ]);
     const done = new Map(progress.map((p) => [p.lessonId, p]));
-    return { lessons, summaries: this.summarize(lessons, done) };
+    return { lessons, summaries: this.summarize(lessons, done, premium) };
   }
 
   async catalog(userId: string): Promise<CatalogResponse> {

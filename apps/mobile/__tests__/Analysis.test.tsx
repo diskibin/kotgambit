@@ -203,13 +203,13 @@ describe('the review', () => {
         'POST /games': () => json({ ...GAME, status: 'active', result: null }, 201),
         [`GET /games/${GAME_ID}`]: () => json(GAME),
         [`POST /games/${GAME_ID}/review`]: () =>
-          json({ status: 'pending', done: 0, total: 5, review: null }),
+          json({ status: 'pending', done: 0, total: 5, review: null, full: true }),
         [`GET /games/${GAME_ID}/review`]: () => {
           reads += 1;
           return json(
             reads < 3
-              ? { status: 'running', done: 2, total: 5, review: null }
-              : { status: 'done', done: 5, total: 5, review: REVIEW },
+              ? { status: 'running', done: 2, total: 5, review: null, full: true }
+              : { status: 'done', done: 5, total: 5, review: REVIEW, full: true },
           );
         },
         ...over,
@@ -240,7 +240,7 @@ describe('the review', () => {
   it('offers another try when the review failed', async () => {
     await openReview({
       [`GET /games/${GAME_ID}/review`]: () =>
-        json({ status: 'failed', done: 1, total: 5, review: null }),
+        json({ status: 'failed', done: 1, total: 5, review: null, full: true }),
     });
     expect(await screen.findByText('Разбор не получился')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Попробовать снова' })).toBeOnTheScreen();

@@ -684,13 +684,13 @@ describe('analysis and review endpoints', () => {
     let status = 'running';
     server.use(
       http.post(`${BASE_URL}/games/${GAME_ID}/review`, () =>
-        HttpResponse.json({ status: 'pending', done: 0, total: 5, review: null }),
+        HttpResponse.json({ status: 'pending', done: 0, total: 5, review: null, full: true }),
       ),
       http.get(`${BASE_URL}/games/${GAME_ID}/review`, () =>
         HttpResponse.json(
           status === 'done'
-            ? { status, done: 5, total: 5, review: REVIEW }
-            : { status, done: 2, total: 5, review: null },
+            ? { status, done: 5, total: 5, review: REVIEW, full: true }
+            : { status, done: 2, total: 5, review: null, full: true },
         ),
       ),
     );

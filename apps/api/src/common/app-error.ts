@@ -34,6 +34,8 @@ export const ERROR_MESSAGES = {
   'billing.payment_not_found': 'Такого платежа не нашлось.',
   'billing.no_subscription': 'У тебя пока нет подписки.',
   'billing.cannot_resume': 'Подписку уже нельзя возобновить. Оформи её заново.',
+  'puzzle.limit': 'На сегодня задачи закончились. Завтра будут новые.',
+  'analysis.limit': 'Анализы на сегодня закончились. Завтра лимит обновится.',
   'premium.required': 'Это есть в Премиуме.',
   'http.not_found': 'Такой страницы не нашлось.',
   'http.too_many_requests': 'Слишком много попыток. Подожди немного и попробуй снова.',

@@ -271,14 +271,14 @@ describe('the review', () => {
         }),
       ),
       http.post(`${API_URL}/games/${GAME_ID}/review`, () =>
-        HttpResponse.json({ status: 'pending', done: 0, total: 5, review: null }),
+        HttpResponse.json({ status: 'pending', done: 0, total: 5, review: null, full: true }),
       ),
       http.get(`${API_URL}/games/${GAME_ID}/review`, () => {
         reads += 1;
         return HttpResponse.json(
           reads < 3
-            ? { status: 'running', done: 2, total: 5, review: null }
-            : { status: 'done', done: 5, total: 5, review: REVIEW },
+            ? { status: 'running', done: 2, total: 5, review: null, full: true }
+            : { status: 'done', done: 5, total: 5, review: REVIEW, full: true },
         );
       }),
     );
@@ -328,7 +328,7 @@ describe('the review', () => {
   it('offers another try when the review failed', async () => {
     server.use(
       http.get(`${API_URL}/games/${GAME_ID}/review`, () =>
-        HttpResponse.json({ status: 'failed', done: 1, total: 5, review: null }),
+        HttpResponse.json({ status: 'failed', done: 1, total: 5, review: null, full: true }),
       ),
     );
     renderApp(`/review/${GAME_ID}`);

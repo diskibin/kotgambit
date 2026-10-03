@@ -6,6 +6,7 @@ import { CardsModule } from './cards/cards.module.js';
 import { AnalysisModule } from './analysis/analysis.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CONFIG, ConfigModule, type AppConfig } from './config/config.module.js';
+import { EntitlementsModule } from './entitlements/entitlements.module.js';
 import { EngineModule } from './engine/engine.module.js';
 import { GamesModule } from './games/games.module.js';
 import { HealthController } from './health/health.controller.js';
@@ -45,6 +46,7 @@ const REDACTED_PATHS = [
     GamesModule,
     AnalysisModule,
     BillingModule,
+    EntitlementsModule,
     CardsModule,
     ProfileModule,
     LoggerModule.forRootAsync({

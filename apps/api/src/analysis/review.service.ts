@@ -2,12 +2,13 @@ import { playGame } from '@kotgambit/chess-core';
 import { GameReviewSchema, type ReviewStatus } from '@kotgambit/contracts';
 import { HttpStatus, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { AppError } from '../common/app-error.js';
+import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import { isEngineFailure } from '../engine/engine-errors.js';
 import { Priority } from '../engine/engine-pool.js';
 import { EngineService } from '../engine/engine.service.js';
 import type { Game as GameRow, GameReview } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { buildReview, type PositionEval } from './review.js';
+import { briefReview, buildReview, type PositionEval } from './review.js';
 
 // A little deeper than a hint: the review judges every move of a game, but it is not in a hurry
 const REVIEW_DEPTH = 12;
@@ -33,6 +34,7 @@ export class ReviewService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly engine: EngineService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -50,7 +52,7 @@ export class ReviewService implements OnApplicationBootstrap {
       throw new AppError('review.not_ready', HttpStatus.CONFLICT);
     }
     const existing = await this.prisma.gameReview.findUnique({ where: { gameId } });
-    if (existing && existing.status !== 'failed') return this.view(existing);
+    if (existing && existing.status !== 'failed') return this.view(existing, userId);
 
     const review = await this.prisma.gameReview.upsert({
       where: { gameId },
@@ -58,14 +60,14 @@ export class ReviewService implements OnApplicationBootstrap {
       update: { status: 'pending', done: 0 },
     });
     this.enqueue(gameId);
-    return this.view(review);
+    return this.view(review, userId);
   }
 
   async status(userId: string, gameId: string): Promise<ReviewStatus> {
     await this.ownedGame(userId, gameId);
     const review = await this.prisma.gameReview.findUnique({ where: { gameId } });
     if (!review) throw new AppError('review.not_found', HttpStatus.NOT_FOUND);
-    return this.view(review);
+    return this.view(review, userId);
   }
 
   /** Resolves when the queue is empty, for tests. */
@@ -171,17 +173,19 @@ export class ReviewService implements OnApplicationBootstrap {
     return game;
   }
 
-  private view(review: GameReview): ReviewStatus {
+  private async view(review: GameReview, userId: string): Promise<ReviewStatus> {
     // Reviews saved before the list of mistakes existed have none
     const parsed =
       review.result === null
         ? null
         : GameReviewSchema.safeParse({ mistakes: [], ...(review.result as object) });
+    const full = await this.entitlements.isPremium(userId);
     return {
       status: review.status,
       done: review.done,
       total: review.total,
-      review: parsed?.success ? parsed.data : null,
+      review: parsed?.success ? (full ? parsed.data : briefReview(parsed.data)) : null,
+      full,
     };
   }
 }

@@ -68,7 +68,5 @@ export const EntitlementsSchema = z.object({
   /** The full review (key moments and cards from mistakes) and the repetition of cards. */
   fullReview: z.boolean(),
   cards: z.boolean(),
-  /** Chapters of the tracks after the Basics. */
-  allTracks: z.boolean(),
 });
 export type Entitlements = z.infer<typeof EntitlementsSchema>;

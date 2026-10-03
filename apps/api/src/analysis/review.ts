@@ -181,3 +181,15 @@ export function buildReview(
     mistakes: mistakes.slice(0, MAX_MISTAKES),
   };
 }
+
+/**
+ * The brief review of a free learner: how they played and one moment to look at, the worst one if
+ * there is one. The rest of the key moments and the mistakes for cards are for Premium (PLAN.md 6.8).
+ */
+export function briefReview(review: GameReview): GameReview {
+  const worst =
+    review.keyMoments.find((moment) => moment.kind === 'blunder') ??
+    review.keyMoments.find((moment) => moment.kind === 'mistake') ??
+    review.keyMoments[0];
+  return { ...review, keyMoments: worst ? [worst] : [], mistakes: [] };
+}

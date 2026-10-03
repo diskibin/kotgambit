@@ -122,5 +122,7 @@ export const ReviewStatusSchema = z.object({
   done: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
   review: GameReviewSchema.nullable(),
+  /** False for the brief review of a free learner: the best-known moment and no cards from mistakes. */
+  full: z.boolean(),
 });
 export type ReviewStatus = z.infer<typeof ReviewStatusSchema>;

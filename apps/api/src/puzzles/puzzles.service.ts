@@ -18,6 +18,7 @@ import type {
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomInt } from 'node:crypto';
 import { AppError } from '../common/app-error.js';
+import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import type { Prisma, Puzzle as PuzzleRow, PuzzleAttempt } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ProgressService } from '../progress/progress.service.js';
@@ -43,9 +44,11 @@ export class PuzzlesService {
     private readonly prisma: PrismaService,
     private readonly themes: PuzzleThemesService,
     private readonly progress: ProgressService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async next(userId: string, request: NextPuzzleRequest): Promise<Puzzle> {
+    await this.entitlements.assertPuzzleAllowed(userId);
     const mode = request.mode ?? 'rating';
     const stats = await this.prisma.userPuzzleStats.upsert({
       where: { userId },

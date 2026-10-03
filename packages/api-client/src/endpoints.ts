@@ -1,5 +1,6 @@
 import {
   ActiveGameSchema,
+  SettingsSchema,
   CheckoutResponseSchema,
   EntitlementsSchema,
   PaymentStatusSchema,
@@ -31,6 +32,8 @@ import {
   PuzzleThemeListSchema,
   UserSchema,
   type ActiveGame,
+  type Settings,
+  type UpdateSettingsRequest,
   type CheckoutRequest,
   type CheckoutResponse,
   type Entitlements,
@@ -335,6 +338,21 @@ export function endpoints(build: Builder) {
       query: () => ({ url: '/billing/resume', method: 'POST' }),
       responseSchema: SubscriptionViewSchema,
       invalidatesTags: ['Billing'],
+    }),
+    settings: build.query<Settings, void>({
+      query: () => '/users/me/settings',
+      responseSchema: SettingsSchema,
+      providesTags: ['Settings'],
+    }),
+    updateSettings: build.mutation<Settings, UpdateSettingsRequest>({
+      query: (body) => ({ url: '/users/me/settings', method: 'PATCH', body }),
+      responseSchema: SettingsSchema,
+      // The goal changes the day bar and the name changes the profile and the avatar
+      invalidatesTags: ['Settings', 'Progress', 'Me'],
+    }),
+    // Final: the screen asks the learner to type the word first, and signs out afterwards
+    deleteAccount: build.mutation<undefined, void>({
+      query: () => ({ url: '/users/me', method: 'DELETE' }),
     }),
     me: build.query<User, void>({
       query: () => '/users/me',

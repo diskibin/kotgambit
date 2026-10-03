@@ -40,6 +40,9 @@ export const api = createApi({
 
 export const {
   useActiveGameQuery,
+  useDeleteAccountMutation,
+  useSettingsQuery,
+  useUpdateSettingsMutation,
   useCancelSubscriptionMutation,
   useCheckoutMutation,
   useEntitlementsQuery,

@@ -36,3 +36,24 @@ export function computeStreak(
   }
   return streak;
 }
+
+/** The longest run of days with the goal reached, over all the days given. */
+export function bestStreak(
+  days: readonly { day: DayKey; seconds: number }[],
+  goalSeconds: number,
+): number {
+  const reached = days
+    .filter((d) => d.seconds >= goalSeconds)
+    .map((d) => d.day)
+    .sort();
+  let best = 0;
+  let run = 0;
+  let previous: DayKey | null = null;
+  for (const day of reached) {
+    if (day === previous) continue;
+    run = previous !== null && daysBetween(previous, day) === 1 ? run + 1 : 1;
+    best = Math.max(best, run);
+    previous = day;
+  }
+  return best;
+}

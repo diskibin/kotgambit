@@ -592,6 +592,13 @@ describe('game endpoints', () => {
     );
   });
 
+  it('reads one game by its id', async () => {
+    server.use(http.get(`${BASE_URL}/games/${GAME.id}`, () => HttpResponse.json(GAME)));
+    const { api, store } = setup();
+    const result = await store.dispatch(api.endpoints.game.initiate(GAME.id));
+    expect(result.data).toMatchObject({ id: GAME.id, botId: 'alisa' });
+  });
+
   it('lists the bots', async () => {
     const fox = {
       id: 'alisa',

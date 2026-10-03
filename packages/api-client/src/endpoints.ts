@@ -191,6 +191,11 @@ export function endpoints(build: Builder) {
       responseSchema: ActiveGameSchema,
       providesTags: ['Games'],
     }),
+    game: build.query<Game, string>({
+      query: (gameId) => `/games/${encodeURIComponent(gameId)}`,
+      responseSchema: GameSchema,
+      providesTags: ['Games'],
+    }),
     gameMove: build.mutation<GameMoveResponse, { gameId: string; move: string }>({
       query: ({ gameId, move }) => ({
         url: `/games/${encodeURIComponent(gameId)}/moves`,

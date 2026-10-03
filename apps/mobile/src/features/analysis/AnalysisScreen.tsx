@@ -57,13 +57,7 @@ function hintSquaresFor(
 }
 
 /** The position editor with the engine's look at the position under it. */
-export function AnalysisScreen({
-  onBack,
-  onPremium,
-}: {
-  onBack: () => void;
-  onPremium: () => void;
-}) {
+export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -129,7 +123,6 @@ export function AnalysisScreen({
         <Text accessibilityRole="header" style={[typography.h1, { color: colors.text, flex: 1 }]}>
           {t('analysis.title')}
         </Text>
-        <Button variant="text" label={t('lesson.complete.home')} onPress={onBack} />
       </View>
 
       {result && !loading && <AnalysisResult analysis={result} />}

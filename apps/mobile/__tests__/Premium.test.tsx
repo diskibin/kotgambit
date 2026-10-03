@@ -44,6 +44,21 @@ function routes(over: Routes = {}): Routes {
   return {
     ...SIGNED_IN,
     ...HOME,
+    // The way to Premium is on the profile
+    'GET /profile': () =>
+      json({
+        displayName: null,
+        memberSince: '2026-09-02',
+        level: { level: 1, xpInLevel: 0, xpForNext: 100 },
+        xpTotal: 0,
+        streak: { current: 0, best: 0 },
+        puzzles: { rating: 1000, solved: 0 },
+        games: { played: 0, wins: 0, draws: 0, losses: 0 },
+        week: [],
+        achievements: [],
+        themes: [],
+        cards: { due: 0, total: 0 },
+      }),
     'GET /billing/plans': () => json(PLANS),
     'GET /billing/subscription': () => json(subscription),
     'POST /billing/checkout': async (request) => {
@@ -75,6 +90,7 @@ afterEach(() => jest.restoreAllMocks());
 
 const press = async (name: string | RegExp) =>
   fireEvent.press(await screen.findByRole('button', { name }));
+const tab = async (name: string) => fireEvent.press(await screen.findByRole('tab', { name }));
 
 /** The props the last WebView was given, which is how a test plays the part of the page. */
 const webview = () =>
@@ -87,6 +103,7 @@ const webview = () =>
 async function openPremium(over: Routes = {}) {
   mockApi(routes(over));
   render(<App store={makeStore()} />);
+  await tab('Профиль');
   await press('Премиум');
   await screen.findByRole('header', { name: 'Премиум' });
 }
@@ -229,7 +246,7 @@ describe('what became of the payment', () => {
     expect(await screen.findByText('Готово, у тебя Премиум!')).toBeOnTheScreen();
     expect(screen.getByText('Премиум активен')).toBeOnTheScreen();
     await press('Отлично!');
-    await screen.findByRole('button', { name: 'Премиум' });
+    expect(await screen.findByRole('tab', { name: 'Путь', selected: true })).toBeOnTheScreen();
   });
 
   it('says it kindly when the payment did not go through, and offers another try', async () => {
@@ -296,7 +313,7 @@ describe('the limits', () => {
       }),
     );
     render(<App store={makeStore()} />);
-    await press('Задачи');
+    await tab('Задачи');
     await press('Решить');
     expect(
       await screen.findByRole('header', { name: 'На сегодня задачи закончились' }),
@@ -312,7 +329,7 @@ describe('the limits', () => {
       }),
     );
     render(<App store={makeStore()} />);
-    await press('Анализ позиции');
+    await tab('Анализ');
     await press('Анализировать');
     expect(
       await screen.findByRole('header', { name: 'Анализы на сегодня закончились' }),
@@ -343,7 +360,7 @@ describe('the limits', () => {
       }),
     );
     render(<App store={makeStore()} />);
-    await press('Профиль');
+    await tab('Профиль');
     await press('Повторять');
     expect(
       await screen.findByRole('header', { name: 'Повтор ошибок — в Премиуме' }),

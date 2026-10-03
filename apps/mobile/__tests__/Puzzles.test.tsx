@@ -106,11 +106,12 @@ beforeEach(async () => {
 
 const press = async (name: string | RegExp) =>
   fireEvent.press(await screen.findByRole('button', { name }));
+const tab = async (name: string) => fireEvent.press(await screen.findByRole('tab', { name }));
 const square = (label: string) => screen.findByLabelText(label);
 
 async function openCatalog() {
   render(<App store={makeStore()} />);
-  await press('Задачи');
+  await tab('Задачи');
   await screen.findByText('Темы');
 }
 

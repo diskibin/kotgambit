@@ -115,12 +115,13 @@ beforeEach(async () => {
 
 const press = async (name: string | RegExp) =>
   fireEvent.press(await screen.findByRole('button', { name }));
+const tab = async (name: string) => fireEvent.press(await screen.findByRole('tab', { name }));
 const square = (label: string) => screen.findByLabelText(label);
 
 async function openBots(over: Routes = {}) {
   mockApi(routes(over));
   render(<App store={makeStore()} />);
-  await press('Играть');
+  await tab('Играть');
   await screen.findByRole('header', { name: 'Играть' });
 }
 

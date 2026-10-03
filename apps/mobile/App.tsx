@@ -1,6 +1,6 @@
 import type { CheckoutResponse } from '@kotgambit/contracts';
-import { useEffect, useState } from 'react';
-import { BackHandler, StatusBar } from 'react-native';
+import { useEffect, useState, type ReactElement } from 'react';
+import { BackHandler, StatusBar, View } from 'react-native';
 import { Provider } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useMeQuery } from './src/app/api';
@@ -23,6 +23,7 @@ import { BotsScreen } from './src/features/play/BotsScreen';
 import { GameScreen } from './src/features/play/GameScreen';
 import { PuzzleScreen } from './src/features/puzzles/PuzzleScreen';
 import { PuzzlesScreen, type PuzzleRequest } from './src/features/puzzles/PuzzlesScreen';
+import { TabBar, type TabId } from './src/shared/ui/TabBar';
 import './src/shared/i18n';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
@@ -41,6 +42,23 @@ type Screen =
   | { name: 'premium' }
   | { name: 'checkout'; checkout: CheckoutResponse }
   | { name: 'payment'; paymentId: string };
+
+// The screens that live under a tab, and where a tab leads
+const TAB_OF: Partial<Record<Screen['name'], TabId>> = {
+  path: 'path',
+  puzzles: 'tasks',
+  bots: 'play',
+  review: 'play',
+  analysis: 'analysis',
+  profile: 'profile',
+};
+const SCREEN_OF: Record<TabId, Screen> = {
+  path: { name: 'path' },
+  tasks: { name: 'puzzles' },
+  play: { name: 'bots' },
+  analysis: { name: 'analysis' },
+  profile: { name: 'profile' },
+};
 
 /** The signed-in app: the chapters, a lesson in focus mode, the finish screen and the puzzles. */
 function SignedIn() {
@@ -80,139 +98,128 @@ function SignedIn() {
     return () => subscription.remove();
   }, [screen.name]);
 
-  if (screen.name === 'premium') {
-    return (
-      <PremiumScreen
-        onBack={() => setScreen({ name: 'path' })}
-        onCheckout={(checkout) => setScreen({ name: 'checkout', checkout })}
-      />
-    );
-  }
-  // The payment page is in focus mode and asks before leaving on its own
-  if (screen.name === 'checkout') {
-    return (
-      <CheckoutScreen
-        key={screen.checkout.paymentId}
-        checkout={screen.checkout}
-        onReturn={() => setScreen({ name: 'payment', paymentId: screen.checkout.paymentId })}
-        onClose={() => setScreen({ name: 'payment', paymentId: screen.checkout.paymentId })}
-      />
-    );
-  }
-  if (screen.name === 'payment') {
-    return (
-      <PaymentStatusScreen
-        paymentId={screen.paymentId}
-        onDone={() => setScreen({ name: 'path' })}
-        onRetry={() => setScreen({ name: 'premium' })}
-      />
-    );
-  }
-  if (screen.name === 'profile') {
-    return (
-      <ProfileScreen
-        onBack={() => setScreen({ name: 'path' })}
-        onCards={() => setScreen({ name: 'cards' })}
-        onTheme={(theme) => setScreen({ name: 'puzzle', request: { mode: 'theme', theme } })}
-      />
-    );
-  }
-  if (screen.name === 'cards') {
-    return (
-      <CardsScreen
-        onClose={() => setScreen({ name: 'profile' })}
-        onPremium={() => setScreen({ name: 'premium' })}
-      />
-    );
-  }
-  if (screen.name === 'analysis')
-    return (
-      <AnalysisScreen
-        onBack={() => setScreen({ name: 'path' })}
-        onPremium={() => setScreen({ name: 'premium' })}
-      />
-    );
-  if (screen.name === 'review') {
-    return (
-      <ReviewScreen
-        id={screen.id}
-        onClose={() => setScreen({ name: 'bots' })}
-        onCards={() => setScreen({ name: 'cards' })}
-        onPremium={() => setScreen({ name: 'premium' })}
-      />
-    );
-  }
-  if (screen.name === 'bots') {
-    return (
-      <BotsScreen
-        onStart={(id) => setScreen({ name: 'game', id })}
-        onBack={() => setScreen({ name: 'path' })}
-      />
-    );
-  }
-  // The game asks before leaving on its own, like a lesson
-  if (screen.name === 'game') {
-    return (
-      <GameScreen
-        // A new game is a new screen with fresh state
-        key={screen.id}
-        id={screen.id}
-        onClose={() => setScreen({ name: 'bots' })}
-        onNewGame={(id) => setScreen({ name: 'game', id })}
-        onReview={(id) => setScreen({ name: 'review', id })}
-      />
-    );
-  }
-  if (screen.name === 'puzzles') {
-    return (
-      <PuzzlesScreen
-        onOpen={(request) => setScreen({ name: 'puzzle', request })}
-        onBack={() => setScreen({ name: 'path' })}
-      />
-    );
-  }
-  if (screen.name === 'puzzle') {
-    return (
-      <PuzzleScreen
-        // Another mode or theme is another screen with fresh state
-        key={`${screen.request.mode}:${screen.request.theme ?? ''}`}
-        request={screen.request}
-        onClose={() => setScreen({ name: 'puzzles' })}
-        onPremium={() => setScreen({ name: 'premium' })}
-      />
-    );
-  }
+  const render = (): ReactElement => {
+    if (screen.name === 'premium') {
+      return (
+        <PremiumScreen
+          onBack={() => setScreen({ name: 'path' })}
+          onCheckout={(checkout) => setScreen({ name: 'checkout', checkout })}
+        />
+      );
+    }
+    // The payment page is in focus mode and asks before leaving on its own
+    if (screen.name === 'checkout') {
+      return (
+        <CheckoutScreen
+          key={screen.checkout.paymentId}
+          checkout={screen.checkout}
+          onReturn={() => setScreen({ name: 'payment', paymentId: screen.checkout.paymentId })}
+          onClose={() => setScreen({ name: 'payment', paymentId: screen.checkout.paymentId })}
+        />
+      );
+    }
+    if (screen.name === 'payment') {
+      return (
+        <PaymentStatusScreen
+          paymentId={screen.paymentId}
+          onDone={() => setScreen({ name: 'path' })}
+          onRetry={() => setScreen({ name: 'premium' })}
+        />
+      );
+    }
+    if (screen.name === 'profile') {
+      return (
+        <ProfileScreen
+          onCards={() => setScreen({ name: 'cards' })}
+          onTheme={(theme) => setScreen({ name: 'puzzle', request: { mode: 'theme', theme } })}
+          onPremium={() => setScreen({ name: 'premium' })}
+        />
+      );
+    }
+    if (screen.name === 'cards') {
+      return (
+        <CardsScreen
+          onClose={() => setScreen({ name: 'profile' })}
+          onPremium={() => setScreen({ name: 'premium' })}
+        />
+      );
+    }
+    if (screen.name === 'analysis')
+      return <AnalysisScreen onPremium={() => setScreen({ name: 'premium' })} />;
+    if (screen.name === 'review') {
+      return (
+        <ReviewScreen
+          id={screen.id}
+          onClose={() => setScreen({ name: 'bots' })}
+          onCards={() => setScreen({ name: 'cards' })}
+          onPremium={() => setScreen({ name: 'premium' })}
+        />
+      );
+    }
+    if (screen.name === 'bots') {
+      return <BotsScreen onStart={(id) => setScreen({ name: 'game', id })} />;
+    }
+    // The game asks before leaving on its own, like a lesson
+    if (screen.name === 'game') {
+      return (
+        <GameScreen
+          // A new game is a new screen with fresh state
+          key={screen.id}
+          id={screen.id}
+          onClose={() => setScreen({ name: 'bots' })}
+          onNewGame={(id) => setScreen({ name: 'game', id })}
+          onReview={(id) => setScreen({ name: 'review', id })}
+        />
+      );
+    }
+    if (screen.name === 'puzzles') {
+      return <PuzzlesScreen onOpen={(request) => setScreen({ name: 'puzzle', request })} />;
+    }
+    if (screen.name === 'puzzle') {
+      return (
+        <PuzzleScreen
+          // Another mode or theme is another screen with fresh state
+          key={`${screen.request.mode}:${screen.request.theme ?? ''}`}
+          request={screen.request}
+          onClose={() => setScreen({ name: 'puzzles' })}
+          onPremium={() => setScreen({ name: 'premium' })}
+        />
+      );
+    }
 
-  if (screen.name === 'lesson') {
-    return (
-      <LessonScreen
-        // A new id is a new lesson with fresh state
-        key={screen.id}
-        id={screen.id}
-        onExit={() => setScreen({ name: 'path' })}
-        onFinished={(data) => setScreen({ name: 'done', data })}
-      />
-    );
-  }
-  if (screen.name === 'done') {
-    return (
-      <CompleteScreen
-        data={screen.data}
-        onRepeat={(id) => setScreen({ name: 'lesson', id })}
-        onNext={(id) => setScreen({ name: 'lesson', id })}
-        onHome={() => setScreen({ name: 'path' })}
-      />
-    );
-  }
+    if (screen.name === 'lesson') {
+      return (
+        <LessonScreen
+          // A new id is a new lesson with fresh state
+          key={screen.id}
+          id={screen.id}
+          onExit={() => setScreen({ name: 'path' })}
+          onFinished={(data) => setScreen({ name: 'done', data })}
+        />
+      );
+    }
+    if (screen.name === 'done') {
+      return (
+        <CompleteScreen
+          data={screen.data}
+          onRepeat={(id) => setScreen({ name: 'lesson', id })}
+          onNext={(id) => setScreen({ name: 'lesson', id })}
+          onHome={() => setScreen({ name: 'path' })}
+        />
+      );
+    }
+    return <PathScreen onOpenLesson={(id) => setScreen({ name: 'lesson', id })} />;
+  };
+
+  const tab = TAB_OF[screen.name];
+  const content = render();
+  if (!tab) return content;
+  // The five places keep the bar of the design at the bottom, the focus screens do not have it
   return (
-    <PathScreen
-      onOpenLesson={(id) => setScreen({ name: 'lesson', id })}
-      onOpenPuzzles={() => setScreen({ name: 'puzzles' })}
-      onOpenPlay={() => setScreen({ name: 'bots' })}
-      onOpenAnalysis={() => setScreen({ name: 'analysis' })}
-      onOpenProfile={() => setScreen({ name: 'profile' })}
-      onOpenPremium={() => setScreen({ name: 'premium' })}
-    />
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>{content}</View>
+      <TabBar active={tab} onSelect={(next) => setScreen(SCREEN_OF[next])} />
+    </View>
   );
 }
 

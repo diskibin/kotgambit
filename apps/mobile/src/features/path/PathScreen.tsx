@@ -9,7 +9,6 @@ import { Button } from '../../shared/ui/Button';
 import { ProgressBar } from '../../shared/ui/ProgressBar';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, screenPadding, space, typography } from '../../theme/theme';
-import { useSignOut } from '../auth/useSignOut';
 import { Mascot } from '../mascot/Mascot';
 import { ChapterCard } from './ChapterCard';
 import { DayBar } from './DayBar';
@@ -18,27 +17,12 @@ const PERCENT = 100;
 const CAT = 40;
 
 /** The home screen: the day bar, then the chapters of every track as a list, the current one as a card. */
-export function PathScreen({
-  onOpenLesson,
-  onOpenPuzzles,
-  onOpenPlay,
-  onOpenAnalysis,
-  onOpenProfile,
-  onOpenPremium,
-}: {
-  onOpenLesson: (id: string) => void;
-  onOpenPuzzles: () => void;
-  onOpenPlay: () => void;
-  onOpenAnalysis: () => void;
-  onOpenProfile: () => void;
-  onOpenPremium: () => void;
-}) {
+export function PathScreen({ onOpenLesson }: { onOpenLesson: (id: string) => void }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const lessons = useLessonsQuery();
   const progress = useProgressQuery(localDateKey());
-  const signOut = useSignOut();
 
   const catalog = lessons.data?.lessons ?? [];
   const tracks = TRACKS.filter((track) => catalog.some((lesson) => lesson.track === track));
@@ -66,12 +50,6 @@ export function PathScreen({
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[3] }}>
         <Mascot mood={current ? 'wave' : 'proud'} size={CAT} dark={scheme === 'dark'} />
         <View style={{ flex: 1 }}>{progress.data && <DayBar progress={progress.data} />}</View>
-        <Button variant="text" label={t('puzzles.title')} onPress={onOpenPuzzles} />
-        <Button variant="text" label={t('play.title')} onPress={onOpenPlay} />
-        <Button variant="text" label={t('analysis.title')} onPress={onOpenAnalysis} />
-        <Button variant="text" label={t('profile.title')} onPress={onOpenProfile} />
-        <Button variant="text" label={t('premium.title')} onPress={onOpenPremium} />
-        <Button variant="text" label={t('path.signOut')} onPress={() => void signOut()} />
       </View>
 
       {lessons.isError && (

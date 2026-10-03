@@ -26,13 +26,7 @@ export interface PuzzleRequest {
 }
 
 /** The puzzle catalog: the puzzle of the day, the way back to mistakes and the themes with their progress. */
-export function PuzzlesScreen({
-  onOpen,
-  onBack,
-}: {
-  onOpen: (request: PuzzleRequest) => void;
-  onBack: () => void;
-}) {
+export function PuzzlesScreen({ onOpen }: { onOpen: (request: PuzzleRequest) => void }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -79,7 +73,6 @@ export function PuzzlesScreen({
             </Text>
           </View>
         )}
-        <Button variant="text" label={t('lesson.complete.home')} onPress={onBack} />
       </View>
 
       {failed && (

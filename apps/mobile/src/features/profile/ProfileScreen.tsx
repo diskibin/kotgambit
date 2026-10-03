@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileQuery } from '../../app/api';
+import { useSignOut } from '../auth/useSignOut';
 import { localDateKey } from '../../shared/localDate';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
@@ -40,18 +41,19 @@ function Tile({ label, value }: { label: string; value: string }) {
 
 /** What the learner has done so far: level, streak, the week, achievements and the weak themes. */
 export function ProfileScreen({
-  onBack,
   onCards,
   onTheme,
+  onPremium,
 }: {
-  onBack: () => void;
   onCards: () => void;
   onTheme: (key: string) => void;
+  onPremium: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const profile = useProfileQuery(localDateKey());
+  const signOut = useSignOut();
   const data = profile.data;
   const weakest = data?.themes[0];
   const unlocked = data?.achievements.filter((a) => a.unlocked).length ?? 0;
@@ -70,7 +72,6 @@ export function ProfileScreen({
         <Text accessibilityRole="header" style={[typography.h1, { color: colors.text, flex: 1 }]}>
           {t('profile.title')}
         </Text>
-        <Button variant="text" label={t('lesson.complete.home')} onPress={onBack} />
       </View>
 
       {profile.isError && (
@@ -351,6 +352,9 @@ export function ProfileScreen({
             </Text>
             {data.cards.due > 0 && <Button label={t('profile.cards.start')} onPress={onCards} />}
           </View>
+
+          <Button variant="premium" label={t('premium.title')} onPress={onPremium} />
+          <Button variant="secondary" label={t('path.signOut')} onPress={() => void signOut()} />
         </>
       )}
     </ScrollView>

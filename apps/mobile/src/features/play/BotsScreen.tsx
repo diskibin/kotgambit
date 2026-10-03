@@ -20,12 +20,11 @@ const PIP = 8;
 const DEFAULT_BOT = 'alisa';
 
 interface BotsScreenProps {
-  onBack: () => void;
   onStart: (gameId: string) => void;
 }
 
 /** Choosing the opponent and the color before a game; the learning mode is on, as the design has no switch here. */
-export function BotsScreen({ onBack, onStart }: BotsScreenProps) {
+export function BotsScreen({ onStart }: BotsScreenProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -66,7 +65,6 @@ export function BotsScreen({ onBack, onStart }: BotsScreenProps) {
         <Text accessibilityRole="header" style={[typography.h1, { color: colors.text, flex: 1 }]}>
           {t('play.title')}
         </Text>
-        <Button variant="text" label={t('lesson.complete.home')} onPress={onBack} />
       </View>
       <Text style={[typography.body, { color: colors.text2 }]}>{t('play.pick.subtitle')}</Text>
 

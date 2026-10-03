@@ -49,11 +49,12 @@ beforeEach(async () => {
 
 const press = async (name: string | RegExp) =>
   fireEvent.press(await screen.findByRole('button', { name }));
+const tab = async (name: string) => fireEvent.press(await screen.findByRole('tab', { name }));
 
 async function openEditor(over: Routes = {}) {
   mockApi(routes(over));
   render(<App store={makeStore()} />);
-  await press('Анализ позиции');
+  await tab('Анализ');
   await screen.findByRole('header', { name: 'Анализ позиции' });
 }
 
@@ -216,7 +217,7 @@ describe('the review', () => {
       }),
     );
     render(<App store={makeStore()} />);
-    await press('Играть');
+    await tab('Играть');
     await press('Играть с Лисой Алисой');
     await screen.findByRole('header', { name: 'Лиса Алиса' });
     const review = await screen.findAllByRole('button', { name: 'Разбор партии' });

@@ -133,6 +133,20 @@ test('signing out revokes the session and clears the Keystore', async () => {
       request.headers.get('Authorization') === 'Bearer token-1' ? json(USER) : empty(401),
     'POST /auth/refresh': () => json(AUTH),
     ...HOME,
+    'GET /profile': () =>
+      json({
+        displayName: null,
+        memberSince: '2026-09-02',
+        level: { level: 1, xpInLevel: 0, xpForNext: 100 },
+        xpTotal: 0,
+        streak: { current: 0, best: 0 },
+        puzzles: { rating: 1000, solved: 0 },
+        games: { played: 0, wins: 0, draws: 0, losses: 0 },
+        week: [],
+        achievements: [],
+        themes: [],
+        cards: { due: 0, total: 0 },
+      }),
     'POST /auth/logout': async (request) => {
       logoutBody = await request.json();
       return empty(204);
@@ -140,6 +154,8 @@ test('signing out revokes the session and clears the Keystore', async () => {
   });
   renderApp();
 
+  // Signing out is on the profile, the path has only the chapters
+  fireEvent.press(await screen.findByRole('tab', { name: 'Профиль' }));
   fireEvent.press(await screen.findByRole('button', { name: 'Выйти' }));
   expect(await screen.findByRole('tab', { name: 'Вход', selected: true })).toBeOnTheScreen();
   await waitFor(() => expect(logoutBody).toEqual({ refreshToken: 'refresh-1' }));

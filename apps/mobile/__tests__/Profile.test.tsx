@@ -88,11 +88,12 @@ beforeEach(async () => {
 
 const press = async (name: string | RegExp) =>
   fireEvent.press(await screen.findByRole('button', { name }));
+const tab = async (name: string) => fireEvent.press(await screen.findByRole('tab', { name }));
 
 async function openProfile(over: Routes = {}) {
   mockApi(routes(over));
   render(<App store={makeStore()} />);
-  await press('Профиль');
+  await tab('Профиль');
   await screen.findByRole('header', { name: 'Профиль' });
 }
 

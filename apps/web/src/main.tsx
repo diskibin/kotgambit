@@ -10,6 +10,7 @@ import '@fontsource/onest/800.css';
 import '@fontsource/unbounded/700.css';
 import { App } from './App';
 import { store } from './app/store';
+import { ErrorBoundary } from './features/system/ErrorBoundary';
 import './styles/index.css';
 import './shared/i18n';
 
@@ -19,9 +20,11 @@ if (!root) throw new Error('Root element #root not found');
 createRoot(root).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ErrorBoundary>
     </Provider>
   </StrictMode>,
 );

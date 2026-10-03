@@ -21,6 +21,7 @@ import { PremiumScreen } from './src/features/premium/PremiumScreen';
 import { ApplyOnboarding } from './src/features/onboarding/ApplyOnboarding';
 import { OnboardingScreen } from './src/features/onboarding/OnboardingScreen';
 import { firstLessonOpened } from './src/features/onboarding/onboarding.slice';
+import { ErrorBoundary } from './src/features/system/ErrorBoundary';
 import { SettingsScreen } from './src/features/settings/SettingsScreen';
 import { PathScreen } from './src/features/path/PathScreen';
 import { BotsScreen } from './src/features/play/BotsScreen';
@@ -323,11 +324,13 @@ function ThemedRoot() {
 /** `store` is only passed by tests, each of which needs a fresh one. */
 function App({ store = appStore }: { store?: AppStore } = {}) {
   return (
-    <Provider store={store}>
-      <SafeAreaProvider>
-        <ThemedRoot />
-      </SafeAreaProvider>
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <SafeAreaProvider>
+          <ThemedRoot />
+        </SafeAreaProvider>
+      </Provider>
+    </ErrorBoundary>
   );
 }
 

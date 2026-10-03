@@ -452,6 +452,19 @@ export const ru = {
     offline: {
       banner: 'Нет соединения. Как только связь вернётся, продолжим с того же места.',
     },
+    busy: {
+      chip: 'Сервер занят',
+      title: 'Гамбит задумался',
+      text: 'Подожди пару секунд и попробуй снова.',
+      retry: 'Попробовать снова',
+    },
+    // The phone app: a failure of the screen itself, with the way back (mobile/screens/system.md, "error")
+    error: {
+      title: 'Что-то пошло не так',
+      text: 'Мы уже знаем об ошибке. Попробуй ещё раз через минуту.',
+      retry: 'Повторить',
+      home: 'На главную',
+    },
   },
   start: {
     back: 'Назад',

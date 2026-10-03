@@ -11,6 +11,8 @@ import { SplashScreen } from './src/features/auth/SplashScreen';
 import { CompleteScreen } from './src/features/lessons/CompleteScreen';
 import { LessonScreen, type LessonResult } from './src/features/lessons/LessonScreen';
 import { PathScreen } from './src/features/path/PathScreen';
+import { BotsScreen } from './src/features/play/BotsScreen';
+import { GameScreen } from './src/features/play/GameScreen';
 import { PuzzleScreen } from './src/features/puzzles/PuzzleScreen';
 import { PuzzlesScreen, type PuzzleRequest } from './src/features/puzzles/PuzzlesScreen';
 import './src/shared/i18n';
@@ -21,7 +23,9 @@ type Screen =
   | { name: 'lesson'; id: string }
   | { name: 'done'; data: LessonResult }
   | { name: 'puzzles' }
-  | { name: 'puzzle'; request: PuzzleRequest };
+  | { name: 'puzzle'; request: PuzzleRequest }
+  | { name: 'bots' }
+  | { name: 'game'; id: string };
 
 /** The signed-in app: the chapters, a lesson in focus mode, the finish screen and the puzzles. */
 function SignedIn() {
@@ -30,7 +34,14 @@ function SignedIn() {
   // Behind the finish screen and the puzzle catalog there are the chapters, behind a puzzle the catalog.
   // The lesson asks before leaving on its own.
   useEffect(() => {
-    if (screen.name !== 'done' && screen.name !== 'puzzles' && screen.name !== 'puzzle') return;
+    if (
+      screen.name !== 'done' &&
+      screen.name !== 'puzzles' &&
+      screen.name !== 'puzzle' &&
+      screen.name !== 'bots'
+    ) {
+      return;
+    }
     const back: Screen = screen.name === 'puzzle' ? { name: 'puzzles' } : { name: 'path' };
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       setScreen(back);
@@ -39,6 +50,26 @@ function SignedIn() {
     return () => subscription.remove();
   }, [screen.name]);
 
+  if (screen.name === 'bots') {
+    return (
+      <BotsScreen
+        onStart={(id) => setScreen({ name: 'game', id })}
+        onBack={() => setScreen({ name: 'path' })}
+      />
+    );
+  }
+  // The game asks before leaving on its own, like a lesson
+  if (screen.name === 'game') {
+    return (
+      <GameScreen
+        // A new game is a new screen with fresh state
+        key={screen.id}
+        id={screen.id}
+        onClose={() => setScreen({ name: 'bots' })}
+        onNewGame={(id) => setScreen({ name: 'game', id })}
+      />
+    );
+  }
   if (screen.name === 'puzzles') {
     return (
       <PuzzlesScreen
@@ -83,6 +114,7 @@ function SignedIn() {
     <PathScreen
       onOpenLesson={(id) => setScreen({ name: 'lesson', id })}
       onOpenPuzzles={() => setScreen({ name: 'puzzles' })}
+      onOpenPlay={() => setScreen({ name: 'bots' })}
     />
   );
 }

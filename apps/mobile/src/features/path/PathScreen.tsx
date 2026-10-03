@@ -21,9 +21,11 @@ const CAT = 40;
 export function PathScreen({
   onOpenLesson,
   onOpenPuzzles,
+  onOpenPlay,
 }: {
   onOpenLesson: (id: string) => void;
   onOpenPuzzles: () => void;
+  onOpenPlay: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
@@ -59,6 +61,7 @@ export function PathScreen({
         <Mascot mood={current ? 'wave' : 'proud'} size={CAT} dark={scheme === 'dark'} />
         <View style={{ flex: 1 }}>{progress.data && <DayBar progress={progress.data} />}</View>
         <Button variant="text" label={t('puzzles.title')} onPress={onOpenPuzzles} />
+        <Button variant="text" label={t('play.title')} onPress={onOpenPlay} />
         <Button variant="text" label={t('path.signOut')} onPress={() => void signOut()} />
       </View>
 

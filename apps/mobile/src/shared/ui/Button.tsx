@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, shashka, size, typography } from '../../theme/theme';
 
-type Variant = 'primary' | 'success' | 'secondary' | 'text' | 'danger';
+type Variant = 'primary' | 'success' | 'secondary' | 'caution' | 'text' | 'danger';
 
 interface ButtonProps {
   label: string;
@@ -50,12 +50,19 @@ export function Button({
     );
   }
 
-  const background = { primary: colors.brand, success: colors.mint, secondary: colors.surface }[
-    variant
-  ];
-  const foreground = { primary: colors.onBrand, success: colors.onAccent, secondary: colors.text }[
-    variant
-  ];
+  const background = {
+    primary: colors.brand,
+    success: colors.mint,
+    secondary: colors.surface,
+    // Giving up: a calm coral plate, still a button of the same family
+    caution: colors.coralTint,
+  }[variant];
+  const foreground = {
+    primary: colors.onBrand,
+    success: colors.onAccent,
+    secondary: colors.text,
+    caution: colors.coralText,
+  }[variant];
 
   // "Shashka": a second view in the outline colour sits under the button, offset to the bottom right.
   // Not elevation or shadow*, which blur and differ between devices.

@@ -47,6 +47,16 @@ export const api = createApi({
 });
 
 export const {
+  useActiveGameQuery,
+  useBotsQuery,
+  useCreateGameMutation,
+  useGameBotMoveMutation,
+  useGameHintMutation,
+  useGameMoveMutation,
+  useGameQuery,
+  useGameResignMutation,
+  useGameUndoMutation,
+  useLazyGameQuery,
   useCompleteLessonMutation,
   useDailyPuzzleQuery,
   useForgotPasswordMutation,

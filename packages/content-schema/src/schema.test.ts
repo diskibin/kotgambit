@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BotsFileSchema,
   LICHESS_PUZZLE_THEMES,
   LessonSchema,
   PuzzleThemesSchema,
+  STOCKFISH_MIN_ELO,
   StepSchema,
+  validateBots,
   validateCatalog,
   validateLesson,
   validatePuzzleThemes,
@@ -202,5 +205,58 @@ describe('puzzle themes', () => {
     expect(PuzzleThemesSchema.safeParse({ themes: { 'for k': { title: 'x' } } }).success).toBe(
       false,
     );
+  });
+});
+
+describe('bots', () => {
+  const strength = { movetimeMs: 300, candidates: 1, mistakeChance: 0 };
+  const bot = (id: string, level: number, kind: string, extra: object = {}) => ({
+    id,
+    kind,
+    name: 'Бот',
+    level,
+    character: 'Играет.',
+    greeting: 'Привет!',
+    strength: { elo: 1500, ...strength },
+    ...extra,
+  });
+  const file = (...bots: object[]) => BotsFileSchema.parse({ bots });
+
+  it('accepts bots that go from the weakest to the strongest', () => {
+    expect(validateBots(file(bot('a', 1, 'mouse'), bot('b', 2, 'owl')))).toEqual([]);
+  });
+
+  it('wants either a skill level or an Elo, not both and not neither', () => {
+    const both = { strength: { elo: 1500, skillLevel: 3, ...strength } };
+    const neither = { strength };
+    expect(BotsFileSchema.safeParse({ bots: [bot('a', 1, 'mouse', both)] }).success).toBe(false);
+    expect(BotsFileSchema.safeParse({ bots: [bot('a', 1, 'mouse', neither)] }).success).toBe(false);
+  });
+
+  it('rejects an Elo below what Stockfish accepts', () => {
+    const weak = { strength: { elo: STOCKFISH_MIN_ELO - 1, ...strength } };
+    expect(BotsFileSchema.safeParse({ bots: [bot('a', 1, 'mouse', weak)] }).success).toBe(false);
+  });
+
+  it('wants several candidates from a bot that makes mistakes', () => {
+    const lonely = { strength: { elo: 1500, ...strength, mistakeChance: 0.3 } };
+    expect(BotsFileSchema.safeParse({ bots: [bot('a', 1, 'mouse', lonely)] }).success).toBe(false);
+  });
+
+  it('reports repeated ids, levels and kinds and a wrong order', () => {
+    const problems = validateBots(file(bot('a', 2, 'mouse'), bot('a', 2, 'mouse')));
+    expect(problems).toEqual(
+      expect.arrayContaining([
+        'bots: duplicate id',
+        'bots: duplicate level',
+        'bots: duplicate kind',
+        'a: bots must go from the weakest to the strongest',
+      ]),
+    );
+  });
+
+  it('keeps the harsh words out of the texts', () => {
+    const problems = validateBots(file(bot('a', 1, 'mouse', { greeting: 'Это неверно!' })));
+    expect(problems).toHaveLength(1);
   });
 });

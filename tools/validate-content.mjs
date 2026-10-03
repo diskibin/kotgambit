@@ -1,8 +1,10 @@
 // Checks every lesson file against the schema and with chess.js, and the puzzle theme dictionary.
 // Usage: node tools/validate-content.mjs [dir ...]   (default: content/lessons)
 import {
+  BotsFileSchema,
   LessonSchema,
   PuzzleThemesSchema,
+  validateBots,
   validateCatalog,
   validateLesson,
   validatePuzzleThemes,
@@ -12,6 +14,7 @@ import { lessonFiles, readYaml } from './content.mjs';
 
 const defaultDir = fileURLToPath(new URL('../content/lessons', import.meta.url));
 const themesFile = fileURLToPath(new URL('../content/puzzle-themes.ru.yaml', import.meta.url));
+const botsFile = fileURLToPath(new URL('../content/bots.yaml', import.meta.url));
 const dirs = process.argv.length > 2 ? process.argv.slice(2) : [defaultDir];
 
 let problems = 0;
@@ -32,7 +35,7 @@ for (const file of dirs.flatMap(lessonFiles)) {
 }
 for (const issue of validateCatalog(lessons)) report('catalog', issue.path, issue.message);
 
-// Only the default run checks the dictionary: a custom directory is a set of lesson files to try out
+// Only the default run checks the dictionary and the bots: a custom directory is a set of lesson files to try out
 if (process.argv.length <= 2) {
   const themes = PuzzleThemesSchema.safeParse(readYaml(themesFile));
   if (!themes.success) {
@@ -40,6 +43,13 @@ if (process.argv.length <= 2) {
       report(themesFile, issue.path.join('.'), issue.message);
   } else {
     for (const problem of validatePuzzleThemes(themes.data)) report(themesFile, 'themes', problem);
+  }
+
+  const bots = BotsFileSchema.safeParse(readYaml(botsFile));
+  if (!bots.success) {
+    for (const issue of bots.error.issues) report(botsFile, issue.path.join('.'), issue.message);
+  } else {
+    for (const problem of validateBots(bots.data)) report(botsFile, 'bots', problem);
   }
 }
 

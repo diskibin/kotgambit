@@ -1,0 +1,77 @@
+# Texts are from kot-gambit-design/shared/characters.md. The strength numbers are a first guess
+# to be tuned on real games (PLAN.md 6.3): the two weakest bots use Skill Level because
+# Stockfish's UCI_Elo does not go below 1320.
+bots:
+  - id: misha
+    kind: mouse
+    name: Мышонок Миша
+    level: 1
+    character: Только учится. Часто оставляет фигуры под боем.
+    greeting: Привет! Я только учусь, не ругайся.
+    strength:
+      skillLevel: 0
+      depth: 1
+      movetimeMs: 100
+      candidates: 5
+      mistakeChance: 0.6
+
+  - id: timofey
+    kind: hamster
+    name: Хомяк Тимофей
+    level: 2
+    character: Любит собирать фигуры и не любит меняться.
+    greeting: Все фигуры — мои! Ну, почти.
+    strength:
+      skillLevel: 3
+      depth: 2
+      movetimeMs: 150
+      candidates: 4
+      mistakeChance: 0.4
+
+  - id: alisa
+    kind: fox
+    name: Лиса Алиса
+    level: 3
+    character: Хитрая, любит ловушки.
+    greeting: Сыграем? Осторожно с конём на d4!
+    strength:
+      elo: 1350
+      movetimeMs: 300
+      candidates: 3
+      mistakeChance: 0.15
+
+  - id: sofya
+    kind: owl
+    name: Сова Софья
+    level: 4
+    character: Думает долго и играет аккуратно.
+    greeting: Не спеши. Я тоже не буду.
+    strength:
+      elo: 1600
+      movetimeMs: 800
+      candidates: 1
+      mistakeChance: 0
+
+  - id: grigoriy
+    kind: wolf
+    name: Волк Григорий
+    level: 5
+    character: Смело атакует короля.
+    greeting: Береги короля, я иду в атаку!
+    strength:
+      elo: 1900
+      movetimeMs: 600
+      candidates: 1
+      mistakeChance: 0
+
+  - id: mikhail
+    kind: bear
+    name: Медведь Михаил
+    level: 6
+    character: Самый сильный. Почти не ошибается.
+    greeting: Готов к серьёзной партии?
+    strength:
+      elo: 2400
+      movetimeMs: 1200
+      candidates: 1
+      mistakeChance: 0

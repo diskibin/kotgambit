@@ -21,7 +21,8 @@ export interface Move {
   isCapture: boolean;
 }
 
-export type DrawReason = 'stalemate' | 'insufficient-material' | 'fifty-moves';
+export type DrawReason =
+  'stalemate' | 'insufficient-material' | 'fifty-moves' | 'threefold-repetition';
 
 export type GameStatus =
   | { kind: 'playing'; inCheck: boolean }

@@ -90,16 +90,53 @@ export function applyMove(fen: string, input: string): ApplyMoveResult {
 function drawReason(game: Chess): DrawReason {
   if (game.isStalemate()) return 'stalemate';
   if (game.isInsufficientMaterial()) return 'insufficient-material';
+  if (game.isThreefoldRepetition()) return 'threefold-repetition';
   return 'fifty-moves';
 }
 
-// Threefold repetition is not reported: it needs the move history, which a bare FEN lacks.
-export function getStatus(fen: string): GameStatus | null {
-  const game = load(fen);
-  if (!game) return null;
+function statusOf(game: Chess): GameStatus {
   if (game.isCheckmate()) return { kind: 'checkmate', winner: game.turn() === 'w' ? 'b' : 'w' };
   if (game.isDraw()) return { kind: 'draw', reason: drawReason(game) };
   return { kind: 'playing', inCheck: game.inCheck() };
+}
+
+// A bare FEN has no history, so threefold repetition only shows up in `playGame`
+export function getStatus(fen: string): GameStatus | null {
+  const game = load(fen);
+  return game ? statusOf(game) : null;
+}
+
+export interface PlayedGame {
+  fen: string;
+  moves: Move[];
+  status: GameStatus;
+}
+
+/**
+ * Plays a game from the starting position. Returns `null` when a move is not legal at its place,
+ * which for a stored game would mean corrupted data.
+ */
+export function playGame(uciMoves: readonly string[]): PlayedGame | null {
+  const game = new Chess();
+  const moves: Move[] = [];
+  for (const input of uciMoves) {
+    const uci = UCI_PATTERN.exec(input);
+    if (!uci) return null;
+    try {
+      moves.push(
+        toMove(
+          game.move({
+            from: uci[1] as string,
+            to: uci[2] as string,
+            ...(uci[3] ? { promotion: uci[3] } : {}),
+          }),
+        ),
+      );
+    } catch {
+      return null;
+    }
+  }
+  return { fen: game.fen(), moves, status: statusOf(game) };
 }
 
 export function countMaterial(fen: string): Record<Color, number> | null {

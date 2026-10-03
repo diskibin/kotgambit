@@ -12,13 +12,12 @@ import {
 import type { FastifyReply } from 'fastify';
 import type { z } from 'zod';
 import { AccessTokenGuard } from '../auth/access-token.guard.js';
-import { AppError } from '../common/app-error.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { RateLimit, RateLimitGuard } from '../rate-limit/rate-limit.guard.js';
-import { EngineBusyError, Priority } from './engine-pool.js';
+import { toHttpError } from './engine-errors.js';
+import { Priority } from './engine-pool.js';
 import { ENGINE_LIMITS } from './engine.limits.js';
 import { EngineService } from './engine.service.js';
-import { EngineCrashedError, EngineTimeoutError } from './uci-engine.js';
 
 type AnalysisBody = z.output<typeof EngineAnalysisRequestSchema>;
 
@@ -40,16 +39,7 @@ export class EngineController {
     try {
       return await this.engine.analyze({ ...body, priority: Priority.Analysis });
     } catch (error) {
-      if (error instanceof EngineBusyError) {
-        void reply.header('Retry-After', error.retryAfterSeconds);
-        throw new AppError('server.unavailable', HttpStatus.SERVICE_UNAVAILABLE);
-      }
-      if (error instanceof EngineTimeoutError || error instanceof EngineCrashedError) {
-        // The engine restarts itself, so asking again soon is the right advice
-        this.logger.error(error);
-        throw new AppError('server.unavailable', HttpStatus.SERVICE_UNAVAILABLE);
-      }
-      throw error;
+      throw toHttpError(error, reply, this.logger);
     }
   }
 }

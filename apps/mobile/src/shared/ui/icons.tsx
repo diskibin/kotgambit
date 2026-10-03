@@ -27,6 +27,9 @@ export const LockIcon = (p: IconProps) => (
   <Stroke {...p} d="M5 10.5h14v10H5zM8 10.5V8a4 4 0 0 1 8 0v2.5" />
 );
 export const PauseIcon = (p: IconProps) => <Stroke {...p} d="M8 5v14M16 5v14" />;
+export const SlidersIcon = (p: IconProps) => (
+  <Stroke {...p} d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4" />
+);
 export const ChevronLeftIcon = (p: IconProps) => <Stroke {...p} d="M15 6l-6 6 6 6" />;
 export const ChevronRightIcon = (p: IconProps) => <Stroke {...p} d="M9 6l6 6-6 6" />;
 

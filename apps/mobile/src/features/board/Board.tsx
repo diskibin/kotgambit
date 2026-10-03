@@ -20,8 +20,9 @@ import React, { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } 
 import { useTranslation } from 'react-i18next';
 import { PanResponder, Pressable, Text, View } from 'react-native';
 import Svg, { Defs, Line, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { boardHighlight, coordColors } from '../../theme/board';
-import { useTheme, type Colors, type Scheme } from '../../theme/ThemeProvider';
+import { boardHighlight, boardPalette, type BoardPalette } from '../../theme/board';
+import { useUiPreferences } from '../settings/useUiPreferences';
+import { useTheme, type Colors } from '../../theme/ThemeProvider';
 import { radius, shashka, size as sizes } from '../../theme/theme';
 import { Piece } from './Piece';
 
@@ -180,7 +181,7 @@ interface CellProps {
   rankLabel: string | null;
   disabled: boolean;
   colors: Colors;
-  scheme: Scheme;
+  palette: BoardPalette;
   onPress: (square: Square) => void;
   onTouchStart: (square: Square, x: number, y: number) => void;
 }
@@ -205,12 +206,11 @@ const Cell = memo(function Cell({
   rankLabel,
   disabled,
   colors,
-  scheme,
+  palette,
   onPress,
   onTouchStart,
 }: CellProps) {
-  const coords = coordColors(scheme);
-  const coordColor = light ? coords.onLight : coords.onDark;
+  const coordColor = light ? palette.coordOnLight : palette.coordOnDark;
   const coordSize = Math.max(MIN_COORD_FONT, Math.round(cell * COORD_FONT_RATIO));
   return (
     <Pressable
@@ -230,7 +230,7 @@ const Cell = memo(function Cell({
         height: cell,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: light ? colors.boardB : colors.boardA,
+        backgroundColor: light ? palette.light : palette.dark,
       }}
     >
       {last && <View style={[fill, { backgroundColor: boardHighlight.lastMove }]} />}
@@ -368,7 +368,7 @@ export function Board({
   dispatch,
   size = sizes.board,
   hintSquares = [],
-  coords = true,
+  coords: coordsOverride,
   disabled = false,
   arrows = [],
   marked = [],
@@ -378,6 +378,12 @@ export function Board({
 }: BoardProps) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
+  const preferences = useUiPreferences();
+  const coords = coordsOverride ?? preferences.coordinates;
+  const palette = useMemo(
+    () => boardPalette(preferences.boardTheme, scheme, colors),
+    [preferences.boardTheme, scheme, colors],
+  );
   const [drag, setDrag] = useState<Drag | null>(null);
   const pending = useRef<PendingDrag | null>(null);
 
@@ -569,7 +575,7 @@ export function Board({
               rankLabel={coords && col === 0 ? square.charAt(1) : null}
               disabled={disabled}
               colors={colors}
-              scheme={scheme}
+              palette={palette}
               onPress={handlePress}
               onTouchStart={handleTouchStart}
             />

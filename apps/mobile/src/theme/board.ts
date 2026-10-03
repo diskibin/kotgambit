@@ -1,5 +1,6 @@
 import { boardThemes } from './theme';
-import type { Scheme } from './ThemeProvider';
+import type { BoardTheme } from '@kotgambit/preferences';
+import type { Colors, Scheme } from './ThemeProvider';
 
 const { highlight, gambit } = boardThemes;
 
@@ -18,4 +19,31 @@ export function coordColors(scheme: Scheme): { onLight: string; onDark: string }
   return scheme === 'light'
     ? { onLight: gambit['coord-on-light'], onDark: gambit['coord-on-dark'] }
     : { onLight: '#14111F', onDark: gambit['coord-on-dark'] };
+}
+
+export interface BoardPalette {
+  light: string;
+  dark: string;
+  coordOnLight: string;
+  coordOnDark: string;
+}
+
+/** The squares and the letters of the board the learner chose. The board of the cat follows the color scheme. */
+export function boardPalette(theme: BoardTheme, scheme: Scheme, colors: Colors): BoardPalette {
+  if (theme === 'gambit') {
+    const coords = coordColors(scheme);
+    return {
+      light: colors.boardB,
+      dark: colors.boardA,
+      coordOnLight: coords.onLight,
+      coordOnDark: coords.onDark,
+    };
+  }
+  const chosen = boardThemes[theme];
+  return {
+    light: chosen.light,
+    dark: chosen.dark,
+    coordOnLight: chosen['coord-on-light'],
+    coordOnDark: chosen['coord-on-dark'],
+  };
 }

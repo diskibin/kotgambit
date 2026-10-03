@@ -7,6 +7,8 @@ import { useSignOut } from '../auth/useSignOut';
 import { localDateKey } from '../../shared/localDate';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
+import { IconButton } from '../../shared/ui/IconButton';
+import { SlidersIcon } from '../../shared/ui/icons';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, screenPadding, shashka, space, typography } from '../../theme/theme';
 import { Mascot } from '../mascot/Mascot';
@@ -44,10 +46,12 @@ export function ProfileScreen({
   onCards,
   onTheme,
   onPremium,
+  onSettings,
 }: {
   onCards: () => void;
   onTheme: (key: string) => void;
   onPremium: () => void;
+  onSettings: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
@@ -72,6 +76,9 @@ export function ProfileScreen({
         <Text accessibilityRole="header" style={[typography.h1, { color: colors.text, flex: 1 }]}>
           {t('profile.title')}
         </Text>
+        <IconButton quiet label={t('settings.open')} onPress={onSettings}>
+          <SlidersIcon color={colors.text} />
+        </IconButton>
       </View>
 
       {profile.isError && (

@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, shashka, space, typography } from '../../theme/theme';
+import { useHaptics } from '../useHaptics';
 import { useReducedMotion } from '../useReducedMotion';
 import { BulbIcon, CheckIcon, RetryIcon } from './icons';
 
@@ -29,6 +30,7 @@ interface ReplyCardProps {
 export function ReplyCard({ tone, title, children, actions, note }: ReplyCardProps) {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
+  const vibrate = useHaptics();
   const [appear] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -42,6 +44,17 @@ export function ReplyCard({ tone, title, children, actions, note }: ReplyCardPro
     animation.start();
     return () => animation.stop();
   }, [appear, reducedMotion, tone, title]);
+
+  // The answer is felt as well as seen; hints and neutral cards stay silent. The latest function is read through
+  // a ref, so that switching the vibration in the settings does not vibrate again
+  const vibrateRef = useRef(vibrate);
+  useEffect(() => {
+    vibrateRef.current = vibrate;
+  }, [vibrate]);
+  useEffect(() => {
+    if (tone === 'success') vibrateRef.current('success');
+    if (tone === 'oops') vibrateRef.current('error');
+  }, [tone, title]);
 
   const look = {
     neutral: { bg: colors.surface, title: colors.text, badge: null },

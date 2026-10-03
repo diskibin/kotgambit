@@ -18,6 +18,7 @@ import { ProfileScreen } from './src/features/profile/ProfileScreen';
 import { CheckoutScreen } from './src/features/premium/CheckoutScreen';
 import { PaymentStatusScreen } from './src/features/premium/PaymentStatusScreen';
 import { PremiumScreen } from './src/features/premium/PremiumScreen';
+import { SettingsScreen } from './src/features/settings/SettingsScreen';
 import { PathScreen } from './src/features/path/PathScreen';
 import { BotsScreen } from './src/features/play/BotsScreen';
 import { GameScreen } from './src/features/play/GameScreen';
@@ -25,6 +26,7 @@ import { PuzzleScreen } from './src/features/puzzles/PuzzleScreen';
 import { PuzzlesScreen, type PuzzleRequest } from './src/features/puzzles/PuzzlesScreen';
 import { TabBar, type TabId } from './src/shared/ui/TabBar';
 import './src/shared/i18n';
+import { useUiPreferences } from './src/features/settings/useUiPreferences';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
 type Screen =
@@ -39,6 +41,7 @@ type Screen =
   | { name: 'review'; id: string }
   | { name: 'profile' }
   | { name: 'cards' }
+  | { name: 'settings' }
   | { name: 'premium' }
   | { name: 'checkout'; checkout: CheckoutResponse }
   | { name: 'payment'; paymentId: string };
@@ -51,6 +54,7 @@ const TAB_OF: Partial<Record<Screen['name'], TabId>> = {
   review: 'play',
   analysis: 'analysis',
   profile: 'profile',
+  settings: 'profile',
 };
 const SCREEN_OF: Record<TabId, Screen> = {
   path: { name: 'path' },
@@ -76,6 +80,7 @@ function SignedIn() {
       screen.name !== 'review' &&
       screen.name !== 'profile' &&
       screen.name !== 'cards' &&
+      screen.name !== 'settings' &&
       screen.name !== 'premium' &&
       screen.name !== 'payment'
     ) {
@@ -86,7 +91,7 @@ function SignedIn() {
         ? { name: 'puzzles' }
         : screen.name === 'review'
           ? { name: 'bots' }
-          : screen.name === 'cards'
+          : screen.name === 'cards' || screen.name === 'settings'
             ? { name: 'profile' }
             : screen.name === 'payment'
               ? { name: 'premium' }
@@ -132,6 +137,15 @@ function SignedIn() {
         <ProfileScreen
           onCards={() => setScreen({ name: 'cards' })}
           onTheme={(theme) => setScreen({ name: 'puzzle', request: { mode: 'theme', theme } })}
+          onPremium={() => setScreen({ name: 'premium' })}
+          onSettings={() => setScreen({ name: 'settings' })}
+        />
+      );
+    }
+    if (screen.name === 'settings') {
+      return (
+        <SettingsScreen
+          onBack={() => setScreen({ name: 'profile' })}
           onPremium={() => setScreen({ name: 'premium' })}
         />
       );
@@ -264,14 +278,22 @@ function Root() {
   );
 }
 
+/** The theme the learner chose, or the one of the system until they choose. */
+function ThemedRoot() {
+  const { theme } = useUiPreferences();
+  return (
+    <ThemeProvider preference={theme}>
+      <Root />
+    </ThemeProvider>
+  );
+}
+
 /** `store` is only passed by tests, each of which needs a fresh one. */
 function App({ store = appStore }: { store?: AppStore } = {}) {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
-        <ThemeProvider preference="system">
-          <Root />
-        </ThemeProvider>
+        <ThemedRoot />
       </SafeAreaProvider>
     </Provider>
   );

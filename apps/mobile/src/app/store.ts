@@ -3,6 +3,8 @@ import { lessonSessionReducer } from '@kotgambit/lesson-player';
 import { puzzleSessionReducer } from '@kotgambit/puzzle-player';
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
+import { uiSlice } from '../features/settings/ui.slice';
+import { restorePreferences } from '../features/settings/preferencesStorage';
 import { api, sessionBridge } from './api';
 import { clearRefreshToken, saveRefreshToken } from './refreshTokenStorage';
 
@@ -24,6 +26,7 @@ export function makeStore() {
     reducer: {
       [api.reducerPath]: api.reducer,
       auth: authSlice.reducer,
+      ui: uiSlice.reducer,
       gameSession: gameSessionReducer,
       lessonSession: lessonSessionReducer,
       puzzleSession: puzzleSessionReducer,
@@ -41,6 +44,8 @@ export function makeStore() {
 }
 
 export const store = makeStore();
+// Only the store of the app itself reads and keeps the choices: the stores of the tests stay on the defaults
+void restorePreferences(store);
 
 export type AppStore = ReturnType<typeof makeStore>;
 export type RootState = ReturnType<AppStore['getState']>;

@@ -43,7 +43,7 @@ describe('the home screen', () => {
     expect(await screen.findByText('Задача дня')).toBeInTheDocument();
     expect(screen.getByText('Мат в 1 ход')).toBeInTheDocument();
     const next = screen.getByRole('button', { name: /Дебюты/ });
-    expect(within(next).getByText('1 глава · после «Основы»')).toBeInTheDocument();
+    expect(within(next).getByText('1 глава · после «Основ»')).toBeInTheDocument();
   });
 
   it('marks a finished section and moves on to the next one', async () => {

@@ -6,7 +6,11 @@ import {
   formatScore,
   graphPath,
   lastMoveNumber,
+  levelPercent,
+  monthGenitive,
+  weekdayShort,
   whiteShare,
+  yearOf,
 } from './index.js';
 
 describe('formatScore', () => {
@@ -92,5 +96,27 @@ describe('formatLine', () => {
   it('is empty for no moves and reads a bare FEN', () => {
     expect(formatLine(white, [])).toBe('');
     expect(formatLine('4k3/8/8/8/8/8/8/4K3 b', ['Kd7'])).toBe('1…Kd7');
+  });
+});
+
+describe('profile helpers', () => {
+  it('writes the month in the genitive and the year of a day', () => {
+    expect(monthGenitive('2026-09-01')).toBe('сентября');
+    expect(monthGenitive('2026-12-31')).toBe('декабря');
+    expect(yearOf('2026-09-01')).toBe(2026);
+  });
+
+  it('writes the short weekday', () => {
+    // 2026-10-03 is a Saturday
+    expect(weekdayShort('2026-10-03')).toBe('сб');
+    expect(weekdayShort('2026-10-05')).toBe('пн');
+    expect(weekdayShort('2026-10-04')).toBe('вс');
+  });
+
+  it('fills the level bar and keeps it within bounds', () => {
+    expect(levelPercent(240, 400)).toBe(60);
+    expect(levelPercent(0, 100)).toBe(0);
+    expect(levelPercent(500, 400)).toBe(100);
+    expect(levelPercent(5, 0)).toBe(0);
   });
 });

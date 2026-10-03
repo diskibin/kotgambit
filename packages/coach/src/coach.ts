@@ -73,7 +73,11 @@ export function createCoach(random: () => number = Math.random): Coach {
     return { title, text: `${pickGameText(key)}${suffix}`, ...look };
   }
 
-  function gameOver(outcome: GameOutcome, reason: GameEndReason): CoachMessage {
+  function gameOver(
+    outcome: GameOutcome,
+    reason: GameEndReason,
+    bot: { name: string; gender: 'f' | 'm' } | undefined,
+  ): CoachMessage {
     if (outcome === 'win') {
       return game(GAME_TITLES.win, 'win', {
         mascot: 'cheer',
@@ -83,7 +87,11 @@ export function createCoach(random: () => number = Math.random): Coach {
     }
     if (outcome === 'loss') {
       const key = reason === 'resignation' ? 'resigned' : 'loss';
-      return game(GAME_TITLES.over, key, { mascot: 'oops', tone: 'soft', effect: 'none' });
+      const title =
+        key === 'loss' && bot
+          ? `${bot.gender === 'f' ? 'Победила' : 'Победил'} ${bot.name}`
+          : GAME_TITLES.over;
+      return game(title, key, { mascot: 'oops', tone: 'soft', effect: 'none' });
     }
     const stalemate = reason === 'stalemate';
     return game(
@@ -246,7 +254,7 @@ export function createCoach(random: () => number = Math.random): Coach {
             effect: 'none',
           });
         case 'GAME_OVER':
-          return gameOver(event.outcome, event.reason);
+          return gameOver(event.outcome, event.reason, event.bot);
       }
     },
   };

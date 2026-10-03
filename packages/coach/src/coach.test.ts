@@ -292,6 +292,18 @@ describe('game messages', () => {
     }
   });
 
+  it('names the bot that won, in the right gender', () => {
+    const loss = (gender: 'f' | 'm', name: string) =>
+      coach().message({
+        type: 'GAME_OVER',
+        outcome: 'loss',
+        reason: 'checkmate',
+        bot: { name, gender },
+      }).title;
+    expect(loss('f', 'Лиса Алиса')).toBe('Победила Лиса Алиса');
+    expect(loss('m', 'Волк Григорий')).toBe('Победил Волк Григорий');
+  });
+
   it('uses the words of the design for a resignation', () => {
     expect(
       coach().message({ type: 'GAME_OVER', outcome: 'loss', reason: 'resignation' }).text,

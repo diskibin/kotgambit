@@ -52,7 +52,13 @@ export type CoachEvent =
   | { type: 'GAME_RESIGN_ASK' }
   /** The engine did not answer in time, the position is saved. */
   | { type: 'GAME_BUSY' }
-  | { type: 'GAME_OVER'; outcome: GameOutcome; reason: GameEndReason };
+  /** `bot` names the winner in the title of a loss: "Победила Лиса Алиса". */
+  | {
+      type: 'GAME_OVER';
+      outcome: GameOutcome;
+      reason: GameEndReason;
+      bot?: { name: string; gender: 'f' | 'm' };
+    };
 
 export type GameOutcome = 'win' | 'loss' | 'draw';
 export type GameEndReason =

@@ -23,6 +23,7 @@ import { Board } from '../board';
 import { pieceUrl } from '../board/pieceAssets';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
+import { PremiumNudge } from '../premium/PremiumNudge';
 import { AnalysisResult } from './AnalysisResult';
 
 const PIECE_ORDER: readonly PieceType[] = ['k', 'q', 'r', 'b', 'n', 'p'];
@@ -81,6 +82,7 @@ export function AnalysisPage() {
   const failed = current && analysis.isError;
   const serverError = failed ? apiErrorOf(analysis.error) : null;
   const busy = failed && statusOf(analysis.error) === HTTP_UNAVAILABLE;
+  const limited = serverError?.code === 'analysis.limit';
   const arrows = result?.best
     ? [
         {
@@ -279,7 +281,7 @@ export function AnalysisPage() {
             </div>
           )}
 
-          <Button large disabled={problem !== null || analysis.isLoading} onClick={run}>
+          <Button large disabled={problem !== null || analysis.isLoading || limited} onClick={run}>
             {analysis.isLoading ? t('analysis.analyzing') : t('analysis.analyze')}
           </Button>
 
@@ -298,7 +300,8 @@ export function AnalysisPage() {
             </div>
           )}
 
-          {failed && !problem && (
+          {limited && <PremiumNudge kind="analysis" compact />}
+          {failed && !problem && !limited && (
             <div className="flex flex-col gap-3">
               <Banner>
                 {busy

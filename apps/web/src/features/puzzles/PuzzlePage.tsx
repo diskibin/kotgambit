@@ -9,6 +9,7 @@ import { Button } from '../../shared/ui/Button';
 import { IconButton } from '../../shared/ui/IconButton';
 import { CloseIcon } from '../../shared/ui/icons';
 import { Mascot } from '../mascot/Mascot';
+import { PremiumNudge } from '../premium/PremiumNudge';
 import { useScheme } from '../theme/useScheme';
 import { PuzzleSolver } from './PuzzleSolver';
 
@@ -16,7 +17,7 @@ const MODES: readonly PuzzleMode[] = ['rating', 'theme', 'review', 'daily'];
 const HTTP_UNAVAILABLE = 503;
 const HTTP_NOT_FOUND = 404;
 
-type Load = 'loading' | 'ready' | 'none' | 'busy' | 'error';
+type Load = 'loading' | 'ready' | 'none' | 'busy' | 'limit' | 'error';
 
 function parseMode(value: string | null): PuzzleMode {
   return MODES.find((mode) => mode === value) ?? 'rating';
@@ -62,8 +63,17 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
       return;
     }
     const status = statusOf(result.error);
-    setServerMessage(apiErrorOf(result.error)?.message ?? '');
-    setLoad(status === HTTP_NOT_FOUND ? 'none' : status === HTTP_UNAVAILABLE ? 'busy' : 'error');
+    const problem = apiErrorOf(result.error);
+    setServerMessage(problem?.message ?? '');
+    setLoad(
+      problem?.code === 'puzzle.limit'
+        ? 'limit'
+        : status === HTTP_NOT_FOUND
+          ? 'none'
+          : status === HTTP_UNAVAILABLE
+            ? 'busy'
+            : 'error',
+    );
   }
 
   /** "Next puzzle" and "Try again": the screen shows that it is working before the answer comes. */
@@ -84,6 +94,17 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
   if (authStatus === 'anonymous') return <Navigate to="/login" replace />;
 
   const leave = () => void navigate('/puzzles');
+
+  if (load === 'limit') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-bg p-6 text-text">
+        <PremiumNudge kind="puzzles" />
+        <Button variant="secondary" onClick={leave}>
+          {t('puzzles.mistakes.back')}
+        </Button>
+      </div>
+    );
+  }
 
   if (load === 'ready' && puzzle) {
     return (
@@ -156,6 +177,8 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
       retry: true,
     },
     ready: { mood: 'thinking', chip: null, title: '', text: null, retry: false },
+    // Shown by its own card above, this entry only keeps the table complete
+    limit: { mood: 'thinking', chip: null, title: '', text: null, retry: false },
   }[load] as {
     mood: 'thinking' | 'proud' | 'oops';
     chip: string | null;

@@ -1,6 +1,6 @@
 import { boardReducer, createBoardState, type BoardAction } from '@kotgambit/board-controller';
 import { createCoach, type CoachMessage } from '@kotgambit/coach';
-import type { CardAnswerResponse, ReviewCard } from '@kotgambit/contracts';
+import { apiErrorOf, type CardAnswerResponse, type ReviewCard } from '@kotgambit/contracts';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
@@ -13,6 +13,7 @@ import { CloseIcon } from '../../shared/ui/icons';
 import { ReplyCard, type ReplyTone } from '../../shared/ui/ReplyCard';
 import { Board } from '../board';
 import { Mascot } from '../mascot/Mascot';
+import { PremiumNudge } from '../premium/PremiumNudge';
 import { useScheme } from '../theme/useScheme';
 
 const TONES: Record<CoachMessage['tone'], ReplyTone> = {
@@ -35,7 +36,7 @@ export function CardsPage() {
   const [nextCard] = useNextCardMutation();
   const [card, setCard] = useState<ReviewCard | null>(null);
   const [left, setLeft] = useState(0);
-  const [load, setLoad] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
+  const [load, setLoad] = useState<'loading' | 'ready' | 'empty' | 'premium' | 'error'>('loading');
   const requested = useRef(false);
 
   async function fetchCard() {
@@ -46,7 +47,7 @@ export function CardsPage() {
       setCard(result.data.card);
       setLoad(result.data.card ? 'ready' : 'empty');
     } else {
-      setLoad('error');
+      setLoad(apiErrorOf(result.error)?.code === 'premium.required' ? 'premium' : 'error');
     }
   }
 
@@ -77,7 +78,9 @@ export function CardsPage() {
         )}
       </header>
       <main className="flex-1">
-        {load === 'ready' && card ? (
+        {load === 'premium' ? (
+          <PremiumNudge kind="cards" />
+        ) : load === 'ready' && card ? (
           <CardSolver key={card.id} card={card} onNext={() => void fetchCard()} />
         ) : (
           <Waiting load={load} onRetry={() => void fetchCard()} onLeave={leave} />
@@ -92,7 +95,7 @@ function Waiting({
   onRetry,
   onLeave,
 }: {
-  load: 'loading' | 'ready' | 'empty' | 'error';
+  load: 'loading' | 'ready' | 'empty' | 'premium' | 'error';
   onRetry: () => void;
   onLeave: () => void;
 }) {

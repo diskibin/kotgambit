@@ -377,7 +377,23 @@ export function ReviewPage() {
             })}
           </div>
 
-          {result.mistakes.length > 0 && (
+          {!data.full && (
+            <div className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-sun-depth bg-sun-tint p-4 text-center">
+              <Mascot mood="proud" size={72} dark={scheme === 'dark'} />
+              <span className="rounded-pill border-2 border-edge bg-sun px-3 py-0.5 text-[13px] font-extrabold text-on-accent">
+                {t('limits.review.chip')}
+              </span>
+              <strong className="font-heading text-[18px]">{t('limits.review.title')}</strong>
+              <span className="text-[15px] font-semibold text-text-2">
+                {t('limits.review.text')}
+              </span>
+              <Button variant="premium" onClick={() => void navigate('/premium')}>
+                {t('limits.review.cta')}
+              </Button>
+            </div>
+          )}
+
+          {data.full && result.mistakes.length > 0 && (
             <div className="flex flex-col gap-3 rounded-card border-2 border-dashed border-line p-4">
               <Button
                 variant="secondary"

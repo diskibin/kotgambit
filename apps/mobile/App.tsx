@@ -4,7 +4,7 @@ import { BackHandler, StatusBar, View } from 'react-native';
 import { Provider } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useMeQuery } from './src/app/api';
-import { useAppSelector } from './src/app/hooks';
+import { useAppDispatch, useAppSelector } from './src/app/hooks';
 import { store as appStore, type AppStore } from './src/app/store';
 import { AuthScreen } from './src/features/auth/AuthScreen';
 import { RecoverScreen } from './src/features/auth/RecoverScreen';
@@ -18,6 +18,9 @@ import { ProfileScreen } from './src/features/profile/ProfileScreen';
 import { CheckoutScreen } from './src/features/premium/CheckoutScreen';
 import { PaymentStatusScreen } from './src/features/premium/PaymentStatusScreen';
 import { PremiumScreen } from './src/features/premium/PremiumScreen';
+import { ApplyOnboarding } from './src/features/onboarding/ApplyOnboarding';
+import { OnboardingScreen } from './src/features/onboarding/OnboardingScreen';
+import { firstLessonOpened } from './src/features/onboarding/onboarding.slice';
 import { SettingsScreen } from './src/features/settings/SettingsScreen';
 import { PathScreen } from './src/features/path/PathScreen';
 import { BotsScreen } from './src/features/play/BotsScreen';
@@ -66,7 +69,15 @@ const SCREEN_OF: Record<TabId, Screen> = {
 
 /** The signed-in app: the chapters, a lesson in focus mode, the finish screen and the puzzles. */
 function SignedIn() {
-  const [screen, setScreen] = useState<Screen>({ name: 'path' });
+  const dispatch = useAppDispatch();
+  const firstLesson = useAppSelector((state) => state.onboarding.firstLesson);
+  // A learner who came from the first steps starts in the chapter they were shown
+  const [screen, setScreen] = useState<Screen>(
+    firstLesson ? { name: 'lesson', id: firstLesson } : { name: 'path' },
+  );
+  useEffect(() => {
+    if (firstLesson) dispatch(firstLessonOpened());
+  }, [firstLesson, dispatch]);
 
   // Behind the finish screen and the puzzle catalog there are the chapters, behind a puzzle the catalog.
   // The lesson asks before leaving on its own.
@@ -237,23 +248,38 @@ function SignedIn() {
   );
 }
 
-/** Sign-in with the way to password recovery; the system Back button leaves recovery first. */
+type SignedOutScreen = 'start' | 'login' | 'register' | 'recover';
+
+/** The first steps, then sign-in or sign-up with the way to password recovery; the system Back button goes one step back. */
 function SignedOut() {
-  const [recovering, setRecovering] = useState(false);
+  const hadSession = useAppSelector((state) => state.onboarding.hadSession);
+  const [screen, setScreen] = useState<SignedOutScreen>(hadSession ? 'login' : 'start');
 
   useEffect(() => {
-    if (!recovering) return;
+    if (screen === 'start') return;
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      setRecovering(false);
+      setScreen(screen === 'recover' ? 'login' : 'start');
       return true;
     });
     return () => subscription.remove();
-  }, [recovering]);
+  }, [screen]);
 
-  return recovering ? (
-    <RecoverScreen onBack={() => setRecovering(false)} />
-  ) : (
-    <AuthScreen onForgot={() => setRecovering(true)} />
+  if (screen === 'start') {
+    return (
+      <OnboardingScreen
+        onAccount={() => setScreen('register')}
+        onSignIn={() => setScreen('login')}
+      />
+    );
+  }
+  if (screen === 'recover') return <RecoverScreen onBack={() => setScreen('login')} />;
+  return (
+    <AuthScreen
+      // The way in decides the tab it opens on
+      key={screen}
+      initialMode={screen}
+      onForgot={() => setScreen('recover')}
+    />
   );
 }
 
@@ -267,6 +293,7 @@ function Root() {
   return (
     <>
       <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+      <ApplyOnboarding />
       {status === 'unknown' && isLoading ? (
         <SplashScreen />
       ) : status === 'authenticated' ? (

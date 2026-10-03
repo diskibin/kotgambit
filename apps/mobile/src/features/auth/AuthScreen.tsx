@@ -50,14 +50,20 @@ function bubbleKey({ loading, mode, email, password }: Status): string {
   return mode === 'register' ? 'register' : 'empty';
 }
 
-export function AuthScreen({ onForgot }: { onForgot: () => void }) {
+export function AuthScreen({
+  onForgot,
+  initialMode = 'login',
+}: {
+  onForgot: () => void;
+  initialMode?: Mode;
+}) {
   const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const [login, loginState] = useLoginMutation();
   const [register, registerState] = useRegisterMutation();
 
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

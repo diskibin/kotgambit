@@ -3,6 +3,7 @@ import { lessonSessionReducer } from '@kotgambit/lesson-player';
 import { puzzleSessionReducer } from '@kotgambit/puzzle-player';
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
+import { onboardingSlice } from '../features/onboarding/onboarding.slice';
 import { uiSlice } from '../features/settings/ui.slice';
 import { restorePreferences } from '../features/settings/preferencesStorage';
 import { api, sessionBridge } from './api';
@@ -27,6 +28,7 @@ export function makeStore() {
       [api.reducerPath]: api.reducer,
       auth: authSlice.reducer,
       ui: uiSlice.reducer,
+      onboarding: onboardingSlice.reducer,
       gameSession: gameSessionReducer,
       lessonSession: lessonSessionReducer,
       puzzleSession: puzzleSessionReducer,

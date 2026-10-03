@@ -11,6 +11,12 @@ function renderApp() {
   render(<App store={makeStore()} />);
 }
 
+/** The first steps come first for a visitor: the way to the sign-in is on the first of them. */
+async function openSignIn() {
+  renderApp();
+  fireEvent.press(await screen.findByRole('button', { name: 'У меня уже есть аккаунт' }));
+}
+
 /** Nobody is signed in: the session check fails quietly and the sign-in screen appears. */
 const ANONYMOUS = {
   'GET /users/me': () => empty(401),
@@ -29,14 +35,14 @@ beforeEach(async () => {
 
 test('shows the sign-in screen with a greeting from the cat when nobody is signed in', async () => {
   mockApi(ANONYMOUS);
-  renderApp();
+  await openSignIn();
   expect(await screen.findByText('С возвращением! Войди, и продолжим.')).toBeOnTheScreen();
   expect(screen.getByRole('tab', { name: 'Вход', selected: true })).toBeOnTheScreen();
 });
 
 test('explains a missing @ without calling the server', async () => {
   const fetchMock = mockApi(ANONYMOUS);
-  renderApp();
+  await openSignIn();
   await fillAndSubmit('dima.mail.ru', 'gambit2026');
 
   expect(await screen.findByText('Кажется, в адресе не хватает «@».')).toBeOnTheScreen();
@@ -56,7 +62,7 @@ test('signs in, keeps the refresh token in the Keystore and opens the app', asyn
       return json(AUTH);
     },
   });
-  renderApp();
+  await openSignIn();
   await fillAndSubmit('cat@example.com', 'gambit2026');
 
   expect(await screen.findByText('Доска и фигуры')).toBeOnTheScreen();
@@ -72,7 +78,7 @@ test('shows a calm banner when the password is wrong', async () => {
     'POST /auth/login': () =>
       json(apiError('auth.invalid_credentials', 'Не получилось войти.'), 401),
   });
-  renderApp();
+  await openSignIn();
   await fillAndSubmit('cat@example.com', 'wrong-password');
 
   expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -83,7 +89,7 @@ test('shows a calm banner when the password is wrong', async () => {
 
 test('asks for 8 characters when registering', async () => {
   mockApi(ANONYMOUS);
-  renderApp();
+  await openSignIn();
   fireEvent.press(await screen.findByRole('tab', { name: 'Регистрация' }));
   await fillAndSubmit('cat@example.com', 'short', 'Создать аккаунт');
   expect(await screen.findByText('Минимум 8 символов.')).toBeOnTheScreen();
@@ -94,7 +100,7 @@ test('offers to sign in when the email is taken', async () => {
     ...ANONYMOUS,
     'POST /auth/register': () => json(apiError('auth.email_taken', 'Эта почта занята.'), 409),
   });
-  renderApp();
+  await openSignIn();
   fireEvent.press(await screen.findByRole('tab', { name: 'Регистрация' }));
   await fillAndSubmit('cat@example.com', 'gambit2026', 'Создать аккаунт');
 
@@ -171,7 +177,7 @@ test('sends a reset link from the recovery screen', async () => {
       return empty(204);
     },
   });
-  renderApp();
+  await openSignIn();
   fireEvent.press(await screen.findByRole('link', { name: 'Забыли пароль?' }));
 
   fireEvent.changeText(await screen.findByLabelText('Email'), 'dima@mail.ru');
@@ -190,7 +196,7 @@ test('sends a reset link from the recovery screen', async () => {
 
 test('explains a missing @ on the recovery screen', async () => {
   mockApi(ANONYMOUS);
-  renderApp();
+  await openSignIn();
   fireEvent.press(await screen.findByRole('link', { name: 'Забыли пароль?' }));
   fireEvent.changeText(await screen.findByLabelText('Email'), 'dima.mail.ru');
   fireEvent.press(screen.getByRole('button', { name: 'Отправить ссылку' }));

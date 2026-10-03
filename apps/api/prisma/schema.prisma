@@ -253,9 +253,36 @@ model Game {
   startedAt  DateTime   @default(now()) @map("started_at")
   finishedAt DateTime?  @map("finished_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review GameReview?
 
   // The list of games to resume and the count of games a learner has open
   @@index([userId, status])
   @@map("games")
+}
+
+enum ReviewStatus {
+  pending
+  running
+  done
+  failed
+
+  @@map("review_status")
+}
+
+// The look of the engine at a finished game, made in the background. `done` out of `total` positions
+// are checked, which is what the progress bar shows while the engine works through them.
+model GameReview {
+  gameId     String       @id @map("game_id") @db.Uuid
+  status     ReviewStatus @default(pending)
+  done       Int          @default(0)
+  total      Int
+  // The review as the contract has it, validated before it is saved
+  result     Json?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  finishedAt DateTime?    @map("finished_at")
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@map("game_reviews")
 }

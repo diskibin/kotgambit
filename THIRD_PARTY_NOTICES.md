@@ -26,8 +26,10 @@ as they are added to the project.
 
 ## Brand marks of the sign-in services
 
-- **Google "G" icon** (`apps/web/src/features/auth/assets` and `apps/mobile/src/features/auth/assets`) is a file from the official
-  Sign in with Google brand assets (https://developers.google.com/identity/branding-guidelines, light theme, square, no text).
-  It is a trademark of Google LLC, it is used unchanged as the guidelines ask and is not covered by the license of this repository.
+- **Google "G"** (`apps/web/src/features/auth/assets` and `apps/mobile/src/features/auth/assets`) is cut from a file of the official
+  Sign in with Google brand assets (https://developers.google.com/identity/branding-guidelines, light theme, square, no text): the
+  central 20x20 area of the 40x40 icon (and the same area of the @2x and @3x files), so the frame of the button is left out and the
+  G itself is not changed, in size or color. It is shown on a white plate, as the guidelines ask. It is a trademark of Google LLC and
+  is not covered by the license of this repository.
 - The marks of **Yandex** and **VK** on the sign-in buttons are simple stand-ins drawn by the project, not the official logos.
   The official files of the two services replace them (`ProviderIcon.tsx` in the web and the mobile app).

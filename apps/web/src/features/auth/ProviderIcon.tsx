@@ -3,9 +3,9 @@ import google1x from './assets/google-g.png';
 import google2x from './assets/google-g@2x.png';
 import google3x from './assets/google-g@3x.png';
 
-// Google: the official icon from its brand assets (Sign in with Google, light, square), used as it is. The file is
-// 40x40, Google does not allow changing the logo, so it is shown at its own size.
-const GOOGLE_SIZE = 40;
+// Google: the "G" of its official brand assets (Sign in with Google), cut out of the 40x40 icon without its frame and
+// used unchanged, at its own 20x20. Google wants the G on white, so it sits on a white plate of the size of the other marks.
+const GOOGLE_G_SIZE = 20;
 const MARK_SIZE = 32;
 
 // Yandex and VK: the marks the design draws (web/source/Profile.dc.html). They are brand colors, not part of
@@ -27,15 +27,19 @@ const MARKS = {
 export function ProviderIcon({ id }: { id: OAuthProviderId }) {
   if (id === 'google') {
     return (
-      <img
-        src={google1x}
-        srcSet={`${google2x} 2x, ${google3x} 3x`}
-        width={GOOGLE_SIZE}
-        height={GOOGLE_SIZE}
-        alt=""
+      <span
         aria-hidden="true"
-        className="shrink-0"
-      />
+        style={{ background: '#FFFFFF', width: MARK_SIZE, height: MARK_SIZE }}
+        className="flex shrink-0 items-center justify-center rounded-[9px]"
+      >
+        <img
+          src={google1x}
+          srcSet={`${google2x} 2x, ${google3x} 3x`}
+          width={GOOGLE_G_SIZE}
+          height={GOOGLE_G_SIZE}
+          alt=""
+        />
+      </span>
     );
   }
   const mark = MARKS[id];

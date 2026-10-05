@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { ProviderIcon } from './ProviderIcon';
 
 describe('ProviderIcon', () => {
-  it('shows the official icon of Google at its own size, for three densities', () => {
+  it('shows the G of Google at its own size and for three densities, with no frame around it', () => {
     const { container } = render(<ProviderIcon id="google" />);
     const img = container.querySelector('img');
-    expect(img).toHaveAttribute('width', '40');
-    expect(img).toHaveAttribute('height', '40');
+    expect(img).toHaveAttribute('width', '20');
+    expect(img).toHaveAttribute('height', '20');
     expect(img?.getAttribute('srcset')).toMatch(/ 2x, .* 3x$/);
   });
 

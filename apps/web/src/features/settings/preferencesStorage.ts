@@ -22,6 +22,7 @@ function currentPreferences(store: AppStore): Preferences {
   return {
     theme: state.theme.preference,
     boardTheme: state.ui.boardTheme,
+    pieceSet: state.ui.pieceSet,
     coordinates: state.ui.coordinates,
     reduceMotion: state.ui.reduceMotion,
     // The vibration is the phone's, the site has no switch for it

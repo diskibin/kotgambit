@@ -2,9 +2,11 @@ import { displaySquares, isLightSquare } from '@kotgambit/board-controller';
 import { getPieces } from '@kotgambit/chess-core';
 import { useMemo } from 'react';
 import { pieceUrl } from '../board/pieceAssets';
+import { useUiPreferences } from '../settings/useUiPreferences';
 
 /** A small read-only look at a position, as on the card of the puzzle of the day. */
 export function PositionBoard({ fen, size }: { fen: string; size: number }) {
+  const { pieceSet } = useUiPreferences();
   const pieces = useMemo(() => new Map(getPieces(fen).map((p) => [p.square, p])), [fen]);
   return (
     <div
@@ -19,7 +21,9 @@ export function PositionBoard({ fen, size }: { fen: string; size: number }) {
             key={square}
             className={`flex items-center justify-center ${isLightSquare(square) ? 'bg-board-b' : 'bg-board-a'}`}
           >
-            {piece && <img src={pieceUrl(piece.color, piece.type)} alt="" className="w-[92%]" />}
+            {piece && (
+              <img src={pieceUrl(piece.color, piece.type, pieceSet)} alt="" className="w-[92%]" />
+            )}
           </span>
         );
       })}

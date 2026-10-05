@@ -4,6 +4,7 @@ import type { Piece } from '@kotgambit/content-schema';
 import { useMemo } from 'react';
 import '../board/board.css';
 import { pieceUrl } from '../board/pieceAssets';
+import { useUiPreferences } from '../settings/useUiPreferences';
 
 const COVER_SQUARE = 'd4';
 
@@ -23,6 +24,7 @@ interface MiniBoardProps {
 
 /** A small read-only board for chapter cards: no buttons, no labels, only the squares and pieces. */
 export function MiniBoard({ piece, size, moves = false }: MiniBoardProps) {
+  const { pieceSet } = useUiPreferences();
   const fen = useMemo(() => coverFen(piece), [piece]);
   const pieces = useMemo(() => new Map(getPieces(fen).map((p) => [p.square, p])), [fen]);
   const dots = useMemo<Set<Square>>(
@@ -53,7 +55,9 @@ export function MiniBoard({ piece, size, moves = false }: MiniBoardProps) {
             key={square}
             className={`relative flex items-center justify-center ${isLightSquare(square) ? 'bg-board-b' : 'bg-board-a'}`}
           >
-            {shown && <img src={pieceUrl(shown.color, shown.type)} alt="" className="w-[92%]" />}
+            {shown && (
+              <img src={pieceUrl(shown.color, shown.type, pieceSet)} alt="" className="w-[92%]" />
+            )}
             {dots.has(square) && <span className="board-dot absolute" />}
           </span>
         );

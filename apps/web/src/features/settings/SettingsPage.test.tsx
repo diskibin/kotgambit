@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
@@ -70,6 +70,29 @@ describe('the settings', () => {
     expect(coordinates).toBeChecked();
     await user.click(coordinates);
     expect(coordinates).not.toBeChecked();
+  });
+
+  it('offers four sets of pieces, the pieces of the cat is the one chosen', async () => {
+    renderApp('/settings');
+    const group = await screen.findByRole('radiogroup', { name: 'Набор фигур' });
+    expect(
+      within(group)
+        .getAllByRole('radio')
+        .map((radio) => radio.textContent),
+    ).toEqual(['Гамбит', 'Классика', 'Тёплые', 'Линии']);
+    expect(within(group).getByRole('radio', { name: 'Гамбит' })).toBeChecked();
+  });
+
+  it('chooses a set of pieces and keeps the board theme as it was', async () => {
+    const user = userEvent.setup();
+    renderApp('/settings');
+    await user.click(await screen.findByRole('radio', { name: 'Дерево' }));
+    await user.click(await screen.findByRole('radio', { name: 'Тёплые' }));
+
+    const pieces = screen.getByRole('radiogroup', { name: 'Набор фигур' });
+    expect(within(pieces).getByRole('radio', { name: 'Тёплые' })).toBeChecked();
+    expect(within(pieces).getByRole('radio', { name: 'Гамбит' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Дерево' })).toBeChecked();
   });
 
   it('sends the goal of the day to the server', async () => {

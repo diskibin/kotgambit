@@ -277,7 +277,7 @@ export function Board({
               )}
               {piece && (
                 <img
-                  src={pieceUrl(piece.color, piece.type)}
+                  src={pieceUrl(piece.color, piece.type, preferences.pieceSet)}
                   alt=""
                   draggable={false}
                   style={{ width: `${PIECE_SCALE * 100}%` }}
@@ -321,7 +321,7 @@ export function Board({
 
       {drag && (
         <img
-          src={pieceUrl(drag.piece.color, drag.piece.type)}
+          src={pieceUrl(drag.piece.color, drag.piece.type, preferences.pieceSet)}
           alt=""
           aria-hidden="true"
           draggable={false}
@@ -363,7 +363,7 @@ export function Board({
                 className={`flex aspect-square items-center justify-center p-0 ${piece === 'q' ? 'bg-brand-tint' : 'bg-surface'}`}
               >
                 <img
-                  src={pieceUrl(sideToMove, piece)}
+                  src={pieceUrl(sideToMove, piece, preferences.pieceSet)}
                   alt=""
                   draggable={false}
                   className="w-[90%]"

@@ -1,5 +1,11 @@
 import { DAILY_GOAL_MINUTES } from '@kotgambit/contracts';
-import { BOARD_THEMES, type BoardTheme, type ThemePreference } from '@kotgambit/preferences';
+import {
+  BOARD_THEMES,
+  PIECE_SETS,
+  type BoardTheme,
+  type PieceSet,
+  type ThemePreference,
+} from '@kotgambit/preferences';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
@@ -21,7 +27,13 @@ import { Mascot } from '../mascot/Mascot';
 import { preferenceChanged } from '../theme/theme.slice';
 import { useScheme } from '../theme/useScheme';
 import { BOARD_COLORS } from './boardThemes';
-import { boardThemeChanged, coordinatesChanged, reduceMotionChanged } from './ui.slice';
+import {
+  boardThemeChanged,
+  coordinatesChanged,
+  pieceSetChanged,
+  reduceMotionChanged,
+} from './ui.slice';
+import { pieceUrl } from '../board/pieceAssets';
 
 const THEME_CHOICES: readonly ThemePreference[] = ['light', 'dark', 'system'];
 const PREVIEW_CELLS = 4;
@@ -84,6 +96,27 @@ function BoardPreview({ theme }: { theme: BoardTheme }) {
         const light = (Math.floor(index / PREVIEW_CELLS) + index) % 2 === 0;
         return <span key={index} style={{ background: light ? colors.light : colors.dark }} />;
       })}
+    </span>
+  );
+}
+
+// A king, a knight and a pawn, white and black, as small as on a board
+const PREVIEW_PIECES = [
+  { color: 'w', type: 'k' },
+  { color: 'b', type: 'n' },
+  { color: 'w', type: 'p' },
+] as const;
+
+/** The look of a set of pieces. */
+function PiecePreview({ set }: { set: PieceSet }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-16 items-center justify-center rounded-[10px] bg-board-b"
+    >
+      {PREVIEW_PIECES.map(({ color, type }) => (
+        <img key={`${color}${type}`} src={pieceUrl(color, type, set)} alt="" className="size-12" />
+      ))}
     </span>
   );
 }
@@ -190,9 +223,27 @@ export function SettingsPage() {
               ))}
             </div>
           </div>
-          <div className="flex items-center justify-between gap-3 text-[15px] font-bold">
-            <span>{t('settings.board.pieces')}</span>
-            <span className="text-text-2">{t('settings.board.piecesValue')}</span>
+          <div className="flex flex-col gap-2">
+            <span className="text-[15px] font-extrabold">{t('settings.board.pieces')}</span>
+            <div
+              role="radiogroup"
+              aria-label={t('settings.board.pieces')}
+              className="grid grid-cols-2 gap-3 tablet:grid-cols-4"
+            >
+              {PIECE_SETS.map((choice) => (
+                <button
+                  key={choice}
+                  type="button"
+                  role="radio"
+                  aria-checked={ui.pieceSet === choice}
+                  onClick={() => dispatch(pieceSetChanged(choice))}
+                  className={`flex flex-col items-center gap-2 rounded-card border-2 p-2 text-[14px] font-extrabold ${ui.pieceSet === choice ? 'border-brand bg-brand-tint' : 'border-line bg-surface'}`}
+                >
+                  <PiecePreview set={choice} />
+                  {t(`settings.board.pieceSets.${choice}`)}
+                </button>
+              ))}
+            </div>
           </div>
           <Switch
             label={t('settings.board.coordinates.title')}

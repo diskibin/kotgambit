@@ -43,6 +43,7 @@ export function makeStore(preferences: Preferences = DEFAULT_PREFERENCES) {
       theme: { preference: preferences.theme },
       ui: {
         boardTheme: preferences.boardTheme,
+        pieceSet: preferences.pieceSet,
         coordinates: preferences.coordinates,
         reduceMotion: preferences.reduceMotion,
       },

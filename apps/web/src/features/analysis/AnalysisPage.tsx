@@ -22,6 +22,7 @@ import { Button } from '../../shared/ui/Button';
 import { Tabs } from '../../shared/ui/Tabs';
 import { Board } from '../board';
 import { pieceUrl } from '../board/pieceAssets';
+import { useUiPreferences } from '../settings/useUiPreferences';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
 import { PremiumNudge } from '../premium/PremiumNudge';
@@ -55,6 +56,7 @@ function hintSquaresFor(
 export function AnalysisPage() {
   const { t } = useTranslation();
   const scheme = useScheme();
+  const { pieceSet } = useUiPreferences();
   const status = useAppSelector((state) => state.auth.status);
   const [editor, dispatch] = useReducer(editorReducer, undefined, initialEditorState);
   const [analyze, analysis] = useAnalyzePositionMutation();
@@ -147,7 +149,7 @@ export function AnalysisPage() {
                       }
                       className={`flex size-[52px] items-center justify-center rounded-control border-2 ${selected ? 'border-brand bg-brand-tint' : 'border-line bg-surface hover:bg-surface-2'}`}
                     >
-                      <img src={pieceUrl(color, type)} alt="" className="size-10" />
+                      <img src={pieceUrl(color, type, pieceSet)} alt="" className="size-10" />
                     </button>
                   );
                 }),

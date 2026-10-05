@@ -14,4 +14,17 @@ export const AUTH_LIMITS = {
   emailLinkPerIp: { name: 'email-link-ip', limit: 20, windowSeconds: HOUR, by: 'ip' },
   resendVerificationPerIp: { name: 'resend-ip', limit: 5, windowSeconds: HOUR, by: 'ip' },
   refreshPerIp: { name: 'refresh-ip', limit: 60, windowSeconds: MINUTE, by: 'ip' },
+  oauthStartPerIp: { name: 'oauth-start-ip', limit: 30, windowSeconds: 15 * MINUTE, by: 'ip' },
+  oauthCallbackPerIp: {
+    name: 'oauth-callback-ip',
+    limit: 60,
+    windowSeconds: 15 * MINUTE,
+    by: 'ip',
+  },
+  oauthExchangePerIp: {
+    name: 'oauth-exchange-ip',
+    limit: 30,
+    windowSeconds: 15 * MINUTE,
+    by: 'ip',
+  },
 } as const satisfies Record<string, RateLimitRule>;

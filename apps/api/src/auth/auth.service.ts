@@ -76,6 +76,13 @@ export class AuthService {
     return this.startSession(user, randomUUID());
   }
 
+  /** A new session for a user who has proven who they are some other way, such as a provider. */
+  async signInUser(userId: string): Promise<Session> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new AppError('auth.unauthorized', HttpStatus.UNAUTHORIZED);
+    return this.startSession(user, randomUUID());
+  }
+
   /**
    * Swaps a refresh token for a new pair. A token can be used once: presenting an already used one
    * means it was copied, so the whole family is revoked and the real owner has to sign in again.

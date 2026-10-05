@@ -30,10 +30,9 @@ import { AccountService } from './account.service.js';
 import { AUTH_LIMITS } from './auth.limits.js';
 import { CurrentUserId } from './current-user.decorator.js';
 import { AuthService, type Session } from './auth.service.js';
+import { REFRESH_COOKIE, REFRESH_COOKIE_PATH, setRefreshCookie } from './refresh-cookie.js';
 
-export const REFRESH_COOKIE = 'kg_refresh';
-// The browser sends the cookie to the auth routes only
-const REFRESH_COOKIE_PATH = '/auth';
+export { REFRESH_COOKIE };
 
 type Register = z.output<typeof RegisterRequestSchema>;
 type Login = z.output<typeof LoginRequestSchema>;
@@ -134,13 +133,7 @@ export class AuthController {
     if (request.headers[CLIENT_HEADER] === MOBILE_CLIENT) {
       return { ...session.auth, refreshToken: session.refreshToken };
     }
-    void reply.setCookie(REFRESH_COOKIE, session.refreshToken, {
-      httpOnly: true,
-      secure: this.config.isProduction,
-      sameSite: 'lax',
-      path: REFRESH_COOKIE_PATH,
-      expires: session.refreshExpiresAt,
-    });
+    setRefreshCookie(reply, session, this.config.isProduction);
     return session.auth;
   }
 }

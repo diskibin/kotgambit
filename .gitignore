@@ -28,7 +28,10 @@ keystore.properties
 *.sql.gz
 dump*
 backups/
-premium/
+# Premium lessons live in the private repository. Only these two places are hidden: the screens of the apps are code and
+# have a folder with this name too (apps/*/src/features/premium)
+/premium/
+/content/**/premium/
 content-private/
 .secrets/
 local.properties

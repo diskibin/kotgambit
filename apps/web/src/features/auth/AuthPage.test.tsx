@@ -361,3 +361,15 @@ describe('sign-in with a provider', () => {
     await waitFor(() => expect(linked).toEqual({ ticket: 'ticket-1' }));
   });
 });
+
+describe('the documents', () => {
+  it('links the offer and the privacy policy under the form, in other tabs so that the form stays', async () => {
+    renderApp('/register');
+    const offer = await screen.findByRole('link', { name: 'оферту' });
+    const privacy = screen.getByRole('link', { name: 'политику конфиденциальности' });
+    expect(offer).toHaveAttribute('href', '/offer');
+    expect(privacy).toHaveAttribute('href', '/privacy');
+    expect(offer).toHaveAttribute('target', '_blank');
+    expect(offer).toHaveAttribute('rel', expect.stringContaining('noopener'));
+  });
+});

@@ -9,8 +9,8 @@ import {
   type PasswordProblem,
 } from '@kotgambit/contracts';
 import type { Mood } from '@kotgambit/mascot';
-import { useState, type FormEvent } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useLinkIdentityMutation, useLoginMutation, useRegisterMutation } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
@@ -39,6 +39,20 @@ function moodFor(
   if (email === 'noAt' || email === 'invalid') return 'thinking';
   if (password === 'wrong') return 'oops';
   return 'wave';
+}
+
+/** A link to a document: it opens in another tab, so that what was typed in the form stays. */
+function TermsLink({ to, children }: { to: string; children?: ReactNode }) {
+  return (
+    <Link
+      to={to}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-extrabold text-brand-text underline-offset-2 hover:underline"
+    >
+      {children}
+    </Link>
+  );
 }
 
 export function AuthPage({ mode }: { mode: AuthMode }) {
@@ -206,7 +220,13 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         <SocialSignIn />
 
         <p className="m-0 text-center text-[13px] leading-[18px] font-semibold text-text-2">
-          {t('auth.terms')}
+          <Trans
+            i18nKey="auth.terms"
+            components={{
+              offer: <TermsLink to="/offer" />,
+              privacy: <TermsLink to="/privacy" />,
+            }}
+          />
         </p>
       </form>
     </AuthShell>

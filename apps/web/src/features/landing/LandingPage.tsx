@@ -206,9 +206,9 @@ function CookieNotice({ onClose }: { onClose: () => void }) {
         <Mascot mood="idle" size={56} dark={scheme === 'dark'} />
         <p className="m-0 text-[15px] leading-[22px] font-semibold">
           {t('landing.cookie.text')}{' '}
-          <a href="#privacy" className="font-extrabold">
+          <Link to="/privacy#cookies" className="font-extrabold">
             {t('landing.cookie.more')}
-          </a>
+          </Link>
         </p>
       </div>
       <div className="flex gap-2.5">
@@ -585,9 +585,9 @@ export function LandingPage() {
               </Link>
               <span className="text-[13px] leading-[18px] font-semibold text-text-2">
                 {t('landing.pricing.premium.note')}{' '}
-                <a href="#offer" className="font-extrabold">
+                <Link to="/offer" className="font-extrabold">
                   {t('landing.pricing.premium.offer')}
-                </a>
+                </Link>
               </span>
             </div>
           </div>
@@ -631,15 +631,15 @@ export function LandingPage() {
           aria-label={t('landing.footer.documents')}
           className="flex flex-col gap-x-6 gap-y-2 text-[16px] font-extrabold tablet:flex-row"
         >
-          <a href="#offer" className="flex min-h-11 items-center text-on-ink">
+          <Link to="/offer" className="flex min-h-11 items-center text-on-ink">
             {t('landing.footer.offer')}
-          </a>
-          <a id="privacy" href="#privacy" className="flex min-h-11 items-center text-on-ink">
+          </Link>
+          <Link to="/privacy" className="flex min-h-11 items-center text-on-ink">
             {t('landing.footer.privacy')}
-          </a>
-          <a href="#contacts" className="flex min-h-11 items-center text-on-ink">
+          </Link>
+          <Link to="/privacy#contacts" className="flex min-h-11 items-center text-on-ink">
             {t('landing.footer.contacts')}
-          </a>
+          </Link>
         </nav>
       </footer>
 

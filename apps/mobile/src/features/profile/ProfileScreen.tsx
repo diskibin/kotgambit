@@ -12,6 +12,7 @@ import { SlidersIcon } from '../../shared/ui/icons';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, screenPadding, shashka, space, typography } from '../../theme/theme';
 import { Mascot } from '../mascot/Mascot';
+import { LinkedAccounts } from './LinkedAccounts';
 import { WardrobeRow } from './WardrobeRow';
 
 const AVATAR = 92;
@@ -362,6 +363,7 @@ export function ProfileScreen({
           </View>
 
           <WardrobeRow wardrobe={data.wardrobe} />
+          <LinkedAccounts />
 
           <Button variant="premium" label={t('premium.title')} onPress={onPremium} />
           <Button variant="secondary" label={t('path.signOut')} onPress={() => void signOut()} />

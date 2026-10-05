@@ -9,7 +9,9 @@ import {
 export type OAuthDeepLink =
   | { kind: 'code'; code: string }
   | { kind: 'error'; error: OAuthError }
-  | { kind: 'link'; ticket: string; provider: OAuthProviderId | null };
+  | { kind: 'link'; ticket: string; provider: OAuthProviderId | null }
+  /** A provider was tied to the account of the signed-in learner. */
+  | { kind: 'linked'; provider: OAuthProviderId };
 
 /**
  * Reads what the API put in the address that brings the app back from the browser, or `null` for any
@@ -22,6 +24,9 @@ export function parseOAuthDeepLink(url: string): OAuthDeepLink | null {
 
   const code = params.get('code');
   if (code) return { kind: 'code', code };
+
+  const linked = OAuthProviderSchema.safeParse(params.get('linked'));
+  if (linked.success) return { kind: 'linked', provider: linked.data };
 
   const ticket = params.get('link');
   if (ticket) {

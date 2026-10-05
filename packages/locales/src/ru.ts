@@ -980,6 +980,9 @@ export const ru = {
     accounts: {
       title: 'Вход через',
       label: 'Привязанные аккаунты',
+      mobileTitle: 'Аккаунты для входа',
+      tiedNamed: '{{name}}, привязан',
+      linkShort: 'привязать',
       linked: 'Привязан',
       notLinked: 'Не привязан',
       link: 'Привязать',

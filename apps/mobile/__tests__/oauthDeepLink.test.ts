@@ -42,6 +42,13 @@ describe('parseOAuthDeepLink', () => {
     });
   });
 
+  it('reads the provider that was tied to the account', () => {
+    expect(parseOAuthDeepLink(`${BASE}?linked=google`)).toEqual({
+      kind: 'linked',
+      provider: 'google',
+    });
+  });
+
   it('ignores every other address', () => {
     expect(parseOAuthDeepLink('kotgambit://billing/return?code=1')).toBeNull();
     expect(parseOAuthDeepLink('https://example.com/auth/callback?code=1')).toBeNull();

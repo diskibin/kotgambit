@@ -7,7 +7,7 @@ import {
   type PasswordProblem,
 } from '@kotgambit/contracts';
 import type { Mood } from '@kotgambit/mascot';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -29,17 +29,13 @@ import { TextField } from '../../shared/ui/TextField';
 import { useTheme } from '../../theme/ThemeProvider';
 import { screenPadding, size, space, typography } from '../../theme/theme';
 import { Mascot } from '../mascot/Mascot';
-import { parseOAuthDeepLink } from './oauthDeepLink';
+import { useOAuthDeepLink } from './useOAuthDeepLink';
 
 type Mode = 'login' | 'register';
 
 const TABS = ['login', 'register'] as const;
 const MASCOT_SIZE = 72;
 const RETURN_MASCOT_SIZE = 150;
-
-// The address that opened the app stays the same while the process lives, so a screen that is built again
-// must not use the one-time code in it a second time
-const handledLinks = new Set<string>();
 
 interface Status {
   loading: boolean;
@@ -92,35 +88,27 @@ export function AuthScreen({
   const [returning, setReturning] = useState(false);
   const [linkTicket, setLinkTicket] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function handle(url: string) {
-      const link = parseOAuthDeepLink(url);
-      if (!link || handledLinks.has(url)) return;
-      handledLinks.add(url);
-      if (link.kind === 'code') {
-        setReturning(true);
-        try {
-          // The session starts in the store, which swaps this screen for the app
-          await exchange({ code: link.code }).unwrap();
-        } catch {
-          setReturning(false);
-          setServerMessage(t('auth.social.errors.failed'));
-        }
-      } else if (link.kind === 'link') {
-        setLinkTicket(link.ticket);
-        setServerMessage(
-          link.provider
-            ? t('auth.social.link', { name: t(`auth.social.names.${link.provider}`) })
-            : null,
-        );
-      } else {
-        setServerMessage(t(`auth.social.errors.${link.error}`));
+  useOAuthDeepLink(async (link) => {
+    if (link.kind === 'code') {
+      setReturning(true);
+      try {
+        // The session starts in the store, which swaps this screen for the app
+        await exchange({ code: link.code }).unwrap();
+      } catch {
+        setReturning(false);
+        setServerMessage(t('auth.social.errors.failed'));
       }
+    } else if (link.kind === 'link') {
+      setLinkTicket(link.ticket);
+      setServerMessage(
+        link.provider
+          ? t('auth.social.link', { name: t(`auth.social.names.${link.provider}`) })
+          : null,
+      );
+    } else if (link.kind === 'error') {
+      setServerMessage(t(`auth.social.errors.${link.error}`));
     }
-    const subscription = Linking.addEventListener('url', ({ url }) => void handle(url));
-    void Linking.getInitialURL().then((url) => (url ? handle(url) : undefined));
-    return () => subscription.remove();
-  }, [exchange, t]);
+  });
 
   const loading = loginState.isLoading || registerState.isLoading;
   const isLogin = mode === 'login';

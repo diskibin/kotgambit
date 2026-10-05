@@ -32,6 +32,7 @@ model User {
   achievements   UserAchievement[]
   subscription   Subscription?
   payments       Payment[]
+  identities     Identity[]
 
   @@map("users")
 }
@@ -70,6 +71,32 @@ enum EmailTokenKind {
   reset_password
 
   @@map("email_token_kind")
+}
+
+enum OAuthProvider {
+  google
+  yandex
+  vk
+
+  @@map("oauth_provider")
+}
+
+// A way to sign in besides the password. One user can have several, one account of a provider belongs to one user.
+model Identity {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  provider       OAuthProvider
+  // The id of the person at the provider. It is the stable key, the email there can change
+  providerUserId String        @map("provider_user_id")
+  // The email the provider reported when the account was linked, kept only to show it in the profile
+  email          String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("identities")
 }
 
 // One-time links sent by email. Like refresh tokens, only the hash is stored.

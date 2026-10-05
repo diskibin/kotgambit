@@ -95,6 +95,41 @@ describe('loadConfig', () => {
     );
   });
 
+  it('knows the public address of the API for the redirects of the providers', () => {
+    expect(loadConfig(VALID_ENV).apiUrl).toBe('http://localhost:3000');
+    expect(loadConfig({ ...VALID_ENV, PORT: '4000' }).apiUrl).toBe('http://localhost:4000');
+    expect(loadConfig({ ...VALID_ENV, API_URL: 'https://api.kotgambit.example/' }).apiUrl).toBe(
+      'https://api.kotgambit.example',
+    );
+  });
+
+  it('turns a provider on only when all of its keys are set', () => {
+    expect(loadConfig(VALID_ENV).oauth).toEqual({});
+    expect(
+      loadConfig({ ...VALID_ENV, GOOGLE_CLIENT_ID: 'id', YANDEX_CLIENT_SECRET: 'secret' }).oauth,
+    ).toEqual({});
+    expect(
+      loadConfig({
+        ...VALID_ENV,
+        GOOGLE_CLIENT_ID: 'g',
+        GOOGLE_CLIENT_SECRET: 'gs',
+        YANDEX_CLIENT_ID: 'y',
+        YANDEX_CLIENT_SECRET: 'ys',
+        VK_CLIENT_ID: 'v',
+      }).oauth,
+    ).toEqual({
+      google: { clientId: 'g', clientSecret: 'gs' },
+      yandex: { clientId: 'y', clientSecret: 'ys' },
+      vk: { clientId: 'v' },
+    });
+  });
+
+  it('passes the service key of VK ID on when it is set', () => {
+    expect(
+      loadConfig({ ...VALID_ENV, VK_CLIENT_ID: 'v', VK_SERVICE_TOKEN: 'svc' }).oauth.vk,
+    ).toEqual({ clientId: 'v', serviceToken: 'svc' });
+  });
+
   it('requires REDIS_URL', () => {
     const rest = Object.fromEntries(
       Object.entries(VALID_ENV).filter(([key]) => key !== 'REDIS_URL'),

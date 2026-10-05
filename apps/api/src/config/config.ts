@@ -42,6 +42,16 @@ const EnvSchema = z.object({
     .default(DEFAULT_ENGINE_CACHE_TTL_SECONDS),
   /** Where the web app lives, the links in emails point there. */
   WEB_URL: z.url().default('http://localhost:5173'),
+  /** The public address of this API. The providers send the browser back to it after the sign-in. */
+  API_URL: z.url().optional(),
+  /** Sign-in with a provider is on for the ones whose keys are set, see 6.7 of the plan. */
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  YANDEX_CLIENT_ID: z.string().min(1).optional(),
+  YANDEX_CLIENT_SECRET: z.string().min(1).optional(),
+  VK_CLIENT_ID: z.string().min(1).optional(),
+  /** The service key of VK ID, sent with the code when the app is registered as a confidential one. */
+  VK_SERVICE_TOKEN: z.string().min(1).optional(),
   MAIL_FROM: z.string().min(1).default('Кот Гамбит <noreply@localhost>'),
   /** SMTP connection string such as smtp://user:pass@host:587. Without it emails are only written to the log. */
   SMTP_URL: z.string().min(1).optional(),
@@ -105,6 +115,14 @@ export interface BillingConfig {
   renewalCheckMinutes: number;
 }
 
+export interface OAuthConfig {
+  /** Google and Yandex need the secret for the code exchange. */
+  google?: { clientId: string; clientSecret: string };
+  yandex?: { clientId: string; clientSecret: string };
+  /** VK ID works with PKCE alone, the service key is for an app registered as a confidential one. */
+  vk?: { clientId: string; serviceToken?: string };
+}
+
 export interface AppConfig {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
@@ -112,6 +130,10 @@ export interface AppConfig {
   databaseUrl: string;
   redisUrl: string;
   webUrl: string;
+  /** Without trailing slash. */
+  apiUrl: string;
+  /** The providers that have keys, the others answer 404. */
+  oauth: OAuthConfig;
   mailFrom: string;
   smtpUrl: string | undefined;
   /** `null` when ENGINE_PATH is not set. */
@@ -150,6 +172,33 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     databaseUrl: values.DATABASE_URL,
     redisUrl: values.REDIS_URL,
     webUrl: values.WEB_URL.replace(/\/$/, ''),
+    apiUrl: (values.API_URL ?? `http://localhost:${values.PORT}`).replace(/\/$/, ''),
+    oauth: {
+      ...(values.GOOGLE_CLIENT_ID && values.GOOGLE_CLIENT_SECRET
+        ? {
+            google: {
+              clientId: values.GOOGLE_CLIENT_ID,
+              clientSecret: values.GOOGLE_CLIENT_SECRET,
+            },
+          }
+        : {}),
+      ...(values.YANDEX_CLIENT_ID && values.YANDEX_CLIENT_SECRET
+        ? {
+            yandex: {
+              clientId: values.YANDEX_CLIENT_ID,
+              clientSecret: values.YANDEX_CLIENT_SECRET,
+            },
+          }
+        : {}),
+      ...(values.VK_CLIENT_ID
+        ? {
+            vk: {
+              clientId: values.VK_CLIENT_ID,
+              ...(values.VK_SERVICE_TOKEN ? { serviceToken: values.VK_SERVICE_TOKEN } : {}),
+            },
+          }
+        : {}),
+    },
     mailFrom: values.MAIL_FROM,
     smtpUrl: values.SMTP_URL,
     engine: values.ENGINE_PATH

@@ -1,5 +1,5 @@
 // Checks every lesson file against the schema and with chess.js, and the puzzle theme dictionary.
-// Usage: node tools/validate-content.mjs [dir ...]   (default: content/lessons)
+// Usage: node tools/validate-content.mjs [dir ...]   (default: content/lessons and CONTENT_PRIVATE_DIR when set)
 import {
   BotsFileSchema,
   LessonSchema,
@@ -15,7 +15,11 @@ import { lessonFiles, readYaml } from './content.mjs';
 const defaultDir = fileURLToPath(new URL('../content/lessons', import.meta.url));
 const themesFile = fileURLToPath(new URL('../content/puzzle-themes.ru.yaml', import.meta.url));
 const botsFile = fileURLToPath(new URL('../content/bots.yaml', import.meta.url));
-const dirs = process.argv.length > 2 ? process.argv.slice(2) : [defaultDir];
+const privateDir = process.env.CONTENT_PRIVATE_DIR;
+const dirs =
+  process.argv.length > 2
+    ? process.argv.slice(2)
+    : [defaultDir, ...(privateDir ? [privateDir] : [])];
 
 let problems = 0;
 const lessons = [];

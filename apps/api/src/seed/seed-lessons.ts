@@ -18,21 +18,27 @@ function lessonFiles(dir: string): string[] {
   });
 }
 
-/** Reads and fully validates the lesson files, so that nothing broken ever reaches the database. */
-export function loadLessons(dir: string): Lesson[] {
+/**
+ * Reads and fully validates the lesson files of all the directories, so that nothing broken ever reaches
+ * the database. The catalog is checked over the union: the premium chapters of a track continue the
+ * numbering of the free ones, so neither directory is valid on its own.
+ */
+export function loadLessons(dirs: string | readonly string[]): Lesson[] {
   const lessons: Lesson[] = [];
   const problems: string[] = [];
 
-  for (const file of lessonFiles(dir)) {
-    const parsed = LessonSchema.safeParse(parse(readFileSync(file, 'utf8')));
-    if (!parsed.success) {
-      for (const issue of parsed.error.issues)
-        problems.push(`${file}: ${issue.path.join('.')}: ${issue.message}`);
-      continue;
+  for (const dir of typeof dirs === 'string' ? [dirs] : dirs) {
+    for (const file of lessonFiles(dir)) {
+      const parsed = LessonSchema.safeParse(parse(readFileSync(file, 'utf8')));
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues)
+          problems.push(`${file}: ${issue.path.join('.')}: ${issue.message}`);
+        continue;
+      }
+      lessons.push(parsed.data);
+      for (const issue of validateLesson(parsed.data))
+        problems.push(`${file}: ${issue.path}: ${issue.message}`);
     }
-    lessons.push(parsed.data);
-    for (const issue of validateLesson(parsed.data))
-      problems.push(`${file}: ${issue.path}: ${issue.message}`);
   }
   for (const issue of validateCatalog(lessons))
     problems.push(`catalog: ${issue.path}: ${issue.message}`);
@@ -42,8 +48,11 @@ export function loadLessons(dir: string): Lesson[] {
 }
 
 /** Adds or updates lessons by id. Lessons that disappeared from the files stay: nothing is deleted without a say-so. */
-export async function seedLessons(prisma: PrismaClient, dir: string): Promise<number> {
-  const lessons = loadLessons(dir);
+export async function seedLessons(
+  prisma: PrismaClient,
+  dirs: string | readonly string[],
+): Promise<number> {
+  const lessons = loadLessons(dirs);
   for (const lesson of lessons) {
     const { steps, ...fields } = lesson;
     const contentHash = createHash('sha256').update(JSON.stringify(lesson)).digest('hex');

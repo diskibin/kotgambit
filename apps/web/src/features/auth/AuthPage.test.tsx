@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { homeHandlers } from '../../test/handlers';
 import { API_URL, renderApp, USER } from '../../test/renderApp';
 
@@ -40,6 +40,19 @@ const catMood = () =>
 async function fill(user: ReturnType<typeof userEvent.setup>, mail: string, pass: string) {
   await user.type(email(), mail);
   await user.type(password(), pass);
+}
+
+const confirmField = () => screen.getByLabelText('Повтори пароль');
+
+/** The sign-up asks for the password twice. */
+async function fillRegister(
+  user: ReturnType<typeof userEvent.setup>,
+  mail: string,
+  pass: string,
+  again = pass,
+) {
+  await fill(user, mail, pass);
+  await user.type(confirmField(), again);
 }
 
 describe('login', () => {
@@ -181,7 +194,7 @@ describe('registration', () => {
   it('asks for at least 8 characters before sending', async () => {
     const user = userEvent.setup();
     renderApp('/register');
-    await fill(user, 'cat@example.com', 'short');
+    await fillRegister(user, 'cat@example.com', 'short');
     await user.click(submit('Создать аккаунт'));
     expect(await screen.findByText('Минимум 8 символов.')).toBeInTheDocument();
     expect(password()).toHaveAttribute('aria-invalid', 'true');
@@ -197,9 +210,52 @@ describe('registration', () => {
     );
     renderApp('/register');
     expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
-    await fill(user, 'cat@example.com', 'gambit2026');
+    await fillRegister(user, 'cat@example.com', 'gambit2026');
     await user.click(submit('Создать аккаунт'));
     expect(await screen.findByRole('heading', { name: 'Мои курсы' })).toBeInTheDocument();
+  });
+
+  it('asks for the password twice and does not send when they differ', async () => {
+    const user = userEvent.setup();
+    const sent = vi.fn();
+    server.use(
+      http.post(`${API_URL}/auth/register`, () => {
+        sent();
+        return HttpResponse.json(AUTH, { status: 201 });
+      }),
+    );
+    renderApp('/register');
+    await fillRegister(user, 'cat@example.com', 'gambit2026', 'gambit2025');
+    await user.click(submit('Создать аккаунт'));
+
+    expect(await screen.findByText('Пароли не совпадают.')).toBeInTheDocument();
+    expect(confirmField()).toHaveAttribute('aria-invalid', 'true');
+    expect(sent).not.toHaveBeenCalled();
+  });
+
+  it('lets the sign-up through once the second password is fixed', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(`${API_URL}/auth/register`, () => {
+        signedIn = true;
+        return HttpResponse.json(AUTH, { status: 201 });
+      }),
+    );
+    renderApp('/register');
+    await fillRegister(user, 'cat@example.com', 'gambit2026', 'gambit');
+    await user.click(submit('Создать аккаунт'));
+    await screen.findByText('Пароли не совпадают.');
+
+    await user.clear(confirmField());
+    await user.type(confirmField(), 'gambit2026');
+    await user.click(submit('Создать аккаунт'));
+    expect(await screen.findByRole('heading', { name: 'Мои курсы' })).toBeInTheDocument();
+  });
+
+  it('asks for the password once when signing in', async () => {
+    renderApp('/login');
+    await screen.findByRole('tab', { name: 'Вход', selected: true });
+    expect(screen.queryByLabelText('Повтори пароль')).not.toBeInTheDocument();
   });
 
   it('offers to sign in when the email is taken and keeps the address', async () => {
@@ -212,7 +268,7 @@ describe('registration', () => {
       ),
     );
     renderApp('/register');
-    await fill(user, 'cat@example.com', 'gambit2026');
+    await fillRegister(user, 'cat@example.com', 'gambit2026');
     await user.click(submit('Создать аккаунт'));
 
     expect(await screen.findByText(/Пользователь с таким email уже есть\./)).toBeInTheDocument();

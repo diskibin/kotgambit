@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router';
 import { useMeQuery, useProgressQuery, useSubscriptionQuery } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
+import { VerifyEmailReminder } from '../../features/auth/VerifyEmailReminder';
 import { DayBar } from '../../features/path/DayBar';
 import { Mascot } from '../../features/mascot/Mascot';
 import { useScheme } from '../../features/theme/useScheme';
@@ -209,6 +210,7 @@ export function AppShell({
       <div className={`flex min-w-0 flex-1 flex-col ${layout === 'bottom' ? 'pb-[76px]' : ''}`}>
         <TopBar title={title} layout={layout} />
         <main className="flex flex-1 flex-col gap-6 px-4 py-8 pr-6 tablet:px-7 desktop:px-10">
+          <VerifyEmailReminder />
           {children}
         </main>
       </div>

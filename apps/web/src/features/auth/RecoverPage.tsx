@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useForgotPasswordMutation, useResetPasswordMutation } from '../../app/api';
+import { formatClock } from '../../shared/formatClock';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { Chip } from '../../shared/ui/Chip';
@@ -27,12 +28,6 @@ const MOODS: Record<Step, Mood> = {
 const CARD_WIDTH = 460;
 const CAT_SIZE = 150;
 const RESEND_SECONDS = 45;
-const SECONDS_IN_MINUTE = 60;
-
-function formatTime(seconds: number): string {
-  const rest = String(seconds % SECONDS_IN_MINUTE).padStart(2, '0');
-  return `${Math.floor(seconds / SECONDS_IN_MINUTE)}:${rest}`;
-}
 
 function Heading({ title, text }: { title: string; text: string }) {
   return (
@@ -115,7 +110,7 @@ function RequestSteps({
           }}
         >
           {wait > 0
-            ? t('recover.sent.resendWait', { time: formatTime(wait) })
+            ? t('recover.sent.resendWait', { time: formatClock(wait) })
             : t('recover.sent.resend')}
         </Button>
         <BackToLogin />

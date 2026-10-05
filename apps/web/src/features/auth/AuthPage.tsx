@@ -2,6 +2,7 @@ import {
   apiErrorOf,
   checkEmail,
   checkPassword,
+  checkPasswordConfirm,
   OAuthErrorSchema,
   OAuthProviderSchema,
   type EmailProblem,
@@ -56,6 +57,8 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 
   const [email, setEmail] = useState((location.state as { email?: string } | null)?.email ?? '');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [confirmMismatch, setConfirmMismatch] = useState(false);
   const [emailProblem, setEmailProblem] = useState<EmailProblem | null>(null);
   const [passwordProblem, setPasswordProblem] = useState<PasswordProblem | null>(null);
   const [serverMessage, setServerMessage] = useState<string | null>(null);
@@ -69,10 +72,13 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     event.preventDefault();
     const nextEmail = checkEmail(email.trim());
     const nextPassword = checkPassword(password, mode);
+    // Only a sign-up asks for the password twice
+    const nextConfirm = isLogin ? null : checkPasswordConfirm(password, confirm);
     setEmailProblem(nextEmail);
     setPasswordProblem(nextPassword);
+    setConfirmMismatch(nextConfirm !== null);
     setServerMessage(null);
-    if (nextEmail || nextPassword) return;
+    if (nextEmail || nextPassword || nextConfirm) return;
 
     try {
       await (isLogin ? login({ email, password }) : register({ email, password })).unwrap();
@@ -121,7 +127,11 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           label={t('auth.tablistLabel')}
           tabs={TABS.map((id) => ({ id, label: t(`auth.tabs.${id}`) }))}
           value={mode}
-          onChange={(next) => void navigate(`/${next}`, { state: { email } })}
+          onChange={(next) => {
+            setConfirm('');
+            setConfirmMismatch(false);
+            void navigate(`/${next}`, { state: { email } });
+          }}
         />
 
         {passwordProblem === 'wrong' && (
@@ -176,6 +186,17 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
             ) : undefined
           }
         />
+
+        {!isLogin && (
+          <PasswordField
+            label={t('auth.password.confirm')}
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(event) => setConfirm(event.target.value)}
+            disabled={loading}
+            error={confirmMismatch ? t('auth.password.mismatch') : undefined}
+          />
+        )}
 
         <Button type="submit" large fullWidth disabled={loading} aria-busy={loading}>
           {loading && <Spinner />}

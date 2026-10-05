@@ -1,5 +1,6 @@
 import {
   ActiveGameSchema,
+  OAuthProvidersResponseSchema,
   SettingsSchema,
   WardrobeSchema,
   CheckoutResponseSchema,
@@ -40,6 +41,9 @@ import {
   type CheckoutRequest,
   type CheckoutResponse,
   type Entitlements,
+  type OAuthExchangeRequest,
+  type OAuthLinkRequest,
+  type OAuthProvidersResponse,
   type PaymentStatus,
   type PlansResponse,
   type SubscriptionView,
@@ -113,6 +117,21 @@ export function endpoints(build: Builder) {
       query: (body) => ({ url: '/auth/login', method: 'POST', body }),
       responseSchema: AuthResponseSchema,
       invalidatesTags: ['Me'],
+    }),
+    // The providers the server has keys for, a button is shown only for these
+    oauthProviders: build.query<OAuthProvidersResponse, void>({
+      query: () => '/auth/oauth/providers',
+      responseSchema: OAuthProvidersResponseSchema,
+    }),
+    // The app trades the one-time code of the deep link for a session, like a sign-in
+    exchangeOAuthCode: build.mutation<AuthResponse, OAuthExchangeRequest>({
+      query: (body) => ({ url: '/auth/oauth/exchange', method: 'POST', body }),
+      responseSchema: AuthResponseSchema,
+      invalidatesTags: ['Me'],
+    }),
+    // Ties the provider account to the one the learner has just signed in to
+    linkIdentity: build.mutation<void, OAuthLinkRequest>({
+      query: (body) => ({ url: '/auth/oauth/link', method: 'POST', body }),
     }),
     // Web ends the session through its cookie, mobile sends the refresh token it keeps
     logout: build.mutation<void, RefreshRequest | void>({

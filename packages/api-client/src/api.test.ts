@@ -909,4 +909,55 @@ describe('billing endpoints', () => {
       4,
     );
   });
+  it('reads the providers the server has keys for', async () => {
+    server.use(
+      http.get(`${BASE_URL}/auth/oauth/providers`, () =>
+        HttpResponse.json({ providers: ['yandex', 'google'] }),
+      ),
+    );
+    const { api, store } = setup();
+    expect((await store.dispatch(api.endpoints.oauthProviders.initiate())).data?.providers).toEqual(
+      ['yandex', 'google'],
+    );
+  });
+
+  it('trades the one-time code of the deep link for a session', async () => {
+    let sent: unknown;
+    server.use(
+      http.post(`${BASE_URL}/auth/oauth/exchange`, async ({ request }) => {
+        sent = await request.json();
+        return HttpResponse.json({
+          accessToken: 'access-1',
+          refreshToken: 'refresh-1',
+          expiresIn: 900,
+          user: {
+            id: '0191e2c4-2f6b-7c1a-9d3e-5a4b6c7d8e9f',
+            email: 'cat@example.com',
+            displayName: null,
+            emailVerified: true,
+            accessory: 'none',
+          },
+        });
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.exchangeOAuthCode.initiate({ code: 'one-time' }),
+    );
+    expect(sent).toEqual({ code: 'one-time' });
+    expect(result.data?.refreshToken).toBe('refresh-1');
+  });
+
+  it('sends the ticket that links the provider account to the signed-in one', async () => {
+    let sent: unknown;
+    server.use(
+      http.post(`${BASE_URL}/auth/oauth/link`, async ({ request }) => {
+        sent = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { api, store } = setup();
+    await store.dispatch(api.endpoints.linkIdentity.initiate({ ticket: 'ticket-1' }));
+    expect(sent).toEqual({ ticket: 'ticket-1' });
+  });
 });

@@ -41,6 +41,13 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+        <!-- The sign-in with a provider ends in the browser, the API sends it back here with a one-time code -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="kotgambit" android:host="auth" android:path="/callback" />
+        </intent-filter>
       </activity>
     </application>
 </manifest>

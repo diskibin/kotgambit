@@ -11,7 +11,7 @@ import { getRefreshToken, saveRefreshToken } from './refreshTokenStorage';
 
 // 10.0.2.2 is how the Android emulator reaches the host machine; release builds get their URL
 // together with the release configuration.
-const API_URL = 'http://10.0.2.2:3000';
+export const API_URL = 'http://10.0.2.2:3000';
 
 /**
  * The api is created before the store, but the session lives in the store.
@@ -55,6 +55,9 @@ export const {
   useCancelSubscriptionMutation,
   useCheckoutMutation,
   useEntitlementsQuery,
+  useExchangeOAuthCodeMutation,
+  useLinkIdentityMutation,
+  useOauthProvidersQuery,
   usePaymentQuery,
   usePlansQuery,
   useResumeSubscriptionMutation,

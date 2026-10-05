@@ -13,8 +13,12 @@ import { clearRefreshToken, saveRefreshToken } from './refreshTokenStorage';
 export function makeStore() {
   const listener = createListenerMiddleware();
 
-  // Sign-in and sign-up both end with a token
-  for (const endpoint of [api.endpoints.login, api.endpoints.register]) {
+  // Sign-in, sign-up and the return from the browser sign-in all end with a token
+  for (const endpoint of [
+    api.endpoints.login,
+    api.endpoints.register,
+    api.endpoints.exchangeOAuthCode,
+  ]) {
     listener.startListening({
       matcher: endpoint.matchFulfilled,
       effect: async (action, { dispatch }) => {

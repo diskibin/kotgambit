@@ -983,6 +983,13 @@ export const ru = {
       mobileTitle: 'Аккаунты для входа',
       tiedNamed: '{{name}}, привязан',
       linkShort: 'привязать',
+      tiedHint: 'Нажми, чтобы отвязать',
+      unlinkTitle: 'Отвязать {{name}}?',
+      unlinkText:
+        'Входить через {{name}} больше не получится. Аккаунт и прогресс останутся с тобой.',
+      unlinkConfirm: 'Отвязать',
+      unlinkKeep: 'Оставить',
+      unlinked: '{{name}} отвязан.',
       linked: 'Привязан',
       notLinked: 'Не привязан',
       link: 'Привязать',

@@ -4,7 +4,7 @@ import * as Keychain from 'react-native-keychain';
 import App from '../App';
 import { makeStore } from '../src/app/store';
 import { HOME, SIGNED_IN } from '../src/test/fixtures';
-import { json, mockApi } from '../src/test/mockApi';
+import { empty, json, mockApi } from '../src/test/mockApi';
 
 type UrlHandler = (event: { url: string }) => void;
 
@@ -66,7 +66,7 @@ describe('the accounts for sign-in', () => {
     tied = ['yandex'];
     await openProfile();
     expect(await screen.findByText('Аккаунты для входа')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Яндекс, привязан' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Яндекс, привязан' })).toBeEnabled();
     expect(screen.getByText('Яндекс ✓')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Привязать VK' })).toBeEnabled();
     expect(screen.getByText('VK · привязать')).toBeOnTheScreen();
@@ -121,5 +121,62 @@ describe('the accounts for sign-in', () => {
     expect(
       await screen.findByText('Этот аккаунт уже привязан к другому профилю.'),
     ).toBeOnTheScreen();
+  });
+  describe('unlinking', () => {
+    const tiedYandex = async (
+      over: Record<string, (request: Request) => Response | Promise<Response>> = {},
+    ) => {
+      tied = ['yandex', 'google'];
+      mockApi({ ...accounts(['yandex', 'vk', 'google']), ...over });
+      render(<App store={makeStore()} />);
+      fireEvent.press(await screen.findByRole('tab', { name: 'Профиль' }));
+      fireEvent.press(await screen.findByRole('button', { name: 'Яндекс, привязан' }));
+    };
+
+    it('asks first, in a sheet, and says what stays', async () => {
+      await tiedYandex();
+      expect(await screen.findByText('Отвязать Яндекс?')).toBeOnTheScreen();
+      expect(
+        screen.getByText(
+          'Входить через Яндекс больше не получится. Аккаунт и прогресс останутся с тобой.',
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it('unlinks the service and shows it free again', async () => {
+      let removed = false;
+      await tiedYandex({
+        'DELETE /auth/identities/yandex': () => {
+          removed = true;
+          tied = ['google'];
+          return empty(204);
+        },
+      });
+      fireEvent.press(await screen.findByRole('button', { name: 'Отвязать' }));
+
+      expect(await screen.findByText('Яндекс отвязан.')).toBeOnTheScreen();
+      expect(await screen.findByText('Яндекс · привязать')).toBeOnTheScreen();
+      expect(removed).toBe(true);
+      expect(screen.queryByText('Отвязать Яндекс?')).not.toBeOnTheScreen();
+    });
+
+    it('keeps the service when the learner changes their mind', async () => {
+      const del = jest.fn(() => empty(204));
+      await tiedYandex({ 'DELETE /auth/identities/yandex': del });
+      fireEvent.press(await screen.findByRole('button', { name: 'Оставить' }));
+      await waitFor(() => expect(screen.queryByText('Отвязать Яндекс?')).not.toBeOnTheScreen());
+      expect(screen.getByText('Яндекс ✓')).toBeOnTheScreen();
+      expect(del).not.toHaveBeenCalled();
+    });
+
+    it('says why the last way in cannot be removed', async () => {
+      await tiedYandex({
+        'DELETE /auth/identities/yandex': () =>
+          json({ code: 'oauth.last_method', message: 'Это твой единственный способ входа.' }, 409),
+      });
+      fireEvent.press(await screen.findByRole('button', { name: 'Отвязать' }));
+      expect(await screen.findByText('Это твой единственный способ входа.')).toBeOnTheScreen();
+      expect(screen.getByText('Яндекс ✓')).toBeOnTheScreen();
+    });
   });
 });

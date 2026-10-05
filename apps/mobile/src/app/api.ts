@@ -60,6 +60,7 @@ export const {
   useLinkIdentityMutation,
   useOauthProvidersQuery,
   useStartLinkingProviderMutation,
+  useUnlinkIdentityMutation,
   usePaymentQuery,
   usePlansQuery,
   useResumeSubscriptionMutation,

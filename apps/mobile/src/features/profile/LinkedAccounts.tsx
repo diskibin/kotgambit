@@ -6,8 +6,11 @@ import {
   useIdentitiesQuery,
   useOauthProvidersQuery,
   useStartLinkingProviderMutation,
+  useUnlinkIdentityMutation,
 } from '../../app/api';
 import { Banner } from '../../shared/ui/Banner';
+import { BottomSheet } from '../../shared/ui/BottomSheet';
+import { Button } from '../../shared/ui/Button';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, space, typography } from '../../theme/theme';
 import { useOAuthDeepLink } from '../auth/useOAuthDeepLink';
@@ -23,6 +26,9 @@ export function LinkedAccounts() {
   const identities = useIdentitiesQuery();
   const providers = useOauthProvidersQuery();
   const [startLinking] = useStartLinkingProviderMutation();
+  const [unlink, unlinking] = useUnlinkIdentityMutation();
+  // The service the learner is asked about in the sheet
+  const [leaving, setLeaving] = useState<OAuthProviderId | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   // The browser tells how it went by a deep link, the account was tied on the server before that
@@ -50,6 +56,18 @@ export function LinkedAccounts() {
       await Linking.openURL(url);
     } catch (error) {
       setNotice(apiErrorOf(error)?.message ?? t('profile.accounts.actionError'));
+    }
+  }
+
+  async function remove(provider: OAuthProviderId) {
+    try {
+      await unlink(provider).unwrap();
+      setNotice(t('profile.accounts.unlinked', { name: t(`auth.social.names.${provider}`) }));
+    } catch (error) {
+      // The last way in cannot go, the server says so in its own words
+      setNotice(apiErrorOf(error)?.message ?? t('profile.accounts.actionError'));
+    } finally {
+      setLeaving(null);
     }
   }
 
@@ -82,10 +100,13 @@ export function LinkedAccounts() {
                   ? t('profile.accounts.tiedNamed', { name })
                   : t('profile.accounts.linkNamed', { name })
               }
-              accessibilityState={{ disabled: tied }}
-              disabled={tied}
+              accessibilityHint={tied ? t('profile.accounts.tiedHint') : undefined}
               hitSlop={TAP_SLOP}
-              onPress={() => void link(id)}
+              onPress={() => {
+                setNotice(null);
+                if (tied) setLeaving(id);
+                else void link(id);
+              }}
               style={{
                 height: CHIP_HEIGHT,
                 paddingHorizontal: space[3],
@@ -101,6 +122,32 @@ export function LinkedAccounts() {
           );
         })}
       </View>
+      {leaving && (
+        <BottomSheet
+          label={t('profile.accounts.unlinkTitle', { name: t(`auth.social.names.${leaving}`) })}
+          onClose={() => setLeaving(null)}
+        >
+          <Text accessibilityRole="header" style={[typography.h2, { color: colors.text }]}>
+            {t('profile.accounts.unlinkTitle', { name: t(`auth.social.names.${leaving}`) })}
+          </Text>
+          <Text style={[typography.body, { color: colors.text2, textAlign: 'center' }]}>
+            {t('profile.accounts.unlinkText', { name: t(`auth.social.names.${leaving}`) })}
+          </Text>
+          <View style={{ alignSelf: 'stretch', gap: space[2] }}>
+            <Button
+              large
+              label={t('profile.accounts.unlinkKeep')}
+              onPress={() => setLeaving(null)}
+            />
+            <Button
+              variant="danger"
+              label={t('profile.accounts.unlinkConfirm')}
+              disabled={unlinking.isLoading}
+              onPress={() => void remove(leaving)}
+            />
+          </View>
+        </BottomSheet>
+      )}
     </View>
   );
 }

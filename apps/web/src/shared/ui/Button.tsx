@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type Variant = 'primary' | 'success' | 'secondary' | 'premium' | 'caution' | 'text' | 'danger';
+export type Variant =
+  'primary' | 'success' | 'secondary' | 'premium' | 'caution' | 'text' | 'danger';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -27,6 +28,27 @@ const VARIANTS: Record<Variant, string> = {
   danger: 'text-coral-text',
 };
 
+/** The look of a button, also for a link that has to look like one. */
+export function buttonClassName({
+  variant = 'primary',
+  large = false,
+  fullWidth = false,
+  className = '',
+}: {
+  variant?: Variant;
+  large?: boolean;
+  fullWidth?: boolean;
+  className?: string;
+} = {}): string {
+  const size =
+    variant === 'text' || variant === 'danger'
+      ? 'min-h-11'
+      : large
+        ? 'h-14 text-[18px]'
+        : 'h-12 text-[16px]';
+  return `flex items-center justify-center gap-2.5 rounded-card px-4 font-extrabold disabled:cursor-not-allowed disabled:opacity-85 ${size} ${VARIANTS[variant]} ${fullWidth ? 'w-full' : ''} ${className}`;
+}
+
 export function Button({
   variant = 'primary',
   large = false,
@@ -36,16 +58,10 @@ export function Button({
   children,
   ...rest
 }: ButtonProps) {
-  const size =
-    variant === 'text' || variant === 'danger'
-      ? 'min-h-11'
-      : large
-        ? 'h-14 text-[18px]'
-        : 'h-12 text-[16px]';
   return (
     <button
       type={type}
-      className={`flex items-center justify-center gap-2.5 rounded-card px-4 font-extrabold disabled:cursor-not-allowed disabled:opacity-85 ${size} ${VARIANTS[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={buttonClassName({ variant, large, fullWidth, className })}
       {...rest}
     >
       {children}

@@ -9,6 +9,9 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 
 const DEFAULT_API_URL = 'http://localhost:3000';
 
+/** The address of the API, the sign-in with a provider starts with a navigation to it. */
+export const API_URL: string = import.meta.env.VITE_API_URL ?? DEFAULT_API_URL;
+
 /**
  * The api is created before the store, but the session lives in the store.
  * `makeStore` fills in these functions, they are only called when a request runs.
@@ -31,7 +34,7 @@ const session: SessionAdapter = {
 export const api = createApi({
   reducerPath: REDUCER_PATH,
   baseQuery: createBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL ?? DEFAULT_API_URL,
+    baseUrl: API_URL,
     session,
   }),
   tagTypes: TAG_TYPES,
@@ -47,6 +50,8 @@ export const {
   useCancelSubscriptionMutation,
   useCheckoutMutation,
   useEntitlementsQuery,
+  useLinkIdentityMutation,
+  useOauthProvidersQuery,
   usePaymentQuery,
   usePlansQuery,
   useResumeSubscriptionMutation,

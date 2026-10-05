@@ -23,6 +23,8 @@ beforeEach(() => {
       signedIn ? HttpResponse.json(USER) : new HttpResponse(null, { status: 401 }),
     ),
     http.post(`${API_URL}/auth/refresh`, () => new HttpResponse(null, { status: 401 })),
+    // No provider has keys unless a test says so
+    http.get(`${API_URL}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] })),
     ...homeHandlers(),
   );
 });
@@ -231,5 +233,73 @@ describe('registration', () => {
     ).toBeInTheDocument();
     expect(email()).toHaveValue('cat@example.com');
     expect(submit('Создать аккаунт')).toBeInTheDocument();
+  });
+});
+
+describe('sign-in with a provider', () => {
+  const providers = (...ids: string[]) =>
+    server.use(
+      http.get(`${API_URL}/auth/oauth/providers`, () => HttpResponse.json({ providers: ids })),
+    );
+
+  it('shows a button for every provider the server has keys for, in the order of the design', async () => {
+    providers('yandex', 'vk', 'google');
+    renderApp('/login');
+
+    const yandex = await screen.findByRole('link', { name: 'Войти через Яндекс' });
+    expect(yandex).toHaveAttribute('href', `${API_URL}/auth/oauth/yandex/start?client=web`);
+    expect(screen.getByRole('link', { name: 'Войти через VK' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Войти через Google' })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('link', { name: /^Войти через/ }).map((link) => link.textContent),
+    ).toEqual(['Яндекс', 'VK', 'Google']);
+  });
+
+  it('shows only the providers that are on', async () => {
+    providers('google');
+    renderApp('/register');
+    expect(await screen.findByRole('link', { name: 'Войти через Google' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Войти через Яндекс' })).not.toBeInTheDocument();
+  });
+
+  it('shows no buttons and no divider when no provider is on', async () => {
+    renderApp('/login');
+    await screen.findByRole('tab', { name: 'Вход', selected: true });
+    expect(screen.queryByText('или')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['cancelled', 'Вход отменён. Можно попробовать ещё раз или войти по почте.'],
+    ['failed', 'Не получилось войти через этот сервис. Попробуй ещё раз или войди по почте.'],
+    ['expired', 'Вход занял слишком много времени. Попробуй ещё раз.'],
+  ])('says calmly why it did not work out: %s', async (reason, message) => {
+    renderApp(`/login?oauth_error=${reason}`);
+    expect(await screen.findByText(message)).toBeInTheDocument();
+  });
+
+  it('asks for the account of the learner when the email is taken, and links after the sign-in', async () => {
+    const user = userEvent.setup();
+    let linked: unknown;
+    server.use(
+      http.post(`${API_URL}/auth/login`, () => {
+        signedIn = true;
+        return HttpResponse.json(AUTH);
+      }),
+      http.post(`${API_URL}/auth/oauth/link`, async ({ request }) => {
+        linked = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderApp('/login?link=ticket-1&provider=yandex');
+
+    expect(
+      await screen.findByText(
+        'Эта почта уже есть в Коте Гамбите. Войди в свой аккаунт, и мы привяжем Яндекс.',
+      ),
+    ).toBeInTheDocument();
+    await fill(user, 'cat@example.com', 'gambit2026');
+    await user.click(submit('Войти'));
+
+    await waitFor(() => expect(linked).toEqual({ ticket: 'ticket-1' }));
   });
 });

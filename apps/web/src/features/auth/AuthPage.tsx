@@ -2,14 +2,16 @@ import {
   apiErrorOf,
   checkEmail,
   checkPassword,
+  OAuthErrorSchema,
+  OAuthProviderSchema,
   type EmailProblem,
   type PasswordProblem,
 } from '@kotgambit/contracts';
 import type { Mood } from '@kotgambit/mascot';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router';
-import { useLoginMutation, useRegisterMutation } from '../../app/api';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { useLinkIdentityMutation, useLoginMutation, useRegisterMutation } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
@@ -18,6 +20,7 @@ import { Tabs } from '../../shared/ui/Tabs';
 import { PasswordField } from '../../shared/ui/PasswordField';
 import { TextField } from '../../shared/ui/TextField';
 import { AuthShell } from './AuthShell';
+import { SocialSignIn } from './SocialSignIn';
 
 export type AuthMode = 'login' | 'register';
 
@@ -44,6 +47,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   const status = useAppSelector((state) => state.auth.status);
   const [login, loginState] = useLoginMutation();
   const [register, registerState] = useRegisterMutation();
+  const [linkIdentity] = useLinkIdentityMutation();
+  // The server sends the browser back here after a sign-in with a provider, the outcome is in the address
+  const [params] = useSearchParams();
+  const oauthError = OAuthErrorSchema.safeParse(params.get('oauth_error'));
+  const linkTicket = params.get('link');
+  const linkProvider = OAuthProviderSchema.safeParse(params.get('provider'));
 
   const [email, setEmail] = useState((location.state as { email?: string } | null)?.email ?? '');
   const [password, setPassword] = useState('');
@@ -67,6 +76,9 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 
     try {
       await (isLogin ? login({ email, password }) : register({ email, password })).unwrap();
+      // The learner has proven the account is theirs, so the provider account can be tied to it now.
+      // If it does not work out, the sign-in itself still did
+      if (isLogin && linkTicket) await linkIdentity({ ticket: linkTicket });
       // The session starts in the store, which redirects this page
     } catch (error) {
       const apiError = apiErrorOf(error);
@@ -121,6 +133,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
             {t('auth.wrong.after')}
           </Banner>
         )}
+        {oauthError.success && <Banner>{t(`auth.social.errors.${oauthError.data}`)}</Banner>}
+        {linkTicket && linkProvider.success && (
+          <Banner>
+            {t('auth.social.link', { name: t(`auth.social.names.${linkProvider.data}`) })}
+          </Banner>
+        )}
         {serverMessage && <Banner>{serverMessage}</Banner>}
 
         <TextField
@@ -163,6 +181,8 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           {loading && <Spinner />}
           {submitLabel}
         </Button>
+
+        <SocialSignIn />
 
         <p className="m-0 text-center text-[13px] leading-[18px] font-semibold text-text-2">
           {t('auth.terms')}

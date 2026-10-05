@@ -15,7 +15,7 @@ import { useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAnalyzePositionMutation } from '../../app/api';
+import { useAnalyzePositionMutation, useEntitlementsQuery } from '../../app/api';
 import { Banner } from '../../shared/ui/Banner';
 import { BottomSheet } from '../../shared/ui/BottomSheet';
 import { Button } from '../../shared/ui/Button';
@@ -64,6 +64,7 @@ export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
   const boardSize = useBoardSize();
   const [editor, dispatch] = useReducer(editorReducer, undefined, initialEditorState);
   const [analyze, analysis] = useAnalyzePositionMutation();
+  const entitlements = useEntitlementsQuery();
   const [fenDraft, setFenDraft] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   // The position that was sent: a look at an older one says nothing about this one
@@ -86,7 +87,9 @@ export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
   const failed = current && analysis.isError;
   const serverError = failed ? apiErrorOf(analysis.error) : null;
   const busy = failed && statusOf(analysis.error) === HTTP_UNAVAILABLE;
-  const limited = serverError?.code === 'analysis.limit';
+  // Premium has no limit, the server sends null then
+  const { left, limit } = entitlements.data?.analysis ?? { left: null, limit: null };
+  const limited = serverError?.code === 'analysis.limit' || left === 0;
   const draftInvalid = fenDraft !== null && fromFen(fenDraft) === null;
   const arrows = result?.best
     ? [
@@ -318,6 +321,11 @@ export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
         label={loading ? t('analysis.analyzing') : t('analysis.analyze')}
         onPress={run}
       />
+      {left !== null && limit !== null && (
+        <Text style={[typography.small, { color: colors.text2, textAlign: 'center' }]}>
+          {t('analysis.attemptsLeft', { left, limit })}
+        </Text>
+      )}
 
       {paletteOpen && (
         <BottomSheet label={t('analysis.editor.pieces')} onClose={() => setPaletteOpen(false)}>

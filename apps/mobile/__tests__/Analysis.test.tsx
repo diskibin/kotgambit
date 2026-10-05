@@ -24,7 +24,16 @@ const ANALYSIS = {
   depth: 14,
 };
 
+const entitlements = (left: number | null) => ({
+  premium: left === null,
+  puzzles: { limit: 10, left: 10 },
+  analysis: { limit: left === null ? null : 5, left },
+  fullReview: false,
+  cards: false,
+});
+
 let analyzed: string[];
+let attemptsLeft: number | null;
 
 type Routes = Parameters<typeof mockApi>[0];
 
@@ -34,14 +43,17 @@ function routes(over: Routes = {}): Routes {
     ...HOME,
     'POST /analysis/position': async (request) => {
       analyzed.push(((await request.json()) as { fen: string }).fen);
+      if (attemptsLeft !== null) attemptsLeft -= 1;
       return json(ANALYSIS);
     },
+    'GET /entitlements': () => json(entitlements(attemptsLeft)),
     ...over,
   };
 }
 
 beforeEach(async () => {
   analyzed = [];
+  attemptsLeft = 5;
   await Keychain.setGenericPassword('refresh-token', 'stored-refresh', {
     service: 'kotgambit.refresh-token',
   });
@@ -118,6 +130,28 @@ describe('the analysis', () => {
     expect(screen.getByText('★ e4')).toBeOnTheScreen();
     expect(screen.getByText('1.e4 e5')).toBeOnTheScreen();
     expect(screen.getByText('-1.1')).toBeOnTheScreen();
+  });
+
+  it('counts the attempts that are left out of the five of the day', async () => {
+    await openEditor();
+    expect(await screen.findByText('Осталось попыток: 5 из 5')).toBeOnTheScreen();
+    await press('Анализировать');
+    expect(await screen.findByText('Осталось попыток: 4 из 5')).toBeOnTheScreen();
+  });
+
+  it('says nothing about attempts to premium', async () => {
+    attemptsLeft = null;
+    await openEditor();
+    await screen.findByRole('button', { name: 'Анализировать' });
+    expect(screen.queryByText(/Осталось попыток/)).not.toBeOnTheScreen();
+  });
+
+  it('turns the button off and offers premium when no attempts are left', async () => {
+    attemptsLeft = 0;
+    await openEditor();
+    expect(await screen.findByText('Осталось попыток: 0 из 5')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Анализировать' })).toBeDisabled();
+    expect(screen.getByText('Анализы на сегодня закончились')).toBeOnTheScreen();
   });
 
   it('forgets the look when the position changes', async () => {

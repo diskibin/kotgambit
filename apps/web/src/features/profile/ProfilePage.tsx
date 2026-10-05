@@ -10,6 +10,7 @@ import { Button } from '../../shared/ui/Button';
 import { LockIcon } from '../../shared/ui/icons';
 import { Mascot } from '../mascot/Mascot';
 import { MonthCalendar, RatingGraph } from './Progress';
+import { LinkedAccounts } from './LinkedAccounts';
 import { Wardrobe } from './Wardrobe';
 import { useScheme } from '../theme/useScheme';
 
@@ -121,6 +122,7 @@ export function ProfilePage() {
                 </Button>
               </section>
               <Wardrobe wardrobe={data.wardrobe} />
+              <LinkedAccounts />
             </div>
 
             <div className="flex flex-col gap-6">

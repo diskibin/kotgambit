@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_URL, renderApp, USER } from '../../test/renderApp';
 
 const AUTH = { accessToken: 'token-1', expiresIn: 900, user: USER };
@@ -78,6 +78,11 @@ beforeEach(() => {
         : new HttpResponse(null, { status: 401 }),
     ),
     http.get(`${API_URL}/profile`, () => HttpResponse.json(PROFILE)),
+    // Nothing is tied and no provider is on until a test says so
+    http.get(`${API_URL}/auth/identities`, () =>
+      HttpResponse.json({ identities: [], hasPassword: true }),
+    ),
+    http.get(`${API_URL}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] })),
     http.post(`${API_URL}/cards/next`, () => {
       nextCalls += 1;
       return HttpResponse.json(
@@ -308,5 +313,118 @@ describe('the cards', () => {
       await screen.findByText('Не получилось взять карточку. Попробуй ещё раз.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Повторить' })).toBeInTheDocument();
+  });
+});
+
+describe('the accounts for sign-in', () => {
+  const identities = (tied: string[], hasPassword = true) =>
+    server.use(
+      http.get(`${API_URL}/auth/identities`, () =>
+        HttpResponse.json({
+          identities: tied.map((provider) => ({ provider, email: 'cat@example.com' })),
+          hasPassword,
+        }),
+      ),
+      http.get(`${API_URL}/auth/oauth/providers`, () =>
+        HttpResponse.json({ providers: ['yandex', 'vk', 'google'] }),
+      ),
+    );
+
+  it('shows which services are tied to the account', async () => {
+    identities(['yandex', 'google']);
+    renderApp('/profile');
+    const section = await screen.findByRole('region', { name: 'Привязанные аккаунты' });
+
+    expect(within(section).getAllByText('Привязан')).toHaveLength(2);
+    expect(within(section).getByText('Не привязан')).toBeInTheDocument();
+    expect(within(section).getByRole('button', { name: 'Отвязать Яндекс' })).toBeInTheDocument();
+    expect(within(section).getByRole('button', { name: 'Привязать VK' })).toBeInTheDocument();
+    expect(within(section).getByRole('button', { name: 'Отвязать Google' })).toBeInTheDocument();
+  });
+
+  it('is not shown when no service is on and none is tied', async () => {
+    renderApp('/profile');
+    await screen.findByText('Дмитрий');
+    expect(screen.queryByRole('region', { name: 'Привязанные аккаунты' })).not.toBeInTheDocument();
+  });
+
+  it('unlinks a service and shows it as free again', async () => {
+    const user = userEvent.setup();
+    let tied = ['yandex', 'google'];
+    server.use(
+      http.get(`${API_URL}/auth/identities`, () =>
+        HttpResponse.json({
+          identities: tied.map((provider) => ({ provider, email: null })),
+          hasPassword: true,
+        }),
+      ),
+      http.get(`${API_URL}/auth/oauth/providers`, () =>
+        HttpResponse.json({ providers: ['yandex', 'vk', 'google'] }),
+      ),
+      http.delete(`${API_URL}/auth/identities/yandex`, () => {
+        tied = ['google'];
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderApp('/profile');
+    await user.click(await screen.findByRole('button', { name: 'Отвязать Яндекс' }));
+
+    expect(await screen.findByRole('button', { name: 'Привязать Яндекс' })).toBeInTheDocument();
+  });
+
+  it('says why the last way in cannot be removed', async () => {
+    const user = userEvent.setup();
+    identities(['yandex'], false);
+    server.use(
+      http.delete(`${API_URL}/auth/identities/yandex`, () =>
+        HttpResponse.json(
+          { code: 'oauth.last_method', message: 'Это твой единственный способ входа.' },
+          { status: 409 },
+        ),
+      ),
+    );
+    renderApp('/profile');
+    await user.click(await screen.findByRole('button', { name: 'Отвязать Яндекс' }));
+
+    expect(await screen.findByText('Это твой единственный способ входа.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Отвязать Яндекс' })).toBeInTheDocument();
+  });
+
+  it('asks the server for the page of the service and goes there', async () => {
+    const user = userEvent.setup();
+    identities([]);
+    let sent: unknown;
+    server.use(
+      http.post(`${API_URL}/auth/oauth/vk/link-start`, async ({ request }) => {
+        sent = await request.json();
+        return HttpResponse.json({ url: 'http://localhost:3000/auth/oauth/vk/start?intent=x' });
+      }),
+    );
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+    renderApp('/profile');
+    await user.click(await screen.findByRole('button', { name: 'Привязать VK' }));
+
+    await waitFor(() =>
+      expect(assign).toHaveBeenCalledWith('http://localhost:3000/auth/oauth/vk/start?intent=x'),
+    );
+    expect(sent).toEqual({ client: 'web' });
+    vi.unstubAllGlobals();
+  });
+
+  it('says what happened when the learner comes back from the service', async () => {
+    identities(['yandex']);
+    renderApp('/profile?linked=yandex');
+    expect(
+      await screen.findByText('Яндекс привязан. Теперь можно входить и так.'),
+    ).toBeInTheDocument();
+  });
+
+  it('says calmly why the account was not tied', async () => {
+    identities([]);
+    renderApp('/profile?oauth_error=taken');
+    expect(
+      await screen.findByText('Этот аккаунт уже привязан к другому профилю.'),
+    ).toBeInTheDocument();
   });
 });

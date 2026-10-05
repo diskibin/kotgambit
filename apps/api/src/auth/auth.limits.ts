@@ -21,6 +21,7 @@ export const AUTH_LIMITS = {
     windowSeconds: 15 * MINUTE,
     by: 'ip',
   },
+  oauthLinkPerUser: { name: 'oauth-link-user', limit: 20, windowSeconds: HOUR, by: 'user' },
   oauthExchangePerIp: {
     name: 'oauth-exchange-ip',
     limit: 30,

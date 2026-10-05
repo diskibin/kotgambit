@@ -6,14 +6,8 @@ import { createTestApp } from '../../../test/create-app.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { RedisService } from '../../redis/redis.service.js';
 import { REFRESH_COOKIE } from '../refresh-cookie.js';
-import {
-  OAUTH_ADAPTERS,
-  OAuthProviderError,
-  type AuthUrlParams,
-  type ExchangeParams,
-  type OAuthProfile,
-  type OAuthProviderAdapter,
-} from './oauth-provider.js';
+import { FakeProvider } from '../../../test/fake-oauth-provider.js';
+import { OAUTH_ADAPTERS, type OAuthProfile } from './oauth-provider.js';
 
 const WEB_URL = 'http://localhost:5173';
 const COOKIE = 'kg_oauth';
@@ -23,37 +17,6 @@ const PROFILE: OAuthProfile = {
   emailVerified: true,
   displayName: 'Гамбит',
 };
-
-/** A provider that answers from memory, so the flow can be walked through without the network. */
-class FakeProvider implements OAuthProviderAdapter {
-  profile: OAuthProfile = PROFILE;
-  failExchange = false;
-  lastVerifier = '';
-  lastQuery: Record<string, string> = {};
-
-  constructor(readonly id: OAuthProviderAdapter['id']) {}
-
-  buildAuthUrl({ state, codeChallenge, redirectUri }: AuthUrlParams): string {
-    const url = new URL(`https://${this.id}.example/authorize`);
-    url.search = new URLSearchParams({
-      state,
-      code_challenge: codeChallenge,
-      redirect_uri: redirectUri,
-    }).toString();
-    return url.toString();
-  }
-
-  exchangeCode({ codeVerifier, query }: ExchangeParams): Promise<string> {
-    this.lastVerifier = codeVerifier;
-    this.lastQuery = query;
-    if (this.failExchange) return Promise.reject(new OAuthProviderError('the code was refused'));
-    return Promise.resolve('access-token');
-  }
-
-  fetchProfile(): Promise<OAuthProfile> {
-    return Promise.resolve(this.profile);
-  }
-}
 
 describe('sign-in with a provider', () => {
   let app: NestFastifyApplication;

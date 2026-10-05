@@ -4,10 +4,12 @@ import {
   OAuthClientSchema,
   OAuthExchangeRequestSchema,
   OAuthLinkRequestSchema,
+  OAuthLinkStartRequestSchema,
   OAuthProviderSchema,
   type AuthResponse,
   type OAuthClient,
   type OAuthProviderId,
+  type OAuthLinkStartResponse,
   type OAuthProvidersResponse,
 } from '@kotgambit/contracts';
 import {
@@ -42,9 +44,11 @@ const BROWSER_COOKIE = 'kg_oauth';
 const BROWSER_COOKIE_PATH = '/auth/oauth';
 const BROWSER_COOKIE_SECONDS = 10 * 60;
 const SIGNED_IN_PATH = '/learn';
+const PROFILE_PATH = '/profile';
 
 type Exchange = z.output<typeof OAuthExchangeRequestSchema>;
 type Link = z.output<typeof OAuthLinkRequestSchema>;
+type LinkStart = z.output<typeof OAuthLinkStartRequestSchema>;
 
 function providerOf(value: string): OAuthProviderId {
   const parsed = OAuthProviderSchema.safeParse(value);
@@ -80,12 +84,14 @@ export class OAuthController {
   async start(
     @Param('provider') provider: string,
     @Query('client') clientParam: string | undefined,
+    @Query('intent') intent: string | undefined,
     @Res() reply: FastifyReply,
   ): Promise<void> {
     const client = OAuthClientSchema.safeParse(clientParam);
     const { url, browser } = await this.oauth.begin(
       providerOf(provider),
       client.success ? client.data : 'web',
+      intent,
     );
     void reply.setCookie(BROWSER_COOKIE, browser, {
       httpOnly: true,
@@ -123,6 +129,19 @@ export class OAuthController {
     return { ...session.auth, refreshToken: session.refreshToken };
   }
 
+  /** A signed-in learner ties one more provider to the account: the browser cannot send the token, so it gets an intent. */
+  @Post(':provider/link-start')
+  @UseGuards(AccessTokenGuard)
+  @RateLimit(AUTH_LIMITS.oauthLinkPerUser)
+  @HttpCode(HttpStatus.OK)
+  async linkStart(
+    @CurrentUserId() userId: string,
+    @Param('provider') provider: string,
+    @Body(new ZodValidationPipe(OAuthLinkStartRequestSchema)) body: LinkStart,
+  ): Promise<OAuthLinkStartResponse> {
+    return { url: await this.oauth.startLinking(userId, providerOf(provider), body.client) };
+  }
+
   @Post('link')
   @UseGuards(AccessTokenGuard)
   @RateLimit(AUTH_LIMITS.oauthExchangePerIp)
@@ -141,6 +160,7 @@ export class OAuthController {
   ): Promise<string> {
     const params = new URLSearchParams();
     if (outcome.kind === 'error') params.set(this.errorParam(outcome.client), outcome.error);
+    if (outcome.kind === 'linked') params.set('linked', provider);
     if (outcome.kind === 'link') {
       params.set('link', outcome.ticket);
       params.set('provider', provider);
@@ -157,10 +177,10 @@ export class OAuthController {
         return `${this.config.webUrl}${SIGNED_IN_PATH}`;
       }
     }
+    // Tying an account ends in the profile, where it was started, the other outcomes on the login page
+    const webPath = outcome.linking ? PROFILE_PATH : OAUTH_WEB_PATH;
     const base =
-      outcome.client === 'mobile'
-        ? OAUTH_MOBILE_CALLBACK
-        : `${this.config.webUrl}${OAUTH_WEB_PATH}`;
+      outcome.client === 'mobile' ? OAUTH_MOBILE_CALLBACK : `${this.config.webUrl}${webPath}`;
     return `${base}?${params.toString()}`;
   }
 

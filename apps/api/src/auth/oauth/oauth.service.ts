@@ -26,6 +26,8 @@ const STATE_TTL_SECONDS = 10 * 60;
 // The deep link hands the code to the app at once, so it lives only as long as that takes
 const CODE_TTL_SECONDS = 60;
 const TICKET_TTL_SECONDS = 10 * 60;
+// A learner who taps "link" is sent to the browser at once
+const INTENT_TTL_SECONDS = 5 * 60;
 const RANDOM_BYTES = 32;
 
 interface PendingSignIn {
@@ -34,6 +36,8 @@ interface PendingSignIn {
   codeVerifier: string;
   /** Hash of the value in the cookie of the browser that started the sign-in. */
   browser: string;
+  /** Set when a signed-in learner ties the provider to their account instead of signing in. */
+  linkUserId?: string;
 }
 
 interface PendingLink {
@@ -42,10 +46,12 @@ interface PendingLink {
   email: string;
 }
 
+/** `linking` tells where the learner goes back to: the profile after tying an account, the sign-in screen otherwise. */
 export type SignInOutcome =
-  | { client: OAuthClient; kind: 'signed-in'; userId: string }
-  | { client: OAuthClient; kind: 'link'; ticket: string }
-  | { client: OAuthClient; kind: 'error'; error: OAuthError };
+  | { client: OAuthClient; linking: false; kind: 'signed-in'; userId: string }
+  | { client: OAuthClient; linking: false; kind: 'link'; ticket: string }
+  | { client: OAuthClient; linking: true; kind: 'linked' }
+  | { client: OAuthClient; linking: boolean; kind: 'error'; error: OAuthError };
 
 const token = () => randomBytes(RANDOM_BYTES).toString('base64url');
 const sha256 = (value: string) => createHash('sha256').update(value).digest();
@@ -71,12 +77,36 @@ export class OAuthService {
     return OAUTH_PROVIDERS.filter((id) => this.adapters.has(id));
   }
 
+  /** The address the browser opens to tie one more provider to the account of a signed-in learner. */
+  async startLinking(
+    userId: string,
+    provider: OAuthProviderId,
+    client: OAuthClient,
+  ): Promise<string> {
+    this.adapter(provider);
+    const intent = token();
+    await this.redis.client.set(
+      this.intentKey(intent),
+      JSON.stringify({ userId }),
+      'EX',
+      INTENT_TTL_SECONDS,
+    );
+    return `${this.config.apiUrl}/auth/oauth/${provider}/start?${new URLSearchParams({ client, intent })}`;
+  }
+
   /** Returns the page of the provider and the value for the cookie that ties the sign-in to this browser. */
   async begin(
     provider: OAuthProviderId,
     client: OAuthClient,
+    intent?: string,
   ): Promise<{ url: string; browser: string }> {
     const adapter = this.adapter(provider);
+    let linkUserId: string | undefined;
+    if (intent) {
+      const raw = await this.redis.client.getdel(this.intentKey(intent));
+      if (!raw) throw new AppError('auth.link_expired', HttpStatus.BAD_REQUEST);
+      linkUserId = (JSON.parse(raw) as { userId: string }).userId;
+    }
     const state = token();
     const codeVerifier = token();
     const browser = token();
@@ -85,6 +115,7 @@ export class OAuthService {
       client,
       codeVerifier,
       browser: sha256(browser).toString('hex'),
+      ...(linkUserId ? { linkUserId } : {}),
     };
     await this.redis.client.set(
       this.stateKey(state),
@@ -109,13 +140,20 @@ export class OAuthService {
     const pending = await this.takeState(query['state']);
     // Without a valid state it is unknown who started this, the web app is the safe place to answer
     if (!pending || pending.provider !== provider || !this.sameBrowser(pending, browser)) {
-      return { client: pending?.client ?? 'web', kind: 'error', error: 'expired' };
+      return {
+        client: pending?.client ?? 'web',
+        linking: pending?.linkUserId !== undefined,
+        kind: 'error',
+        error: 'expired',
+      };
     }
     const { client } = pending;
+    const linking = pending.linkUserId !== undefined;
     const code = query['code'];
     if (query['error'] || !code) {
       return {
         client,
+        linking,
         kind: 'error',
         error: query['error'] === 'access_denied' ? 'cancelled' : 'failed',
       };
@@ -137,9 +175,12 @@ export class OAuthService {
       this.logger.warn(
         `Sign-in with ${provider} failed: ${error instanceof Error ? error.message : 'unknown'}`,
       );
-      return { client, kind: 'error', error: 'failed' };
+      return { client, linking, kind: 'error', error: 'failed' };
     }
-    return { client, ...(await this.resolve(provider, profile)) };
+    if (pending.linkUserId) {
+      return { client, ...(await this.attach(pending.linkUserId, provider, profile)) };
+    }
+    return { client, linking: false, ...(await this.resolve(provider, profile)) };
   }
 
   /** The app swaps the one-time code of the deep link for a session. */
@@ -182,6 +223,32 @@ export class OAuthService {
       if (isUniqueViolation(error)) throw new AppError('oauth.identity_taken', HttpStatus.CONFLICT);
       throw error;
     }
+  }
+
+  /** The learner is signed in already, so what the provider says about the email does not matter here. */
+  private async attach(
+    userId: string,
+    provider: OAuthProviderId,
+    profile: OAuthProfile,
+  ): Promise<
+    { linking: true; kind: 'linked' } | { linking: true; kind: 'error'; error: OAuthError }
+  > {
+    const key = { provider_providerUserId: { provider, providerUserId: profile.providerUserId } };
+    const owner = await this.prisma.identity.findUnique({ where: key, select: { userId: true } });
+    if (owner) {
+      return owner.userId === userId
+        ? { linking: true, kind: 'linked' }
+        : { linking: true, kind: 'error', error: 'taken' };
+    }
+    try {
+      await this.prisma.identity.create({
+        data: { userId, provider, providerUserId: profile.providerUserId, email: profile.email },
+      });
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+      return { linking: true, kind: 'error', error: 'taken' };
+    }
+    return { linking: true, kind: 'linked' };
   }
 
   private async resolve(
@@ -269,6 +336,7 @@ export class OAuthService {
     return `${this.config.apiUrl}/auth/oauth/${provider}/callback`;
   }
 
+  private intentKey = (intent: string) => `oauth:intent:${intent}`;
   private stateKey = (state: string) => `oauth:state:${state}`;
   private codeKey = (code: string) => `oauth:code:${code}`;
   private ticketKey = (ticket: string) => `oauth:link:${ticket}`;

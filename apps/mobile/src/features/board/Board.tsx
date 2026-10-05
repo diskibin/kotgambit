@@ -24,6 +24,7 @@ import { boardHighlight, boardPalette, type BoardPalette } from '../../theme/boa
 import { useUiPreferences } from '../settings/useUiPreferences';
 import { useTheme, type Colors } from '../../theme/ThemeProvider';
 import { radius, shashka, size as sizes } from '../../theme/theme';
+import type { PieceSet } from '@kotgambit/preferences';
 import { Piece } from './Piece';
 
 // A drag starts only after the finger travels this far, so that a tap stays a tap
@@ -182,6 +183,7 @@ interface CellProps {
   disabled: boolean;
   colors: Colors;
   palette: BoardPalette;
+  pieceSet: PieceSet;
   onPress: (square: Square) => void;
   onTouchStart: (square: Square, x: number, y: number) => void;
 }
@@ -207,6 +209,7 @@ const Cell = memo(function Cell({
   disabled,
   colors,
   palette,
+  pieceSet,
   onPress,
   onTouchStart,
 }: CellProps) {
@@ -277,7 +280,7 @@ const Cell = memo(function Cell({
       )}
       {piece && (
         <View style={{ opacity: dimmed ? 0.4 : 1 }}>
-          <Piece color={piece.color} type={piece.type} size={cell * PIECE_SCALE} />
+          <Piece color={piece.color} type={piece.type} size={cell * PIECE_SCALE} set={pieceSet} />
         </View>
       )}
       {target && !piece && (
@@ -576,6 +579,7 @@ export function Board({
               disabled={disabled}
               colors={colors}
               palette={palette}
+              pieceSet={preferences.pieceSet}
               onPress={handlePress}
               onTouchStart={handleTouchStart}
             />
@@ -597,6 +601,7 @@ export function Board({
               color={drag.piece.color}
               type={drag.piece.type}
               size={cell * PIECE_SCALE * DRAG_PIECE_SCALE}
+              set={preferences.pieceSet}
             />
           </View>
         )}
@@ -641,6 +646,7 @@ export function Board({
                     color={sideToMove}
                     type={piece}
                     size={cell * PIECE_SCALE - PROMOTION_BORDER}
+                    set={preferences.pieceSet}
                   />
                 </Pressable>
               ))}

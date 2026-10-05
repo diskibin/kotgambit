@@ -25,6 +25,7 @@ import { useTheme } from '../../theme/ThemeProvider';
 import { radius, screenPadding, shashka, size, space, typography } from '../../theme/theme';
 import { Board } from '../board/Board';
 import { Piece } from '../board/Piece';
+import { useUiPreferences } from '../settings/useUiPreferences';
 import { useBoardSize } from '../lessons/StepFrame';
 import { Mascot } from '../mascot/Mascot';
 import { PremiumNudge } from '../premium/PremiumNudge';
@@ -62,6 +63,7 @@ export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
   const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const boardSize = useBoardSize();
+  const preferences = useUiPreferences();
   const [editor, dispatch] = useReducer(editorReducer, undefined, initialEditorState);
   const [analyze, analysis] = useAnalyzePositionMutation();
   const entitlements = useEntitlementsQuery();
@@ -362,7 +364,12 @@ export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
                       backgroundColor: selected ? colors.brandTint : colors.surface,
                     }}
                   >
-                    <Piece color={color} type={type} size={PIECE_CELL - 12} />
+                    <Piece
+                      color={color}
+                      type={type}
+                      size={PIECE_CELL - 12}
+                      set={preferences.pieceSet}
+                    />
                   </Pressable>
                 );
               }),

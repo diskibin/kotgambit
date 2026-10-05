@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import * as Keychain from 'react-native-keychain';
 import App from '../App';
 import { makeStore } from '../src/app/store';
@@ -97,6 +97,23 @@ describe('the settings', () => {
     fireEvent.press(await screen.findByRole('tab', { name: 'Тёмная' }));
     expect(screen.getByRole('tab', { name: 'Тёмная' })).toBeSelected();
     fireEvent.press(screen.getByRole('radio', { name: 'Дерево' }));
+    expect(screen.getByRole('radio', { name: 'Дерево' })).toBeSelected();
+  });
+
+  it('offers four sets of pieces and chooses one, the board stays as it was', async () => {
+    await openSettings();
+    const group = await screen.findByLabelText('Набор фигур');
+    expect(
+      within(group)
+        .getAllByRole('radio')
+        .map((radio) => radio.props.accessibilityLabel),
+    ).toEqual(['Гамбит', 'Классика', 'Тёплые', 'Линии']);
+
+    fireEvent.press(screen.getByRole('radio', { name: 'Дерево' }));
+    fireEvent.press(within(group).getByRole('radio', { name: 'Тёплые' }));
+
+    expect(within(group).getByRole('radio', { name: 'Тёплые' })).toBeSelected();
+    expect(within(group).getByRole('radio', { name: 'Гамбит' })).not.toBeSelected();
     expect(screen.getByRole('radio', { name: 'Дерево' })).toBeSelected();
   });
 

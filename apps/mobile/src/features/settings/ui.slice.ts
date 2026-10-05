@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import {
   DEFAULT_PREFERENCES,
   type BoardTheme,
+  type PieceSet,
   type Preferences,
   type ThemePreference,
 } from '@kotgambit/preferences';
@@ -24,6 +25,9 @@ export const uiSlice = createSlice({
     boardThemeChanged(state, action: PayloadAction<BoardTheme>) {
       state.boardTheme = action.payload;
     },
+    pieceSetChanged(state, action: PayloadAction<PieceSet>) {
+      state.pieceSet = action.payload;
+    },
     coordinatesChanged(state, action: PayloadAction<boolean>) {
       state.coordinates = action.payload;
     },
@@ -40,6 +44,7 @@ export const {
   preferencesLoaded,
   themeChanged,
   boardThemeChanged,
+  pieceSetChanged,
   coordinatesChanged,
   reduceMotionChanged,
   vibrationChanged,

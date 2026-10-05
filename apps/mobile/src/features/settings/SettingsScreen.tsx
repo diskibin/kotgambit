@@ -1,6 +1,12 @@
 import { monthGenitive } from '@kotgambit/game-player';
 import { DAILY_GOAL_MINUTES } from '@kotgambit/contracts';
-import { BOARD_THEMES, type BoardTheme, type ThemePreference } from '@kotgambit/preferences';
+import {
+  BOARD_THEMES,
+  PIECE_SETS,
+  type BoardTheme,
+  type PieceSet,
+  type ThemePreference,
+} from '@kotgambit/preferences';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
@@ -24,9 +30,11 @@ import { boardPalette } from '../../theme/board';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, screenPadding, shashka, size, space, typography } from '../../theme/theme';
 import { useSignOut } from '../auth/useSignOut';
+import { Piece } from '../board/Piece';
 import { Mascot } from '../mascot/Mascot';
 import {
   boardThemeChanged,
+  pieceSetChanged,
   coordinatesChanged,
   reduceMotionChanged,
   themeChanged,
@@ -162,6 +170,64 @@ function BoardChoice({
   );
 }
 
+// A king, a knight and a pawn, white and black, as small as on a board
+const PREVIEW_PIECES = [
+  { color: 'w', type: 'k' },
+  { color: 'b', type: 'n' },
+  { color: 'w', type: 'p' },
+] as const;
+const PREVIEW_PIECE_SIZE = 26;
+
+function PieceChoice({
+  set,
+  selected,
+  onSelect,
+}: {
+  set: PieceSet;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const label = t(`settings.board.pieceSets.${set}`);
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}
+      onPress={onSelect}
+      style={{
+        flexBasis: '22%',
+        flexGrow: 1,
+        minHeight: size.tapMin,
+        alignItems: 'center',
+        gap: space[1],
+        padding: space[2],
+        borderRadius: radius.control,
+        borderWidth: selected ? shashka.borderLarge : shashka.border,
+        borderColor: selected ? colors.brand : colors.line,
+        backgroundColor: selected ? colors.brandTint : colors.surface,
+      }}
+    >
+      <View
+        importantForAccessibility="no-hide-descendants"
+        style={{ flexDirection: 'row', justifyContent: 'center' }}
+      >
+        {PREVIEW_PIECES.map(({ color, type }) => (
+          <Piece
+            key={`${color}${type}`}
+            color={color}
+            type={type}
+            size={PREVIEW_PIECE_SIZE}
+            set={set}
+          />
+        ))}
+      </View>
+      <Text style={[typography.caption, { color: colors.text }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function formatDate(day: string): string {
   const date = new Date(day);
   return `${date.getUTCDate()} ${monthGenitive(day.slice(0, 10))}`;
@@ -246,6 +312,20 @@ export function SettingsScreen({
                 theme={theme}
                 selected={preferences.boardTheme === theme}
                 onSelect={() => dispatch(boardThemeChanged(theme))}
+              />
+            ))}
+          </View>
+          <View
+            accessibilityRole="radiogroup"
+            accessibilityLabel={t('settings.board.pieces')}
+            style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space[2] }}
+          >
+            {PIECE_SETS.map((set) => (
+              <PieceChoice
+                key={set}
+                set={set}
+                selected={preferences.pieceSet === set}
+                onSelect={() => dispatch(pieceSetChanged(set))}
               />
             ))}
           </View>

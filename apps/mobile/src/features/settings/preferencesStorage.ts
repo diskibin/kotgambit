@@ -22,8 +22,8 @@ export async function loadPreferences(): Promise<Preferences> {
 }
 
 function currentPreferences(store: AppStore): Preferences {
-  const { theme, boardTheme, coordinates, reduceMotion, vibration } = store.getState().ui;
-  return { theme, boardTheme, coordinates, reduceMotion, vibration };
+  const { theme, boardTheme, pieceSet, coordinates, reduceMotion, vibration } = store.getState().ui;
+  return { theme, boardTheme, pieceSet, coordinates, reduceMotion, vibration };
 }
 
 /** Reads the saved choices into the store, then keeps them after every change of them. */

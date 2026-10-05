@@ -800,6 +800,7 @@ export const ru = {
     },
     analyze: 'Анализировать',
     analyzing: 'Анализирую…',
+    attemptsLeft: 'Осталось попыток: {{left}} из {{limit}}',
     placeholder: 'Здесь появится оценка, лучший ход и три варианта',
     loading: {
       title: 'Считаю варианты…',
@@ -1046,7 +1047,7 @@ export const ru = {
         unlimited: 'без лимита',
         brief: 'краткий',
         full: 'полный',
-        analysisFree: '3 в день',
+        analysisFree: '5 в день',
       },
     },
     active: {

@@ -15,7 +15,7 @@ import { apiErrorOf } from '@kotgambit/contracts';
 import { useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router';
-import { useAnalyzePositionMutation } from '../../app/api';
+import { useAnalyzePositionMutation, useEntitlementsQuery } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
@@ -58,6 +58,7 @@ export function AnalysisPage() {
   const status = useAppSelector((state) => state.auth.status);
   const [editor, dispatch] = useReducer(editorReducer, undefined, initialEditorState);
   const [analyze, analysis] = useAnalyzePositionMutation();
+  const entitlements = useEntitlementsQuery(undefined, { skip: status !== 'authenticated' });
   const [fenDraft, setFenDraft] = useState<string | null>(null);
   const [pasteFailed, setPasteFailed] = useState(false);
   // The position that was sent: a look at an older one says nothing about this one
@@ -82,7 +83,9 @@ export function AnalysisPage() {
   const failed = current && analysis.isError;
   const serverError = failed ? apiErrorOf(analysis.error) : null;
   const busy = failed && statusOf(analysis.error) === HTTP_UNAVAILABLE;
-  const limited = serverError?.code === 'analysis.limit';
+  // Premium has no limit, the server sends null then
+  const { left, limit } = entitlements.data?.analysis ?? { left: null, limit: null };
+  const limited = serverError?.code === 'analysis.limit' || left === 0;
   const arrows = result?.best
     ? [
         {
@@ -277,6 +280,11 @@ export function AnalysisPage() {
           <Button large disabled={problem !== null || analysis.isLoading || limited} onClick={run}>
             {analysis.isLoading ? t('analysis.analyzing') : t('analysis.analyze')}
           </Button>
+          {left !== null && limit !== null && (
+            <p className="m-0 text-center text-[14px] font-semibold text-text-2">
+              {t('analysis.attemptsLeft', { left, limit })}
+            </p>
+          )}
 
           {current && analysis.isLoading && (
             <div

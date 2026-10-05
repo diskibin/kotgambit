@@ -8,7 +8,7 @@ import { RedisService } from '../redis/redis.service.js';
 
 // The free limits of the design (web/screens and mobile/screens, the table of Free and Premium)
 export const FREE_PUZZLES_PER_DAY = 10;
-export const FREE_ANALYSES_PER_DAY = 3;
+export const FREE_ANALYSES_PER_DAY = 5;
 
 // The counter of a day outlives the day a little, so that a learner in a far timezone is not reset early
 const COUNTER_TTL_SECONDS = 2 * 24 * 60 * 60;

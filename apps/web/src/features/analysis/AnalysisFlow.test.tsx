@@ -30,10 +30,20 @@ const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterAll(() => server.close());
 
+const ENTITLEMENTS = {
+  premium: false,
+  puzzles: { limit: 10, left: 10 },
+  analysis: { limit: 5, left: 5 },
+  fullReview: false,
+  cards: false,
+};
+
 let analyzed: string[];
+let attemptsLeft: number | null;
 
 beforeEach(() => {
   analyzed = [];
+  attemptsLeft = 5;
   server.use(
     http.post(`${API_URL}/auth/refresh`, () => HttpResponse.json(AUTH)),
     http.get(`${API_URL}/users/me`, ({ request }) =>
@@ -43,8 +53,17 @@ beforeEach(() => {
     ),
     http.post(`${API_URL}/analysis/position`, async ({ request }) => {
       analyzed.push(((await request.json()) as { fen: string }).fen);
+      if (attemptsLeft !== null) attemptsLeft -= 1;
       return HttpResponse.json(ANALYSIS);
     }),
+    http.get(`${API_URL}/entitlements`, () =>
+      HttpResponse.json({
+        ...ENTITLEMENTS,
+        premium: attemptsLeft === null,
+        analysis:
+          attemptsLeft === null ? { limit: null, left: null } : { limit: 5, left: attemptsLeft },
+      }),
+    ),
   );
 });
 afterEach(() => server.resetHandlers());
@@ -151,6 +170,29 @@ describe('the analysis', () => {
     expect(screen.getByText(/Лучший ход по оценке движка/)).toBeInTheDocument();
     expect(screen.getByText('1.e4 e5')).toBeInTheDocument();
     expect(screen.getByText('-1.1')).toBeInTheDocument();
+  });
+
+  it('counts the attempts that are left out of the five of the day', async () => {
+    const user = userEvent.setup();
+    await openEditor();
+    expect(await screen.findByText('Осталось попыток: 5 из 5')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Анализировать' }));
+    expect(await screen.findByText('Осталось попыток: 4 из 5')).toBeInTheDocument();
+  });
+
+  it('says nothing about attempts to premium', async () => {
+    attemptsLeft = null;
+    await openEditor();
+    expect(screen.getByRole('button', { name: 'Анализировать' })).toBeEnabled();
+    expect(screen.queryByText(/Осталось попыток/)).not.toBeInTheDocument();
+  });
+
+  it('turns the button off and offers premium when no attempts are left', async () => {
+    attemptsLeft = 0;
+    await openEditor();
+    expect(await screen.findByText('Осталось попыток: 0 из 5')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Анализировать' })).toBeDisabled();
+    expect(screen.getByText('Анализы на сегодня закончились')).toBeInTheDocument();
   });
 
   it('forgets the look when the position changes', async () => {

@@ -261,6 +261,8 @@ export function endpoints(build: Builder) {
     analyzePosition: build.mutation<PositionAnalysis, string>({
       query: (fen) => ({ url: '/analysis/position', method: 'POST', body: { fen } }),
       responseSchema: PositionAnalysisSchema,
+      // Every look uses up one of the free attempts, so the counter is read again
+      invalidatesTags: ['Billing'],
     }),
     startReview: build.mutation<ReviewStatus, string>({
       query: (gameId) => ({ url: `/games/${encodeURIComponent(gameId)}/review`, method: 'POST' }),

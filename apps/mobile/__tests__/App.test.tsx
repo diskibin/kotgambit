@@ -23,9 +23,13 @@ const ANONYMOUS = {
   'POST /auth/refresh': () => empty(401),
 };
 
-async function fillAndSubmit(mail: string, pass: string, button = 'Войти') {
+async function fillAndSubmit(mail: string, pass: string, button = 'Войти', again = pass) {
   fireEvent.changeText(await screen.findByLabelText('Email'), mail);
   fireEvent.changeText(screen.getByLabelText('Пароль'), pass);
+  // The sign-up asks for the password twice
+  if (button === 'Создать аккаунт') {
+    fireEvent.changeText(screen.getByLabelText('Повтори пароль'), again);
+  }
   fireEvent.press(screen.getByRole('button', { name: button }));
 }
 
@@ -85,6 +89,25 @@ test('shows a calm banner when the password is wrong', async () => {
     'Пароль не подошёл. Проверь раскладку и Caps Lock или восстанови пароль.',
   );
   expect(screen.getByText('Пароль что-то не подошёл.')).toBeOnTheScreen();
+});
+
+test('asks for the password twice and does not call the server when they differ', async () => {
+  const fetchMock = mockApi(ANONYMOUS);
+  await openSignIn();
+  fireEvent.press(await screen.findByRole('tab', { name: 'Регистрация' }));
+  await fillAndSubmit('cat@example.com', 'gambit2026', 'Создать аккаунт', 'gambit2025');
+
+  expect(await screen.findByText('Пароли не совпадают.')).toBeOnTheScreen();
+  expect(fetchMock.mock.calls.some(([request]) => request.url.includes('/auth/register'))).toBe(
+    false,
+  );
+});
+
+test('asks for the password once when signing in', async () => {
+  mockApi(ANONYMOUS);
+  await openSignIn();
+  await screen.findByRole('tab', { name: 'Вход', selected: true });
+  expect(screen.queryByLabelText('Повтори пароль')).not.toBeOnTheScreen();
 });
 
 test('asks for 8 characters when registering', async () => {

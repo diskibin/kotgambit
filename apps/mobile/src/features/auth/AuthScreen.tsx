@@ -2,6 +2,7 @@ import {
   apiErrorOf,
   checkEmail,
   checkPassword,
+  checkPasswordConfirm,
   type EmailProblem,
   type OAuthProviderId,
   type PasswordProblem,
@@ -80,6 +81,8 @@ export function AuthScreen({
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [confirmMismatch, setConfirmMismatch] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailProblem, setEmailProblem] = useState<EmailProblem | null>(null);
   const [passwordProblem, setPasswordProblem] = useState<PasswordProblem | null>(null);
@@ -118,10 +121,13 @@ export function AuthScreen({
   async function submit() {
     const nextEmail = checkEmail(email.trim());
     const nextPassword = checkPassword(password, mode);
+    // Only a sign-up asks for the password twice
+    const nextConfirm = isLogin ? null : checkPasswordConfirm(password, confirm);
     setEmailProblem(nextEmail);
     setPasswordProblem(nextPassword);
+    setConfirmMismatch(nextConfirm !== null);
     setServerMessage(null);
-    if (nextEmail || nextPassword) return;
+    if (nextEmail || nextPassword || nextConfirm) return;
 
     try {
       await (isLogin ? login({ email, password }) : register({ email, password })).unwrap();
@@ -147,6 +153,8 @@ export function AuthScreen({
 
   function switchTo(next: Mode) {
     setMode(next);
+    setConfirm('');
+    setConfirmMismatch(false);
     setEmailProblem(null);
     setPasswordProblem(null);
     setServerMessage(null);
@@ -325,6 +333,22 @@ export function AuthScreen({
           </Pressable>
         }
       />
+
+      {!isLogin && (
+        <TextField
+          label={t('auth.password.confirm')}
+          value={confirm}
+          onChangeText={setConfirm}
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          returnKeyType="done"
+          onSubmitEditing={() => void submit()}
+          disabled={loading}
+          invalid={confirmMismatch}
+          error={confirmMismatch ? t('auth.password.mismatch') : undefined}
+        />
+      )}
 
       <Button
         large

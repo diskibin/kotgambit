@@ -68,6 +68,7 @@ describe('the first steps', () => {
     ).toBeOnTheScreen();
     fireEvent.changeText(screen.getByLabelText('Email'), 'cat@example.com');
     fireEvent.changeText(screen.getByLabelText('Пароль'), 'gambit2026');
+    fireEvent.changeText(screen.getByLabelText('Повтори пароль'), 'gambit2026');
     fireEvent.press(screen.getByRole('button', { name: 'Создать аккаунт' }));
 
     await waitFor(() => expect(signedUp).toBe(true));

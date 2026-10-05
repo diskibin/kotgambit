@@ -7,6 +7,7 @@ import { useMeQuery } from './src/app/api';
 import { useAppDispatch, useAppSelector } from './src/app/hooks';
 import { store as appStore, type AppStore } from './src/app/store';
 import { AuthScreen } from './src/features/auth/AuthScreen';
+import { VerifyEmailReminder } from './src/features/auth/VerifyEmailReminder';
 import { RecoverScreen } from './src/features/auth/RecoverScreen';
 import { SplashScreen } from './src/features/auth/SplashScreen';
 import { CompleteScreen } from './src/features/lessons/CompleteScreen';
@@ -249,6 +250,7 @@ function SignedIn() {
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>{content}</View>
+      <VerifyEmailReminder />
       <TabBar active={tab} onSelect={(next) => setScreen(SCREEN_OF[next])} />
     </View>
   );

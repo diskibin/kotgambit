@@ -17,7 +17,7 @@ export const OAuthClientSchema = z.enum(OAUTH_CLIENTS);
 export type OAuthClient = z.infer<typeof OAuthClientSchema>;
 
 /** Why the sign-in in the browser did not finish, it comes back as the `error` parameter of the redirect. */
-export const OAUTH_ERRORS = ['cancelled', 'failed', 'no_email', 'expired'] as const;
+export const OAUTH_ERRORS = ['cancelled', 'failed', 'no_email', 'expired', 'taken'] as const;
 export const OAuthErrorSchema = z.enum(OAUTH_ERRORS);
 export type OAuthError = z.infer<typeof OAuthErrorSchema>;
 
@@ -31,6 +31,19 @@ export type OAuthExchangeRequest = z.infer<typeof OAuthExchangeRequestSchema>;
  */
 export const OAuthLinkRequestSchema = z.object({ ticket: z.string().min(1).max(200) });
 export type OAuthLinkRequest = z.infer<typeof OAuthLinkRequestSchema>;
+
+/** The ways of signing in an account has: the providers it is tied to, and whether it has a password. */
+export const IdentitiesResponseSchema = z.object({
+  identities: z.array(z.object({ provider: OAuthProviderSchema, email: z.string().nullable() })),
+  hasPassword: z.boolean(),
+});
+export type IdentitiesResponse = z.infer<typeof IdentitiesResponseSchema>;
+
+/** A signed-in learner ties one more provider to the account, the answer is the page to open in the browser. */
+export const OAuthLinkStartRequestSchema = z.object({ client: OAuthClientSchema });
+export type OAuthLinkStartRequest = z.infer<typeof OAuthLinkStartRequestSchema>;
+export const OAuthLinkStartResponseSchema = z.object({ url: z.url() });
+export type OAuthLinkStartResponse = z.infer<typeof OAuthLinkStartResponseSchema>;
 
 /** Where the redirect after the browser sign-in goes, the parameters differ by the outcome. */
 export const OAUTH_WEB_PATH = '/login';

@@ -30,6 +30,9 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm validate:content
       - run: pnpm content-guard
+      # Unused files, dependencies and exports, and licenses of what ships to the learner (PLAN.md 8)
+      - run: pnpm knip
+      - run: pnpm check-licenses
       # The version and checksum are pinned: an engine that changes under us changes every evaluation
       - name: Install Stockfish
         env:

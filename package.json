@@ -19,12 +19,15 @@
     "setup": "pnpm i && pnpm services:up && pnpm --filter @kotgambit/api generate && pnpm --filter @kotgambit/api prisma:deploy && pnpm --filter @kotgambit/api seed",
     "start:local": "pnpm setup && turbo run dev --filter=@kotgambit/api --filter=@kotgambit/web",
     "validate:content": "turbo run build --filter=@kotgambit/content-schema && node tools/validate-content.mjs",
-    "content-guard": "node tools/content-guard.mjs"
+    "content-guard": "node tools/content-guard.mjs",
+    "knip": "knip",
+    "check-licenses": "node tools/check-licenses.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "husky": "^9.1.7",
+    "knip": "^6.39.0",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
     "turbo": "^2.11.6",

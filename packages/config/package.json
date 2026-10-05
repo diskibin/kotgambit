@@ -13,7 +13,6 @@
   "dependencies": {
     "@eslint/js": "^10.0.0",
     "eslint": "^10.11.0",
-    "globals": "^17.0.0",
     "typescript-eslint": "^8.0.0"
   },
   "devDependencies": {

@@ -16,7 +16,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@kotgambit/chess-core": "workspace:*",
     "@kotgambit/contracts": "workspace:*"
   },
   "devDependencies": {

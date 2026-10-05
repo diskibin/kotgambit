@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "ignoreIssues": {
+    "apps/web/src/app/api.ts": ["exports"],
+    "apps/mobile/src/app/api.ts": ["exports"],
+    "apps/mobile/src/theme/theme.ts": ["exports"],
+    "apps/web/src/shared/redirect.ts": ["exports"]
+  },
+  "workspaces": {
+    ".": {
+      "entry": ["tools/*.mjs"]
+    },
+    "apps/api": {
+      "ignoreDependencies": ["@prisma/client", "pg", "@types/pg"]
+    },
+    "apps/mobile": {
+      "entry": ["App.tsx"],
+      "ignoreDependencies": ["react-native-webview", "@babel/preset-env", "@babel/runtime"]
+    }
+  }
+}

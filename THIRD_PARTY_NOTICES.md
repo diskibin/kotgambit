@@ -33,3 +33,17 @@ as they are added to the project.
   is not covered by the license of this repository.
 - The marks of **Yandex** and **VK** on the sign-in buttons are simple stand-ins drawn by the project, not the official logos.
   The official files of the two services replace them (`ProviderIcon.tsx` in the web and the mobile app).
+
+## Chess piece sets
+
+The sets of pieces the learner can choose in the settings (`assets/piece-sets`). The files were taken from the
+Lichess repository (https://github.com/lichess-org/lila, `public/piece`, listed in its COPYING.md) and changed in one
+way only: the CSS of a file was written into the attributes of its elements, so that react-native-svg can draw it. The
+picture is the same pixel for pixel. The names in the app are in brackets.
+
+- **chessnut** by Alexis Luengas (https://github.com/LexLuengas/chessnut-pieces), Apache License 2.0, text in
+  `assets/piece-sets/classic/LICENSE.txt` («Классика»). The files were changed as said above.
+- **rhosgfx** by RhosGFX (https://rhosgfx.itch.io/), CC0 1.0, no conditions («Тёплые»).
+- **totoy** by Kosal Sen, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), credit given here («Линии»).
+  The files were changed as said above.
+- The set «Гамбит» is our own and is covered by LICENSE-ASSETS.

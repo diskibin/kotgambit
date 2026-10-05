@@ -4,10 +4,15 @@ export type ThemePreference = (typeof THEMES)[number];
 export const BOARD_THEMES = ['gambit', 'wood', 'contrast', 'mint'] as const;
 export type BoardTheme = (typeof BOARD_THEMES)[number];
 
+/** The sets of pieces: the cat's own, and three open ones from `assets/piece-sets`. */
+export const PIECE_SETS = ['gambit', 'classic', 'warm', 'lines'] as const;
+export type PieceSet = (typeof PIECE_SETS)[number];
+
 /** What the learner chose on the settings screen and keeps on the device. The server knows none of it. */
 export interface Preferences {
   theme: ThemePreference;
   boardTheme: BoardTheme;
+  pieceSet: PieceSet;
   /** The letters a to h and the numbers 1 to 8 on the edges of the board. */
   coordinates: boolean;
   /** No confetti, jumps or slides, only a soft fade, on top of what the system asks for. */
@@ -20,6 +25,7 @@ export interface Preferences {
 export const DEFAULT_PREFERENCES: Preferences = {
   theme: 'system',
   boardTheme: 'gambit',
+  pieceSet: 'gambit',
   coordinates: true,
   reduceMotion: false,
   vibration: true,
@@ -41,6 +47,7 @@ export function parsePreferences(raw: unknown): Preferences {
     boardTheme: isOneOf(BOARD_THEMES, saved.boardTheme)
       ? saved.boardTheme
       : DEFAULT_PREFERENCES.boardTheme,
+    pieceSet: isOneOf(PIECE_SETS, saved.pieceSet) ? saved.pieceSet : DEFAULT_PREFERENCES.pieceSet,
     coordinates: flag(saved.coordinates, DEFAULT_PREFERENCES.coordinates),
     reduceMotion: flag(saved.reduceMotion, DEFAULT_PREFERENCES.reduceMotion),
     vibration: flag(saved.vibration, DEFAULT_PREFERENCES.vibration),

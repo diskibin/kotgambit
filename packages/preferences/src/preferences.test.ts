@@ -4,6 +4,7 @@ import {
   DEFAULT_PREFERENCES,
   deserializePreferences,
   parsePreferences,
+  PIECE_SETS,
   serializePreferences,
 } from './index.js';
 
@@ -15,6 +16,7 @@ describe('parsePreferences', () => {
     expect(DEFAULT_PREFERENCES).toMatchObject({
       theme: 'system',
       boardTheme: 'gambit',
+      pieceSet: 'gambit',
       coordinates: true,
     });
   });
@@ -38,12 +40,28 @@ describe('parsePreferences', () => {
   });
 });
 
+describe('the sets of pieces', () => {
+  it('are the own set of the cat and three open ones, the own set is the default', () => {
+    expect(PIECE_SETS).toEqual(['gambit', 'classic', 'warm', 'lines']);
+    expect(DEFAULT_PREFERENCES.pieceSet).toBe('gambit');
+    for (const pieceSet of PIECE_SETS) {
+      expect(parsePreferences({ pieceSet }).pieceSet).toBe(pieceSet);
+    }
+  });
+
+  it('fall back to the own set for a name that is not known or a save of an older version', () => {
+    expect(parsePreferences({ pieceSet: 'staunton' }).pieceSet).toBe('gambit');
+    expect(parsePreferences({ theme: 'dark' }).pieceSet).toBe('gambit');
+  });
+});
+
 describe('keeping and reading', () => {
   it('gives back what was kept', () => {
     const chosen = {
       ...DEFAULT_PREFERENCES,
       theme: 'light' as const,
       boardTheme: 'wood' as const,
+      pieceSet: 'lines' as const,
       vibration: false,
     };
     expect(deserializePreferences(serializePreferences(chosen))).toEqual(chosen);

@@ -229,7 +229,7 @@ export const ru = {
       theme: 'Тема доски',
       themes: { gambit: 'Гамбит', wood: 'Дерево', contrast: 'Контраст', mint: 'Мята' },
       pieces: 'Набор фигур',
-      piecesValue: '«Гамбит»',
+      pieceSets: { gambit: 'Гамбит', classic: 'Классика', warm: 'Тёплые', lines: 'Линии' },
       coordinates: {
         title: 'Координаты на доске',
         text: 'Буквы a–h и цифры 1–8 по краям',

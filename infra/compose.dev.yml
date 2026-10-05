@@ -32,6 +32,14 @@ services:
       timeout: 3s
       retries: 10
 
+  # Catches every email the API sends, so that the link of a confirmation or a password reset can be opened
+  # without a mail server. The inbox is on http://localhost:8025, set SMTP_URL=smtp://localhost:1025 in .env
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'
+
 volumes:
   postgres-data:
   redis-data:

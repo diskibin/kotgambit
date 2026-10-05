@@ -57,7 +57,7 @@ pnpm start:local
 `pnpm setup` гонять не нужно: дальше хватит `pnpm services:up` и
 `pnpm dev --filter @kotgambit/api --filter @kotgambit/web`.
 
-Без SMTP письма со ссылками (регистрация, сброс пароля) пишутся в лог API.
+Без `SMTP_URL` письма со ссылками (подтверждение почты, сброс пароля) пишутся в лог API. Чтобы открывать их как настоящие, впиши в `.env` `SMTP_URL=smtp://localhost:1025`: `pnpm services:up` запускает Mailpit, ящик на `http://localhost:8025`.
 
 ### Движок
 

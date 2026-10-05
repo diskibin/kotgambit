@@ -21,6 +21,11 @@ export function checkPassword(
   return null;
 }
 
+/** The second field of the sign-up: what was typed again must be the same, so that a typo does not lock the learner out. */
+export function checkPasswordConfirm(password: string, confirm: string): 'mismatch' | null {
+  return password === confirm ? null : 'mismatch';
+}
+
 /** The API error behind a failed request, if the server sent one in the common format. */
 export function apiErrorOf(error: unknown): ApiError | null {
   if (typeof error !== 'object' || error === null || !('data' in error)) return null;

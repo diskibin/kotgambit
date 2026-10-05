@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { apiErrorOf, checkEmail, checkPassword } from './auth-form.js';
+import { apiErrorOf, checkEmail, checkPassword, checkPasswordConfirm } from './auth-form.js';
 
 describe('checkEmail', () => {
   it('accepts a normal address', () => {
@@ -23,6 +23,18 @@ describe('checkPassword', () => {
     expect(checkPassword('short', 'login')).toBeNull();
     expect(checkPassword('short', 'register')).toBe('tooShort');
     expect(checkPassword('long-enough', 'register')).toBeNull();
+  });
+});
+
+describe('checkPasswordConfirm', () => {
+  it('accepts the same password typed twice', () => {
+    expect(checkPasswordConfirm('gambit2026', 'gambit2026')).toBeNull();
+  });
+
+  it('points out a difference, however small', () => {
+    expect(checkPasswordConfirm('gambit2026', 'gambit2025')).toBe('mismatch');
+    expect(checkPasswordConfirm('gambit2026', 'Gambit2026')).toBe('mismatch');
+    expect(checkPasswordConfirm('gambit2026', '')).toBe('mismatch');
   });
 });
 

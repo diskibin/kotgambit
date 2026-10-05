@@ -1,0 +1,8 @@
+# Whoever is listed here is asked to review a change to these paths (PLAN.md 15.5)
+/.github/ @diskibin
+/infra/ @diskibin
+/tools/ @diskibin
+/apps/api/prisma/ @diskibin
+SECURITY.md @diskibin
+LICENSE @diskibin
+LICENSE-ASSETS @diskibin

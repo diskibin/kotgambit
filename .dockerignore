@@ -1,0 +1,36 @@
+# Keeps secrets, history and heavy folders out of the build context and so out of the images (PLAN.md 15.4)
+.git
+.github
+.husky
+.turbo
+node_modules
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/*.tsbuildinfo
+
+# Secrets and private data
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+keystore.properties
+.secrets
+backups
+premium
+content-private
+
+# Not part of any server image
+apps/mobile
+kot-gambit-design
+docs
+PLAN.md
+CLAUDE.md
+AGENTS.md
+**/*.md
+!**/README.md

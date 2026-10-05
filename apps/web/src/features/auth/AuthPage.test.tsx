@@ -251,8 +251,10 @@ describe('sign-in with a provider', () => {
     expect(screen.getByRole('link', { name: 'Войти через VK' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Войти через Google' })).toBeInTheDocument();
     expect(
-      screen.getAllByRole('link', { name: /^Войти через/ }).map((link) => link.textContent),
-    ).toEqual(['Яндекс', 'VK', 'Google']);
+      screen
+        .getAllByRole('link', { name: /^Войти через/ })
+        .map((link) => link.getAttribute('aria-label')),
+    ).toEqual(['Войти через Яндекс', 'Войти через VK', 'Войти через Google']);
   });
 
   it('shows only the providers that are on', async () => {

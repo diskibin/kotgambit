@@ -23,3 +23,11 @@ as they are added to the project.
 - **Lichess puzzle database** (https://database.lichess.org/#puzzles), released by Lichess under CC0 1.0.
   A selection of it is loaded into the database by `pnpm --filter @kotgambit/api import:puzzles`,
   the data is not stored in this repository except for a few rows used as test fixtures.
+
+## Brand marks of the sign-in services
+
+- **Google "G" icon** (`apps/web/src/features/auth/assets` and `apps/mobile/src/features/auth/assets`) is a file from the official
+  Sign in with Google brand assets (https://developers.google.com/identity/branding-guidelines, light theme, square, no text).
+  It is a trademark of Google LLC, it is used unchanged as the guidelines ask and is not covered by the license of this repository.
+- The marks of **Yandex** and **VK** on the sign-in buttons are simple stand-ins drawn by the project, not the official logos.
+  The official files of the two services replace them (`ProviderIcon.tsx` in the web and the mobile app).

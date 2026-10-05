@@ -29,6 +29,7 @@ import { TextField } from '../../shared/ui/TextField';
 import { useTheme } from '../../theme/ThemeProvider';
 import { screenPadding, size, space, typography } from '../../theme/theme';
 import { Mascot } from '../mascot/Mascot';
+import { ProviderIcon } from './ProviderIcon';
 import { useOAuthDeepLink } from './useOAuthDeepLink';
 
 type Mode = 'login' | 'register';
@@ -349,6 +350,7 @@ export function AuthScreen({
               key={id}
               variant="secondary"
               label={t('auth.social.signInWith', { name: t(`auth.social.names.${id}`) })}
+              icon={<ProviderIcon id={id} />}
               onPress={() => openProvider(id)}
             />
           ))}

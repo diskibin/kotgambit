@@ -15,26 +15,7 @@ import {
   useUnlinkIdentityMutation,
 } from '../../app/api';
 import { Banner } from '../../shared/ui/Banner';
-
-// The marks of the services as the design draws them (web/source/Profile.dc.html). They are brand colors,
-// not part of our palette, so they live here and nowhere else
-const BRAND: Record<OAuthProviderId, { mark: string; className: string; style: object }> = {
-  yandex: {
-    mark: 'Я',
-    className: 'rounded-full text-[16px] text-white',
-    style: { background: '#FC3F1D' },
-  },
-  vk: {
-    mark: 'VK',
-    className: 'rounded-[9px] text-[12px] text-white',
-    style: { background: '#0077FF' },
-  },
-  google: {
-    mark: 'G',
-    className: 'rounded-full border-2 border-line text-[16px]',
-    style: { background: '#FFFFFF', color: '#4285F4' },
-  },
-};
+import { ProviderIcon } from '../auth/ProviderIcon';
 
 /** The services the learner can sign in with, and the way to tie one more to the account or let one go. */
 export function LinkedAccounts() {
@@ -102,16 +83,9 @@ export function LinkedAccounts() {
       {shown.map((id) => {
         const name = t(`auth.social.names.${id}`);
         const tied = linked.has(id);
-        const brand = BRAND[id];
         return (
           <div key={id} className="flex min-h-12 items-center gap-3">
-            <span
-              aria-hidden="true"
-              style={brand.style}
-              className={`flex size-8 shrink-0 items-center justify-center font-extrabold ${brand.className}`}
-            >
-              {brand.mark}
-            </span>
+            <ProviderIcon id={id} />
             <div className="flex grow flex-col">
               <b className="text-[16px]">{name}</b>
               <span className={`text-[13px] font-bold ${tied ? 'text-mint-text' : 'text-text-2'}`}>

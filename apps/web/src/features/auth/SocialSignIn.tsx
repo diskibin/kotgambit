@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { API_URL, useOauthProvidersQuery } from '../../app/api';
 import { buttonClassName } from '../../shared/ui/Button';
+import { ProviderIcon } from './ProviderIcon';
 
 /**
  * Sign-in with a provider: the whole page goes to the API, which sends it on to the provider and brings
@@ -31,6 +32,7 @@ export function SocialSignIn() {
               className: 'px-2',
             })}
           >
+            <ProviderIcon id={id} />
             {t(`auth.social.names.${id}`)}
           </a>
         ))}

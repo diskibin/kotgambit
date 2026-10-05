@@ -10,6 +10,8 @@ import {
 const API_URL = 'https://api.yookassa.ru/v3/payments';
 const TIMEOUT_MS = 10_000;
 const KOPECKS_IN_RUBLE = 100;
+// The limit of the receipt item in the reference
+const MAX_ITEM_DESCRIPTION = 128;
 
 const PaymentResponseSchema = z.object({
   id: z.string().min(1),
@@ -50,6 +52,12 @@ function toProviderPayment(raw: z.infer<typeof PaymentResponseSchema>): Provider
   };
 }
 
+/** How the receipt (54-FZ) is made, when the shop is connected to the receipts of YooKassa. */
+export interface ReceiptSettings {
+  vatCode: number;
+  taxSystemCode: number | null;
+}
+
 /** The YooKassa API over `fetch`: Basic authorization with the shop and the secret key. */
 export class YooKassaProvider implements PaymentProvider {
   private readonly authorization: string;
@@ -58,13 +66,15 @@ export class YooKassaProvider implements PaymentProvider {
     shopId: string,
     secretKey: string,
     private readonly fetchImpl: typeof fetch = fetch,
+    private readonly receipt: ReceiptSettings | null = null,
   ) {
     this.authorization = `Basic ${Buffer.from(`${shopId}:${secretKey}`).toString('base64')}`;
   }
 
   async create(input: CreatePaymentInput): Promise<ProviderPayment> {
+    const amount = { value: formatAmount(input.amountKopecks), currency: 'RUB' };
     const body = {
-      amount: { value: formatAmount(input.amountKopecks), currency: 'RUB' },
+      amount,
       capture: true,
       description: input.description,
       metadata: input.metadata,
@@ -73,12 +83,37 @@ export class YooKassaProvider implements PaymentProvider {
         : {}),
       ...(input.savePaymentMethod ? { save_payment_method: true } : {}),
       ...(input.paymentMethodId ? { payment_method_id: input.paymentMethodId } : {}),
+      ...(this.receipt && input.customerEmail
+        ? { receipt: this.receiptOf(input, amount, this.receipt) }
+        : {}),
     };
     return this.request(API_URL, {
       method: 'POST',
       headers: { 'Idempotence-Key': input.idempotencyKey, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+  }
+
+  /** One item, a service paid in full: that is what a subscription is for the tax office. */
+  private receiptOf(
+    input: CreatePaymentInput,
+    amount: { value: string; currency: string },
+    settings: ReceiptSettings,
+  ) {
+    return {
+      customer: { email: input.customerEmail },
+      items: [
+        {
+          description: input.description.slice(0, MAX_ITEM_DESCRIPTION),
+          quantity: '1.00',
+          amount,
+          vat_code: settings.vatCode,
+          payment_subject: 'service',
+          payment_mode: 'full_payment',
+        },
+      ],
+      ...(settings.taxSystemCode ? { tax_system_code: settings.taxSystemCode } : {}),
+    };
   }
 
   get(id: string): Promise<ProviderPayment> {

@@ -20,6 +20,8 @@ export interface CreatePaymentInput {
   idempotencyKey: string;
   /** Keep the payment method for autopayments, only with the learner's agreement. */
   savePaymentMethod?: boolean;
+  /** Where the receipt goes, when the provider is set up to send one. */
+  customerEmail?: string | undefined;
   /** Charge a payment method that was saved earlier, without the learner. */
   paymentMethodId?: string;
   metadata: Record<string, string>;

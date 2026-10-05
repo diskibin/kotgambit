@@ -15,7 +15,12 @@ import { YooKassaProvider } from './yookassa.provider.js';
       inject: [CONFIG],
       useFactory: (config: AppConfig) =>
         config.billing
-          ? new YooKassaProvider(config.billing.shopId, config.billing.secretKey)
+          ? new YooKassaProvider(
+              config.billing.shopId,
+              config.billing.secretKey,
+              fetch,
+              config.billing.receipt,
+            )
           : null,
     },
     BillingService,

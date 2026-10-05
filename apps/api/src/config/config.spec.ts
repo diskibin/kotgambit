@@ -130,6 +130,42 @@ describe('loadConfig', () => {
     ).toEqual({ clientId: 'v', serviceToken: 'svc' });
   });
 
+  describe('the receipt of a payment', () => {
+    const SHOP = {
+      ...VALID_ENV,
+      YOOKASSA_SHOP_ID: 'shop',
+      YOOKASSA_SECRET_KEY: 'key',
+      BILLING_PRICE_MONTH_RUB: '299',
+      BILLING_PRICE_YEAR_RUB: '1990',
+    };
+
+    it('is off by default', () => {
+      expect(loadConfig(SHOP).billing?.receipt).toBeNull();
+    });
+
+    it('is on with the VAT code "no VAT" when asked for', () => {
+      expect(loadConfig({ ...SHOP, BILLING_RECEIPT: 'true' }).billing?.receipt).toEqual({
+        vatCode: 1,
+        taxSystemCode: null,
+      });
+    });
+
+    it('takes the VAT code and the tax system that were set', () => {
+      expect(
+        loadConfig({
+          ...SHOP,
+          BILLING_RECEIPT: 'true',
+          BILLING_VAT_CODE: '2',
+          BILLING_TAX_SYSTEM_CODE: '3',
+        }).billing?.receipt,
+      ).toEqual({ vatCode: 2, taxSystemCode: 3 });
+    });
+
+    it('refuses a code that does not exist', () => {
+      expect(() => loadConfig({ ...SHOP, BILLING_VAT_CODE: '9' })).toThrow(/BILLING_VAT_CODE/);
+    });
+  });
+
   it('requires REDIS_URL', () => {
     const rest = Object.fromEntries(
       Object.entries(VALID_ENV).filter(([key]) => key !== 'REDIS_URL'),

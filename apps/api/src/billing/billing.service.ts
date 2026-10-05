@@ -117,6 +117,7 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
     const billing = this.requireBilling();
     const provider = this.requireProvider();
     const amountKopecks = billing.prices[request.plan] * KOPECKS_IN_RUBLE;
+    const customerEmail = await this.emailOf(userId);
 
     const payment = await this.prisma.payment.create({
       data: {
@@ -135,6 +136,7 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
         description: `Кот Гамбит, Премиум ${PLAN_TITLES[request.plan]}`,
         returnUrl,
         idempotencyKey: payment.idempotencyKey,
+        customerEmail,
         savePaymentMethod: request.autoRenew,
         metadata: { paymentId: payment.id },
       });
@@ -258,6 +260,7 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
           amountKopecks,
           description: `Кот Гамбит, продление Премиума ${PLAN_TITLES[plan]}`,
           idempotencyKey,
+          customerEmail: await this.emailOf(row.userId),
           paymentMethodId: row.paymentMethodId as string,
           metadata: { paymentId: payment.id },
         });
@@ -393,6 +396,15 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
     const row = await this.prisma.subscription.findUnique({ where: { userId } });
     if (!row) throw new AppError('billing.no_subscription', HttpStatus.CONFLICT);
     return row;
+  }
+
+  /** The address the receipt goes to. */
+  private async emailOf(userId: string): Promise<string | undefined> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    return user?.email;
   }
 
   private requireBilling(): BillingConfig {

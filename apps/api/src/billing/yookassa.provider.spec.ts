@@ -69,6 +69,79 @@ describe('YooKassaProvider', () => {
     });
   });
 
+  describe('the receipt (54-FZ)', () => {
+    const input = {
+      amountKopecks: 14900,
+      description: 'Кот Гамбит, Премиум на месяц',
+      idempotencyKey: 'key-1',
+      customerEmail: 'cat@example.com',
+      metadata: { paymentId: 'ours-1' },
+    };
+    const bodyOf = (fetchMock: ReturnType<typeof provider>['fetchMock']) =>
+      JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
+
+    it('is sent as one service paid in full when the shop is set up for it', async () => {
+      const fetchMock = vi.fn(async () => json(PENDING));
+      const yk = new YooKassaProvider('shop-1', 'secret-1', fetchMock as never, {
+        vatCode: 1,
+        taxSystemCode: null,
+      });
+      await yk.create(input);
+
+      expect(bodyOf({ mock: fetchMock.mock } as never).receipt).toEqual({
+        customer: { email: 'cat@example.com' },
+        items: [
+          {
+            description: 'Кот Гамбит, Премиум на месяц',
+            quantity: '1.00',
+            amount: { value: '149.00', currency: 'RUB' },
+            vat_code: 1,
+            payment_subject: 'service',
+            payment_mode: 'full_payment',
+          },
+        ],
+      });
+    });
+
+    it('carries the tax system and the VAT code that were set', async () => {
+      const fetchMock = vi.fn(async () => json(PENDING));
+      const yk = new YooKassaProvider('shop-1', 'secret-1', fetchMock as never, {
+        vatCode: 2,
+        taxSystemCode: 3,
+      });
+      await yk.create(input);
+      const { receipt } = bodyOf({ mock: fetchMock.mock } as never);
+      expect(receipt.tax_system_code).toBe(3);
+      expect(receipt.items[0].vat_code).toBe(2);
+    });
+
+    it('cuts a long description to what the reference allows', async () => {
+      const fetchMock = vi.fn(async () => json(PENDING));
+      const yk = new YooKassaProvider('shop-1', 'secret-1', fetchMock as never, {
+        vatCode: 1,
+        taxSystemCode: null,
+      });
+      await yk.create({ ...input, description: 'я'.repeat(300) });
+      expect(bodyOf({ mock: fetchMock.mock } as never).receipt.items[0].description).toHaveLength(
+        128,
+      );
+    });
+
+    it('is not sent when the shop is not set up for it, or there is no address', async () => {
+      const plain = provider(json(PENDING));
+      await plain.provider.create(input);
+      expect(bodyOf(plain.fetchMock).receipt).toBeUndefined();
+
+      const fetchMock = vi.fn(async () => json(PENDING));
+      const yk = new YooKassaProvider('shop-1', 'secret-1', fetchMock as never, {
+        vatCode: 1,
+        taxSystemCode: null,
+      });
+      await yk.create({ ...input, customerEmail: undefined });
+      expect(bodyOf({ mock: fetchMock.mock } as never).receipt).toBeUndefined();
+    });
+  });
+
   it('charges a saved payment method without a confirmation', async () => {
     const { fetchMock, provider: yk } = provider(json({ ...PENDING, confirmation: undefined }));
     await yk.create({

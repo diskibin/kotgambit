@@ -77,6 +77,18 @@ const EnvSchema = z.object({
   /** What Premium costs, whole rubles. */
   BILLING_PRICE_MONTH_RUB: z.coerce.number().int().positive().optional(),
   BILLING_PRICE_YEAR_RUB: z.coerce.number().int().positive().optional(),
+  /**
+   * Send a receipt (54-FZ) with every payment. Turn it on when the shop is connected to "Чеки от ЮKassa":
+   * such a shop refuses a payment without one.
+   */
+  BILLING_RECEIPT: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  /** The VAT code of the receipt, 1 is "no VAT" (what a self-employed or a simplified tax payer uses). */
+  BILLING_VAT_CODE: z.coerce.number().int().min(1).max(6).default(1),
+  /** The tax system of the receipt (1 to 6), needed when the shop has several of them. */
+  BILLING_TAX_SYSTEM_CODE: z.coerce.number().int().min(1).max(6).optional(),
   /** How often the server looks for subscriptions to renew, 0 turns the check off. */
   BILLING_RENEWAL_CHECK_MINUTES: z.coerce
     .number()
@@ -113,6 +125,8 @@ export interface BillingConfig {
   /** Whole rubles per plan. */
   prices: { month: number; year: number };
   renewalCheckMinutes: number;
+  /** `null` when payments go without a receipt. */
+  receipt: { vatCode: number; taxSystemCode: number | null } | null;
 }
 
 export interface OAuthConfig {
@@ -223,6 +237,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
             secretKey: values.YOOKASSA_SECRET_KEY,
             prices: { month: values.BILLING_PRICE_MONTH_RUB, year: values.BILLING_PRICE_YEAR_RUB },
             renewalCheckMinutes: values.BILLING_RENEWAL_CHECK_MINUTES,
+            receipt: values.BILLING_RECEIPT
+              ? {
+                  vatCode: values.BILLING_VAT_CODE,
+                  taxSystemCode: values.BILLING_TAX_SYSTEM_CODE ?? null,
+                }
+              : null,
           }
         : null,
     trustProxy: values.TRUST_PROXY,

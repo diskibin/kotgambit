@@ -208,6 +208,9 @@ describe('billing', () => {
         `http://localhost:5173/billing/return?paymentId=${paymentId}&client=web`,
       );
       expect(sent?.idempotencyKey).toBeTruthy();
+      // The receipt of the payment goes to the address of the learner
+      const learner = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+      expect(sent?.customerEmail).toBe(learner.email);
       const row = await prisma.payment.findUniqueOrThrow({ where: { id: paymentId } });
       expect(row).toMatchObject({
         status: 'pending',
@@ -404,6 +407,7 @@ describe('billing', () => {
         amountKopecks: 29_900,
         idempotencyKey: `renewal:${userId}:${end.toISOString()}`,
       });
+      expect(provider.created[0]?.customerEmail).toBeTruthy();
       expect(provider.created[0]?.returnUrl).toBeUndefined();
 
       // Running again before the answer comes does not charge twice

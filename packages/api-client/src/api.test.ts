@@ -960,4 +960,45 @@ describe('billing endpoints', () => {
     await store.dispatch(api.endpoints.linkIdentity.initiate({ ticket: 'ticket-1' }));
     expect(sent).toEqual({ ticket: 'ticket-1' });
   });
+  it('reads the accounts of sign-in and reads them again after one is unlinked', async () => {
+    let reads = 0;
+    let removed = '';
+    server.use(
+      http.get(`${BASE_URL}/auth/identities`, () => {
+        reads += 1;
+        return HttpResponse.json({
+          identities: [{ provider: 'yandex', email: 'cat@example.com' }],
+          hasPassword: true,
+        });
+      }),
+      http.delete(`${BASE_URL}/auth/identities/:provider`, ({ params }) => {
+        removed = String(params['provider']);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { api, store } = setup();
+    const query = store.dispatch(api.endpoints.identities.initiate());
+    expect((await query).data?.hasPassword).toBe(true);
+
+    await store.dispatch(api.endpoints.unlinkIdentity.initiate('yandex'));
+    await vi.waitFor(() => expect(reads).toBe(2));
+    expect(removed).toBe('yandex');
+    query.unsubscribe();
+  });
+
+  it('asks for the page that ties a provider to the account', async () => {
+    let sent: unknown;
+    server.use(
+      http.post(`${BASE_URL}/auth/oauth/google/link-start`, async ({ request }) => {
+        sent = await request.json();
+        return HttpResponse.json({ url: 'http://localhost:3000/auth/oauth/google/start?intent=x' });
+      }),
+    );
+    const { api, store } = setup();
+    const result = await store.dispatch(
+      api.endpoints.startLinkingProvider.initiate({ provider: 'google', client: 'web' }),
+    );
+    expect(sent).toEqual({ client: 'web' });
+    expect(result.data?.url).toContain('/auth/oauth/google/start');
+  });
 });

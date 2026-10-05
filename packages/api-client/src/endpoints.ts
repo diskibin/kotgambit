@@ -1,5 +1,7 @@
 import {
   ActiveGameSchema,
+  IdentitiesResponseSchema,
+  OAuthLinkStartResponseSchema,
   OAuthProvidersResponseSchema,
   SettingsSchema,
   WardrobeSchema,
@@ -41,8 +43,12 @@ import {
   type CheckoutRequest,
   type CheckoutResponse,
   type Entitlements,
+  type IdentitiesResponse,
   type OAuthExchangeRequest,
   type OAuthLinkRequest,
+  type OAuthLinkStartRequest,
+  type OAuthLinkStartResponse,
+  type OAuthProviderId,
   type OAuthProvidersResponse,
   type PaymentStatus,
   type PlansResponse,
@@ -132,6 +138,29 @@ export function endpoints(build: Builder) {
     // Ties the provider account to the one the learner has just signed in to
     linkIdentity: build.mutation<void, OAuthLinkRequest>({
       query: (body) => ({ url: '/auth/oauth/link', method: 'POST', body }),
+      invalidatesTags: ['Identities'],
+    }),
+    // The accounts the learner signs in with: the providers tied to it, and whether it has a password
+    identities: build.query<IdentitiesResponse, void>({
+      query: () => '/auth/identities',
+      responseSchema: IdentitiesResponseSchema,
+      providesTags: ['Identities'],
+    }),
+    // The answer is the page to open in the browser, it ends back in the profile
+    startLinkingProvider: build.mutation<
+      OAuthLinkStartResponse,
+      OAuthLinkStartRequest & { provider: OAuthProviderId }
+    >({
+      query: ({ provider, ...body }) => ({
+        url: `/auth/oauth/${provider}/link-start`,
+        method: 'POST',
+        body,
+      }),
+      responseSchema: OAuthLinkStartResponseSchema,
+    }),
+    unlinkIdentity: build.mutation<void, OAuthProviderId>({
+      query: (provider) => ({ url: `/auth/identities/${provider}`, method: 'DELETE' }),
+      invalidatesTags: ['Identities'],
     }),
     // Web ends the session through its cookie, mobile sends the refresh token it keeps
     logout: build.mutation<void, RefreshRequest | void>({

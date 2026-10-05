@@ -16,6 +16,8 @@
     "prepare": "husky",
     "services:up": "docker compose -f infra/compose.dev.yml up -d --wait",
     "services:down": "docker compose -f infra/compose.dev.yml down",
+    "setup": "pnpm i && pnpm services:up && pnpm --filter @kotgambit/api generate && pnpm --filter @kotgambit/api prisma:deploy && pnpm --filter @kotgambit/api seed",
+    "start:local": "pnpm setup && turbo run dev --filter=@kotgambit/api --filter=@kotgambit/web",
     "validate:content": "turbo run build --filter=@kotgambit/content-schema && node tools/validate-content.mjs",
     "content-guard": "node tools/content-guard.mjs"
   },

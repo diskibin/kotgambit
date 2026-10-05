@@ -24,6 +24,7 @@ import {
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { SpeechBubble } from '../../shared/ui/SpeechBubble';
+import { TermsText } from '../../shared/ui/TermsText';
 import { Spinner } from '../../shared/ui/Spinner';
 import { Tabs } from '../../shared/ui/Tabs';
 import { TextField } from '../../shared/ui/TextField';
@@ -381,9 +382,7 @@ export function AuthScreen({
         </>
       )}
 
-      <Text style={[typography.caption, { color: colors.text2, textAlign: 'center' }]}>
-        {t('auth.terms')}
-      </Text>
+      <TermsText i18nKey="auth.terms" style={{ textAlign: 'center' }} />
     </ScrollView>
   );
 }

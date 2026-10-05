@@ -13,6 +13,9 @@ import { getRefreshToken, saveRefreshToken } from './refreshTokenStorage';
 // together with the release configuration.
 export const API_URL = 'http://10.0.2.2:3000';
 
+// The site, where the documents (the offer and the privacy policy) are read. The same address for the emulator.
+export const WEB_URL = 'http://10.0.2.2:5173';
+
 /**
  * The api is created before the store, but the session lives in the store.
  * `makeStore` fills in these functions, they are only called when a request runs.

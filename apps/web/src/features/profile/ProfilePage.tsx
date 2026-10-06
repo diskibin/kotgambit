@@ -9,6 +9,7 @@ import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { LockIcon } from '../../shared/ui/icons';
 import { Mascot } from '../mascot/Mascot';
+import { ShareButton } from '../share/ShareButton';
 import { MonthCalendar, RatingGraph } from './Progress';
 import { LinkedAccounts } from './LinkedAccounts';
 import { Wardrobe } from './Wardrobe';
@@ -101,6 +102,23 @@ export function ProfilePage() {
                     />
                   </div>
                 </div>
+                <ShareButton
+                  mood="proud"
+                  label={t(data.streak.current > 0 ? 'share.streak.label' : 'share.level.label')}
+                  card={
+                    data.streak.current > 0
+                      ? {
+                          kicker: t('share.streak.kicker'),
+                          headline: t('share.streak.headline', { count: data.streak.current }),
+                          caption: t('share.streak.caption'),
+                        }
+                      : {
+                          kicker: t('share.level.kicker'),
+                          headline: t('share.level.headline', { level: data.level.level }),
+                          caption: t('share.level.caption', { xp: data.xpTotal }),
+                        }
+                  }
+                />
                 <div className="flex w-full flex-col gap-2 border-t-2 border-line pt-3">
                   <strong className="text-[16px]">{t('profile.cards.title')}</strong>
                   <span className="text-[14px] font-semibold text-text-2">
@@ -211,7 +229,7 @@ export function ProfilePage() {
                       >
                         {achievement.unlocked ? '★' : <LockIcon size={18} />}
                       </span>
-                      <div className="flex flex-col">
+                      <div className="flex min-w-0 flex-1 flex-col">
                         <strong className="text-[15px]">
                           {t(`profile.achievements.key.${achievement.key}`)}
                         </strong>
@@ -226,6 +244,20 @@ export function ProfilePage() {
                                 })}
                         </span>
                       </div>
+                      {achievement.unlocked && (
+                        <ShareButton
+                          compact
+                          mood="happy"
+                          label={t('share.achievement.label', {
+                            title: t(`profile.achievements.key.${achievement.key}`),
+                          })}
+                          card={{
+                            kicker: t('share.achievement.kicker'),
+                            headline: t(`profile.achievements.key.${achievement.key}`),
+                            caption: t('share.achievement.caption'),
+                          }}
+                        />
+                      )}
                     </li>
                   ))}
                 </ul>

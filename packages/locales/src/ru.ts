@@ -110,6 +110,32 @@ export const ru = {
       action: 'Отправить новую ссылку',
     },
   },
+  share: {
+    button: 'Поделиться',
+    failed: 'Не получилось собрать картинку. Попробуй ещё раз.',
+    text: 'Учусь шахматам с котом Гамбитом',
+    fileName: 'kot-gambit.png',
+    streak: {
+      kicker: 'Серия занятий',
+      headline_one: '{{count}} день подряд',
+      headline_few: '{{count}} дня подряд',
+      headline_many: '{{count}} дней подряд',
+      headline_other: '{{count}} дня подряд',
+      caption: 'Занимаюсь шахматами каждый день',
+      label: 'Поделиться серией занятий',
+    },
+    level: {
+      kicker: 'Мой уровень',
+      headline: 'Уровень {{level}}',
+      caption: 'Заработано {{xp}} XP',
+      label: 'Поделиться уровнем',
+    },
+    achievement: {
+      kicker: 'Новое достижение',
+      caption: 'Кот Гамбит мной гордится',
+      label: 'Поделиться достижением «{{title}}»',
+    },
+  },
   unsubscribe: {
     checking: 'Отписываю…',
     done: {

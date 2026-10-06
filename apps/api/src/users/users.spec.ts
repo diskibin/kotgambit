@@ -1,6 +1,7 @@
 import {
   ApiErrorSchema,
   AuthResponseSchema,
+  DataExportSchema,
   ProfileSchema,
   SettingsSchema,
   WardrobeSchema,
@@ -69,6 +70,7 @@ describe('the settings and the account', () => {
     expect(SettingsSchema.parse(res.json())).toEqual({
       dailyGoalMinutes: 10,
       displayName: 'Дмитрий',
+      reminders: false,
     });
   });
 
@@ -93,7 +95,11 @@ describe('the settings and the account', () => {
   it('changes only what is sent', async () => {
     await call('PATCH', '/users/me/settings', { dailyGoalMinutes: 5 });
     const res = await call('PATCH', '/users/me/settings', { displayName: '  Маша  ' });
-    expect(SettingsSchema.parse(res.json())).toEqual({ dailyGoalMinutes: 5, displayName: 'Маша' });
+    expect(SettingsSchema.parse(res.json())).toEqual({
+      dailyGoalMinutes: 5,
+      displayName: 'Маша',
+      reminders: false,
+    });
   });
 
   it('takes the name away with an empty one and refuses a name that is too long', async () => {
@@ -101,6 +107,157 @@ describe('the settings and the account', () => {
     expect(SettingsSchema.parse(cleared.json()).displayName).toBeNull();
     const long = await call('PATCH', '/users/me/settings', { displayName: 'я'.repeat(41) });
     expect(long.statusCode).toBe(400);
+  });
+
+  describe('the reminders', () => {
+    it('are off to start with, and cannot be switched on before the email is confirmed', async () => {
+      const refused = await call('PATCH', '/users/me/settings', { reminders: true });
+      expect(refused.statusCode).toBe(409);
+      expect(ApiErrorSchema.parse(refused.json()).code).toBe('settings.email_unverified');
+      expect(
+        (await prisma.user.findUniqueOrThrow({ where: { id: userId } })).remindersEnabled,
+      ).toBe(false);
+    });
+
+    it('are switched on and off by the learner with a confirmed email', async () => {
+      await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+      const on = await call('PATCH', '/users/me/settings', { reminders: true });
+      expect(SettingsSchema.parse(on.json())).toMatchObject({ reminders: true });
+      expect(SettingsSchema.parse((await call('GET', '/users/me/settings')).json()).reminders).toBe(
+        true,
+      );
+      const off = await call('PATCH', '/users/me/settings', { reminders: false });
+      expect(SettingsSchema.parse(off.json())).toMatchObject({ reminders: false });
+    });
+
+    it('stay as they are when the settings change in another place', async () => {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { emailVerifiedAt: new Date(), remindersEnabled: true },
+      });
+      const res = await call('PATCH', '/users/me/settings', { dailyGoalMinutes: 5 });
+      expect(SettingsSchema.parse(res.json())).toMatchObject({ reminders: true });
+    });
+  });
+
+  describe('taking the data away', () => {
+    it('gives the account, the progress and the payments as a document', async () => {
+      await prisma.lesson.upsert({
+        where: { id: 'export-1' },
+        update: {},
+        create: {
+          id: 'export-1',
+          track: 'basics',
+          order: 99,
+          access: 'free',
+          piece: 'p',
+          title: 'Глава',
+          summary: 's',
+          minutes: 5,
+          steps: [],
+          contentHash: 'h',
+        },
+      });
+      await prisma.lessonProgress.create({
+        data: {
+          userId,
+          lessonId: 'export-1',
+          bestAccuracy: 0.9,
+          stars: 3,
+          completedAt: new Date(),
+        },
+      });
+      await prisma.dailyActivity.create({
+        data: { userId, day: new Date('2026-10-05T00:00:00.000Z'), seconds: 300, xp: 40 },
+      });
+      await prisma.userAchievement.create({ data: { userId, key: 'streak-3' } });
+      await prisma.payment.create({
+        data: {
+          userId,
+          planKey: 'month',
+          purpose: 'initial',
+          status: 'succeeded',
+          amountKopecks: 29_900,
+          providerPaymentId: 'provider-secret-id',
+          idempotencyKey: 'idem-secret-key',
+          client: 'web',
+          paidAt: new Date(),
+        },
+      });
+      await prisma.subscription.create({
+        data: {
+          userId,
+          planKey: 'month',
+          status: 'active',
+          currentPeriodEnd: new Date(Date.now() + 86_400_000),
+          paymentMethodId: 'pm-secret-id',
+          cardLast4: '4477',
+        },
+      });
+
+      const res = await call('GET', '/users/me/export');
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.headers['cache-control']).toBe('no-store');
+      const doc = DataExportSchema.parse(res.json());
+      expect(doc.account).toMatchObject({
+        id: userId,
+        email: 'cat@example.com',
+        displayName: 'Дмитрий',
+        emailVerified: false,
+        reminders: false,
+      });
+      expect(doc['lessons']).toEqual([
+        expect.objectContaining({ lesson: 'export-1', bestAccuracy: 0.9, stars: 3 }),
+      ]);
+      expect(doc['activity']).toEqual([{ day: '2026-10-05', seconds: 300, xp: 40 }]);
+      expect(doc['achievements']).toEqual([expect.objectContaining({ key: 'streak-3' })]);
+      expect(doc['payments']).toEqual([
+        expect.objectContaining({ plan: 'month', status: 'succeeded', amountKopecks: 29_900 }),
+      ]);
+      expect(doc['subscription']).toMatchObject({ plan: 'month', cardLast4: '4477' });
+    });
+
+    it('leaves the secrets out: the password hash, the tokens and the identifiers of the provider', async () => {
+      await prisma.payment.create({
+        data: {
+          userId,
+          planKey: 'month',
+          purpose: 'initial',
+          status: 'succeeded',
+          amountKopecks: 29_900,
+          providerPaymentId: 'provider-secret-id',
+          idempotencyKey: 'idem-secret-key',
+          client: 'web',
+        },
+      });
+      await prisma.subscription.create({
+        data: {
+          userId,
+          planKey: 'month',
+          status: 'active',
+          currentPeriodEnd: new Date(Date.now() + 86_400_000),
+          paymentMethodId: 'pm-secret-id',
+        },
+      });
+      const credential = await prisma.credential.findUniqueOrThrow({ where: { userId } });
+      const text = (await call('GET', '/users/me/export')).body;
+      for (const secret of [
+        credential.passwordHash,
+        'provider-secret-id',
+        'idem-secret-key',
+        'pm-secret-id',
+      ]) {
+        expect(text).not.toContain(secret);
+      }
+      expect(text).not.toMatch(/tokenHash|passwordHash|refreshToken/i);
+    });
+
+    it('is for the signed-in learner only, a few times an hour', async () => {
+      expect((await app.inject({ method: 'GET', url: '/users/me/export' })).statusCode).toBe(401);
+      const codes: number[] = [];
+      for (let i = 0; i < 6; i += 1) codes.push((await call('GET', '/users/me/export')).statusCode);
+      expect(codes).toEqual([200, 200, 200, 200, 200, 429]);
+    });
   });
 
   describe('deleting the account', () => {

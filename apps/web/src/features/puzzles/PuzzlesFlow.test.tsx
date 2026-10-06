@@ -27,6 +27,8 @@ const DAILY = {
   solver: 'w',
   title: 'Мат в 2 хода',
   solved: false,
+  streak: 0,
+  bestStreak: 0,
 };
 const THEMES = {
   themes: [
@@ -176,6 +178,38 @@ describe('catalog', () => {
     );
     renderApp('/puzzles');
     expect(await screen.findByText('Сегодняшняя задача решена')).toBeInTheDocument();
+  });
+
+  it('shows the streak of the puzzle of the day and what keeps it alive', async () => {
+    server.use(
+      http.get(`${API_URL}/puzzles/daily`, () =>
+        HttpResponse.json({ ...DAILY, streak: 3, bestStreak: 7 }),
+      ),
+    );
+    renderApp('/puzzles');
+    expect(await screen.findByText('Серия: 3 дня подряд')).toBeInTheDocument();
+    expect(
+      screen.getByText('Реши сегодняшнюю задачу, чтобы серия не прервалась'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Рекорд серии: 7')).toBeInTheDocument();
+  });
+
+  it('does not ask for the puzzle once it is solved', async () => {
+    server.use(
+      http.get(`${API_URL}/puzzles/daily`, () =>
+        HttpResponse.json({ ...DAILY, solved: true, streak: 4, bestStreak: 4 }),
+      ),
+    );
+    renderApp('/puzzles');
+    expect(await screen.findByText('Серия: 4 дня подряд')).toBeInTheDocument();
+    expect(screen.queryByText(/чтобы серия не прервалась/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Рекорд серии/)).not.toBeInTheDocument();
+  });
+
+  it('says nothing about a streak that is not there', async () => {
+    renderApp('/puzzles');
+    await screen.findByRole('heading', { name: 'Мат в 2 хода' });
+    expect(screen.queryByText(/Серия:/)).not.toBeInTheDocument();
   });
 
   it('asks for the theme the learner picked', async () => {

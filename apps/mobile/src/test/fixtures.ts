@@ -114,6 +114,8 @@ export const DAILY = {
   solver: 'w',
   title: 'Мат в 1 ход',
   solved: false,
+  streak: 0,
+  bestStreak: 0,
 };
 
 export const HOME = {

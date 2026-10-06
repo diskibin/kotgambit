@@ -24,6 +24,8 @@ const DAILY = {
   solver: 'w',
   title: 'Мат в 2 хода',
   solved: false,
+  streak: 0,
+  bestStreak: 0,
 };
 const THEMES = {
   themes: [

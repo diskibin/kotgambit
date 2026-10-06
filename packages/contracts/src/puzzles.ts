@@ -58,6 +58,9 @@ export const DailyPuzzleSchema = z.object({
   title: z.string(),
   /** The learner has already solved today's puzzle. */
   solved: z.boolean(),
+  /** Days in a row on which the puzzle of the day was solved, up to today (or yesterday while today is open). */
+  streak: z.number().int().nonnegative(),
+  bestStreak: z.number().int().nonnegative(),
 });
 export type DailyPuzzle = z.infer<typeof DailyPuzzleSchema>;
 

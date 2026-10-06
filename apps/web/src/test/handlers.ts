@@ -37,6 +37,8 @@ export const DAILY = {
   solver: 'w',
   title: 'Мат в 1 ход',
   solved: false,
+  streak: 0,
+  bestStreak: 0,
 };
 
 /** The home screen asks for the catalog and the day bar as soon as someone is signed in. */

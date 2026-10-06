@@ -23,6 +23,7 @@ import type { Prisma, Puzzle as PuzzleRow, PuzzleAttempt } from '../generated/pr
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ProgressService } from '../progress/progress.service.js';
 import { START_RATING, nextRating, outcomeOf, type AttemptOutcome } from './puzzle-rating.js';
+import { bestDailyStreak, currentDailyStreak, solvedDailyDays } from './daily-streak.js';
 import { PuzzleThemesService } from './puzzle-themes.service.js';
 import { PUZZLE_MAX_SECONDS, PUZZLE_XP } from './puzzles.limits.js';
 import { dayKeyOf } from '../progress/streak.js';
@@ -57,6 +58,11 @@ export class PuzzlesService {
     });
     const puzzle = await this.pick(userId, mode, stats.rating, request);
     if (!puzzle) throw new AppError('puzzle.none', HttpStatus.NOT_FOUND);
+    // The day of the learner's calendar the puzzle of the day belongs to, for the streak
+    const dailyDay =
+      mode === 'daily'
+        ? new Date(`${this.progress.resolveToday(request.localDate)}T00:00:00.000Z`)
+        : null;
 
     const start = startPuzzle(puzzle.fen, puzzle.moves);
     // The import only keeps puzzles whose line plays through, so this would be a corrupted row
@@ -84,6 +90,7 @@ export class PuzzlesService {
           puzzleId: puzzle.id,
           rated: earlier === null,
           ratingBefore: Math.round(stats.rating),
+          ...(dailyDay ? { dailyDay } : {}),
         },
       });
     });
@@ -225,6 +232,8 @@ export class PuzzlesService {
       where: { userId, puzzleId: puzzle.id, solvedAt: { not: null } },
       select: { id: true },
     });
+    const days = await solvedDailyDays(this.prisma, userId);
+    const today = this.progress.resolveToday(localDate);
     return {
       puzzleId: puzzle.id,
       fen: start.fen,
@@ -232,6 +241,8 @@ export class PuzzlesService {
       solver: start.solver,
       title: this.themes.headline(puzzle.themes)?.title ?? '',
       solved: solved !== null,
+      streak: currentDailyStreak(days, today),
+      bestStreak: bestDailyStreak(days),
     };
   }
 

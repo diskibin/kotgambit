@@ -5,6 +5,7 @@ import { CardsService } from '../cards/cards.service.js';
 import { BotsService } from '../games/bots.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PuzzleThemesService } from '../puzzles/puzzle-themes.service.js';
+import { bestDailyStreak, solvedDailyDays } from '../puzzles/daily-streak.js';
 import { evaluateAchievements, type AchievementStats } from '../progress/achievements.js';
 import { levelOf } from '../progress/levels.js';
 import { ProgressService } from '../progress/progress.service.js';
@@ -56,6 +57,7 @@ export class ProfileService {
       basicsComplete: lessons.basicsComplete,
       bestStreakDays: bestStreak(days, goalSeconds),
       bestPuzzleStreak: puzzleStats?.bestStreak ?? 0,
+      bestDailyPuzzleStreak: bestDailyStreak(await solvedDailyDays(this.prisma, userId)),
       matesDelivered: games.filter((g) => g.outcome === 'win' && g.endReason === 'checkmate')
         .length,
       gamesReviewed: reviews,

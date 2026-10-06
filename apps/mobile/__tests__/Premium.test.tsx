@@ -308,6 +308,8 @@ describe('the limits', () => {
             solver: 'w',
             title: 'Мат в 1 ход',
             solved: false,
+            streak: 0,
+            bestStreak: 0,
           }),
         'GET /puzzles/stats': () =>
           json({ rating: 1000, solved: 0, failed: 0, streak: 0, bestStreak: 0 }),

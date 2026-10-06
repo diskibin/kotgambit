@@ -312,6 +312,11 @@ export function PathPage() {
                       {t('path.daily.solved')}
                     </span>
                   )}
+                  {daily.data.streak > 0 && (
+                    <span className="text-[13px] font-extrabold text-sun-text">
+                      {t('path.daily.streak', { count: daily.data.streak })}
+                    </span>
+                  )}
                 </span>
               </button>
             ) : (

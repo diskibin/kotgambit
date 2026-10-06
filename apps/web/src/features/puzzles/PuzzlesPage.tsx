@@ -87,6 +87,21 @@ export function PuzzlesPage() {
                     ? t('puzzles.daily.solved')
                     : t(`puzzles.turn.${daily.data.solver}`)}
                 </p>
+                {daily.data.streak > 0 && (
+                  <p className="m-0 text-[15px] font-extrabold text-sun-text">
+                    {t('puzzles.daily.streak', { count: daily.data.streak })}
+                    {!daily.data.solved && (
+                      <span className="block font-semibold text-text-2">
+                        {t('puzzles.daily.keep')}
+                      </span>
+                    )}
+                  </p>
+                )}
+                {daily.data.bestStreak > daily.data.streak && (
+                  <p className="m-0 text-[14px] font-semibold text-text-2">
+                    {t('puzzles.daily.best', { count: daily.data.bestStreak })}
+                  </p>
+                )}
                 <Button onClick={() => open('mode=daily')}>
                   {daily.data.solved ? t('puzzles.daily.again') : t('puzzles.daily.solve')}
                 </Button>

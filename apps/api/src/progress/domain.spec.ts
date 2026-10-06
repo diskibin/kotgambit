@@ -97,6 +97,7 @@ describe('evaluateAchievements', () => {
     basicsComplete: false,
     bestStreakDays: 0,
     bestPuzzleStreak: 0,
+    bestDailyPuzzleStreak: 0,
     matesDelivered: 0,
     gamesReviewed: 0,
     winsAgainstBear: 0,
@@ -112,6 +113,9 @@ describe('evaluateAchievements', () => {
       'basics',
       'streak-7',
       'puzzles-10-row',
+      'daily-3',
+      'daily-7',
+      'daily-30',
       'review-5',
       'beat-bear',
     ]);
@@ -134,6 +138,13 @@ describe('evaluateAchievements', () => {
     expect(result['streak-7']).toMatchObject({ unlocked: false, current: 5, target: 7 });
     expect(result['puzzles-10-row']).toMatchObject({ unlocked: false, current: 6, target: 10 });
     expect(result['review-5']).toMatchObject({ unlocked: false, current: 2, target: 5 });
+  });
+
+  it('counts the streak of the puzzle of the day towards three of them', () => {
+    const result = by({ ...none, bestDailyPuzzleStreak: 8 });
+    expect(result['daily-3']?.unlocked).toBe(true);
+    expect(result['daily-7']?.unlocked).toBe(true);
+    expect(result['daily-30']).toMatchObject({ unlocked: false, current: 8, target: 30 });
   });
 
   it('knows the one-time achievements', () => {

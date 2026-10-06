@@ -2,6 +2,7 @@ import {
   ApiErrorSchema,
   AuthResponseSchema,
   DailyPuzzleSchema,
+  ProfileSchema,
   PuzzleGiveUpResponseSchema,
   PuzzleHintResponseSchema,
   PuzzleMoveResponseSchema,
@@ -17,7 +18,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { createTestApp } from '../../test/create-app.js';
 import type { MemoryMailTransport } from '../../test/memory-mail.transport.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
-import { dayKeyOf } from '../progress/streak.js';
+import { dayKeyOf, shiftDay } from '../progress/streak.js';
 import type { RedisService } from '../redis/redis.service.js';
 import { selectPuzzles, writePuzzles } from '../seed/puzzle-import.js';
 import { DEFAULT_SELECTION } from '../seed/puzzle-selection.js';
@@ -457,6 +458,75 @@ describe('puzzles', () => {
         (await call('GET', `/puzzles/daily?localDate=${today()}`)).json(),
       );
       expect(after.solved).toBe(true);
+    });
+
+    describe('the streak', () => {
+      const preview = async () =>
+        DailyPuzzleSchema.parse((await call('GET', `/puzzles/daily?localDate=${today()}`)).json());
+      /** A puzzle of the day that was solved on a day of the past. */
+      const solvedOn = async (offset: number) => {
+        const user = await prisma.user.findFirstOrThrow();
+        await prisma.puzzleAttempt.create({
+          data: {
+            userId: user.id,
+            puzzleId: MATE_IN_ONE,
+            status: 'solved',
+            ratingBefore: 1000,
+            dailyDay: new Date(`${shiftDay(today(), -offset)}T00:00:00.000Z`),
+          },
+        });
+      };
+
+      it('starts at nothing and counts today once the puzzle of the day is solved', async () => {
+        expect(await preview()).toMatchObject({ streak: 0, bestStreak: 0 });
+        await solve(await next({ mode: 'daily', localDate: today() }));
+        expect(await preview()).toMatchObject({ streak: 1, bestStreak: 1 });
+      });
+
+      it('goes on from the days before and survives a day that is not over yet', async () => {
+        await solvedOn(2);
+        await solvedOn(1);
+        // Today is still open, the streak of two days is alive
+        expect(await preview()).toMatchObject({ streak: 2, bestStreak: 2 });
+        await solve(await next({ mode: 'daily', localDate: today() }));
+        expect(await preview()).toMatchObject({ streak: 3, bestStreak: 3 });
+      });
+
+      it('is lost after a missed day, the best run stays', async () => {
+        await solvedOn(5);
+        await solvedOn(4);
+        await solvedOn(3);
+        expect(await preview()).toMatchObject({ streak: 0, bestStreak: 3 });
+      });
+
+      it('does not count a puzzle that was not the puzzle of the day, nor a failed run', async () => {
+        await solve(await next({ mode: 'rating' }));
+        const user = await prisma.user.findFirstOrThrow();
+        await prisma.puzzleAttempt.create({
+          data: {
+            userId: user.id,
+            puzzleId: MATE_IN_ONE,
+            status: 'failed',
+            ratingBefore: 1000,
+            dailyDay: new Date(`${today()}T00:00:00.000Z`),
+          },
+        });
+        expect(await preview()).toMatchObject({ streak: 0, bestStreak: 0 });
+      });
+
+      it('opens the achievements of the streak in the profile', async () => {
+        await solvedOn(2);
+        await solvedOn(1);
+        await solve(await next({ mode: 'daily', localDate: today() }));
+        const profile = ProfileSchema.parse((await call('GET', '/profile')).json());
+        const unlocked = profile.achievements.filter((a) => a.unlocked).map((a) => a.key);
+        expect(unlocked).toContain('daily-3');
+        expect(profile.achievements.find((a) => a.key === 'daily-7')).toMatchObject({
+          unlocked: false,
+          current: 3,
+          target: 7,
+        });
+      });
     });
 
     it('names a puzzle by its idea, not by the phase of the game', async () => {

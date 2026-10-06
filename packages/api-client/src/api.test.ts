@@ -465,6 +465,8 @@ describe('puzzle endpoints', () => {
           solver: 'w',
           title: 'Мат в 2 хода',
           solved: false,
+          streak: 2,
+          bestStreak: 5,
         });
       }),
     );
@@ -479,6 +481,7 @@ describe('puzzle endpoints', () => {
     const daily = await store.dispatch(api.endpoints.dailyPuzzle.initiate('2026-10-02'));
     expect(dailyUrl).toContain('localDate=2026-10-02');
     expect(daily.data?.title).toBe('Мат в 2 хода');
+    expect(daily.data).toMatchObject({ streak: 2, bestStreak: 5 });
   });
 });
 

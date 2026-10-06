@@ -35,6 +35,7 @@ const STATS = {
     revenueKopecks: 149_500,
     totalRevenueKopecks: 598_000,
   },
+  nudges: [],
   usage: {
     gamesStarted: 50,
     gamesFinished: 40,
@@ -112,6 +113,33 @@ describe('the admin page', () => {
       .closest('section') as HTMLElement;
     // The ones of today over the ones of the month
     expect(within(users).getByText('25%')).toBeInTheDocument();
+  });
+
+  it('shows how many saw each hint about Premium and how many pressed it', async () => {
+    server.use(
+      http.get(`${API_URL}/admin/stats`, () =>
+        HttpResponse.json({
+          ...STATS,
+          nudges: [
+            { kind: 'puzzles-limit', viewed: 8, clicked: 2 },
+            { kind: 'puzzles-soft', viewed: 0, clicked: 0 },
+          ],
+        }),
+      ),
+    );
+    renderApp('/admin');
+    const section = (await screen.findByRole('heading', { name: 'Подсказки про Премиум' })).closest(
+      'section',
+    ) as HTMLElement;
+    const limit = within(section).getByText('Задачи: лимит').closest('tr') as HTMLElement;
+    expect(
+      within(limit)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent),
+    ).toEqual(['Задачи: лимит', '8', '2', '25%']);
+    // Nobody saw this one: a dash, not a made-up share
+    const soft = within(section).getByText('Задачи: заранее').closest('tr') as HTMLElement;
+    expect(within(soft).getByText('—')).toBeInTheDocument();
   });
 
   it('asks for another period', async () => {

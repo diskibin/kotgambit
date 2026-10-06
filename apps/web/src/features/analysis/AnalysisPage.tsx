@@ -25,6 +25,7 @@ import { pieceUrl } from '../board/pieceAssets';
 import { useUiPreferences } from '../settings/useUiPreferences';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
+import { PremiumHint } from '../premium/PremiumHint';
 import { PremiumNudge } from '../premium/PremiumNudge';
 import { AnalysisResult } from './AnalysisResult';
 
@@ -307,6 +308,7 @@ export function AnalysisPage() {
             </div>
           )}
 
+          {!limited && <PremiumHint kind="analysis" left={left} />}
           {limited && <PremiumNudge kind="analysis" compact />}
           {failed && !problem && !limited && (
             <div className="flex flex-col gap-3">

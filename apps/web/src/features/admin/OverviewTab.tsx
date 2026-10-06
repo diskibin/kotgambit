@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs } from '../../shared/ui/Tabs';
 import { formatCount, formatRubles, percentOf, shortDay } from './format';
-import { Caption, FunnelBars, Section, Tile, Tiles } from './parts';
+import { Caption, Cell, DataTable, FunnelBars, Section, Tile, Tiles } from './parts';
 
 type Metric = 'visitors' | 'registrations' | 'payments';
 
@@ -138,6 +138,32 @@ function Premium({ stats }: { stats: AdminStats }) {
   );
 }
 
+function Nudges({ stats }: { stats: AdminStats }) {
+  const { t } = useTranslation();
+  return (
+    <Section title={t('admin.nudges.title')}>
+      <Caption>{t('admin.nudges.caption')}</Caption>
+      <DataTable
+        head={[
+          t('admin.nudges.kind'),
+          t('admin.nudges.viewed'),
+          t('admin.nudges.clicked'),
+          t('admin.nudges.share'),
+        ]}
+      >
+        {stats.nudges.map((nudge) => (
+          <tr key={nudge.kind}>
+            <Cell>{t(`admin.nudges.kinds.${nudge.kind}`)}</Cell>
+            <Cell strong>{formatCount(nudge.viewed)}</Cell>
+            <Cell>{formatCount(nudge.clicked)}</Cell>
+            <Cell>{nudge.viewed > 0 ? `${percentOf(nudge.clicked, nudge.viewed)}%` : '—'}</Cell>
+          </tr>
+        ))}
+      </DataTable>
+    </Section>
+  );
+}
+
 function Usage({ stats }: { stats: AdminStats }) {
   const { t } = useTranslation();
   return (
@@ -158,6 +184,7 @@ export function OverviewTab({ stats }: { stats: AdminStats }) {
       <Chart stats={stats} />
       <Users stats={stats} />
       <Premium stats={stats} />
+      <Nudges stats={stats} />
       <Usage stats={stats} />
     </div>
   );

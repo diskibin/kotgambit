@@ -3,7 +3,12 @@ import { THEME_GROUPS, themeGroup, type ThemeGroup } from '@kotgambit/puzzle-pla
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
-import { useDailyPuzzleQuery, usePuzzleStatsQuery, usePuzzleThemesQuery } from '../../app/api';
+import {
+  useDailyPuzzleQuery,
+  useEntitlementsQuery,
+  usePuzzleStatsQuery,
+  usePuzzleThemesQuery,
+} from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { localDateKey } from '../../shared/localDate';
 import { Banner } from '../../shared/ui/Banner';
@@ -11,6 +16,7 @@ import { Button } from '../../shared/ui/Button';
 import { ProgressBar } from '../../shared/ui/ProgressBar';
 import { Tabs } from '../../shared/ui/Tabs';
 import { Mascot } from '../mascot/Mascot';
+import { PremiumHint } from '../premium/PremiumHint';
 import { useScheme } from '../theme/useScheme';
 import { PositionPreview } from './PositionPreview';
 
@@ -28,6 +34,7 @@ export function PuzzlesPage() {
   const daily = useDailyPuzzleQuery(localDateKey(), { skip: !signedIn });
   const stats = usePuzzleStatsQuery(undefined, { skip: !signedIn });
   const themes = usePuzzleThemesQuery(undefined, { skip: !signedIn });
+  const entitlements = useEntitlementsQuery(undefined, { skip: !signedIn });
   const [filter, setFilter] = useState<Filter>('all');
 
   const shown = useMemo(
@@ -67,6 +74,8 @@ export function PuzzlesPage() {
             {t('puzzles.loading')}
           </p>
         )}
+
+        <PremiumHint kind="puzzles" left={entitlements.data?.puzzles.left ?? null} />
 
         <div className="grid gap-6 laptop:grid-cols-[1.55fr_1fr]">
           {daily.data && (

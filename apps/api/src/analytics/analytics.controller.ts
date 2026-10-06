@@ -20,7 +20,7 @@ export class AnalyticsController {
     @Body(new ZodValidationPipe(AnalyticsEventRequestSchema)) body: AnalyticsEventRequest,
   ): Promise<void> {
     await this.prisma.analyticsEvent.create({
-      data: { visitorId: body.visitorId, name: body.name },
+      data: { visitorId: body.visitorId, name: body.name, detail: body.detail ?? null },
     });
   }
 }

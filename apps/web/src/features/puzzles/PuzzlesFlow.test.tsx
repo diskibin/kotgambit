@@ -19,6 +19,13 @@ const PUZZLE = {
   rating: 1434,
   themes: [],
 };
+const entitlements = (left: number | null) => ({
+  premium: left === null,
+  puzzles: { limit: left === null ? null : 10, left },
+  analysis: { limit: left === null ? null : 5, left: left === null ? null : 5 },
+  fullReview: left === null,
+  cards: left === null,
+});
 const STATS = { rating: 1000, solved: 5, failed: 2, streak: 0, bestStreak: 4 };
 const DAILY = {
   puzzleId: '005Bm',
@@ -77,6 +84,7 @@ beforeEach(() => {
     ),
     http.get(`${API_URL}/puzzles/daily`, () => HttpResponse.json(DAILY)),
     http.get(`${API_URL}/puzzles/stats`, () => HttpResponse.json(STATS)),
+    http.get(`${API_URL}/entitlements`, () => HttpResponse.json(entitlements(null))),
     http.get(`${API_URL}/puzzles/themes`, () => HttpResponse.json(THEMES)),
     http.post(`${API_URL}/puzzles/next`, async ({ request }) => {
       nextBodies.push(await request.json());
@@ -210,6 +218,21 @@ describe('catalog', () => {
     renderApp('/puzzles');
     await screen.findByRole('heading', { name: 'Мат в 2 хода' });
     expect(screen.queryByText(/Серия:/)).not.toBeInTheDocument();
+  });
+
+  it('warns kindly that the puzzles of the day are about to run out', async () => {
+    server.use(http.get(`${API_URL}/entitlements`, () => HttpResponse.json(entitlements(2))));
+    renderApp('/puzzles');
+    expect(
+      await screen.findByText('Задач на сегодня осталось: 2. С Премиумом без дневного лимита.'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not warn while there are plenty of puzzles left', async () => {
+    server.use(http.get(`${API_URL}/entitlements`, () => HttpResponse.json(entitlements(8))));
+    renderApp('/puzzles');
+    await screen.findByRole('heading', { name: 'Мат в 2 хода' });
+    expect(screen.queryByText(/Задач на сегодня осталось/)).not.toBeInTheDocument();
   });
 
   it('asks for the theme the learner picked', async () => {

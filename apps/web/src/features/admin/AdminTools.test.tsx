@@ -33,6 +33,7 @@ const OVERVIEW = {
     revenueKopecks: 0,
     totalRevenueKopecks: 0,
   },
+  nudges: [],
   usage: {
     gamesStarted: 0,
     gamesFinished: 0,

@@ -1041,6 +1041,7 @@ describe('analytics and the admin page', () => {
             revenueKopecks: 29900,
             totalRevenueKopecks: 29900,
           },
+          nudges: [],
           usage: {
             gamesStarted: 0,
             gamesFinished: 0,

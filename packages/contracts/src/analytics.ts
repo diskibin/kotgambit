@@ -6,14 +6,33 @@ export const AnalyticsEventNameSchema = z.enum([
   'signed_in',
   'premium_view',
   'checkout_start',
+  'nudge_view',
+  'nudge_click',
 ]);
 export type AnalyticsEventName = z.infer<typeof AnalyticsEventNameSchema>;
 
-export const AnalyticsEventRequestSchema = z.object({
-  /** A random id the browser made up and keeps, it says nothing about who the visitor is. */
-  visitorId: z.uuid(),
-  name: AnalyticsEventNameSchema,
-});
+/** Which hint about Premium was shown: a limit that was reached, or a warning that it is near. */
+export const NUDGE_KINDS = [
+  'puzzles-limit',
+  'puzzles-soft',
+  'analysis-limit',
+  'analysis-soft',
+  'cards-limit',
+] as const;
+export const NudgeKindSchema = z.enum(NUDGE_KINDS);
+export type NudgeKind = z.infer<typeof NudgeKindSchema>;
+
+export const AnalyticsEventRequestSchema = z
+  .object({
+    /** A random id the browser made up and keeps, it says nothing about who the visitor is. */
+    visitorId: z.uuid(),
+    name: AnalyticsEventNameSchema,
+    /** Which hint, for the two events about hints and no other. */
+    detail: NudgeKindSchema.optional(),
+  })
+  .refine((event) => event.name.startsWith('nudge_') === (event.detail !== undefined), {
+    message: 'detail goes with the events about hints only',
+  });
 export type AnalyticsEventRequest = z.infer<typeof AnalyticsEventRequestSchema>;
 
 export const STATS_PERIOD_DAYS = [7, 30, 90] as const;
@@ -72,6 +91,8 @@ export const AdminStatsSchema = z.object({
     revenueKopecks: Count,
     totalRevenueKopecks: Count,
   }),
+  /** The hints about Premium: distinct visitors who saw each and who pressed its button. */
+  nudges: z.array(z.object({ kind: NudgeKindSchema, viewed: Count, clicked: Count })),
   usage: z.object({
     gamesStarted: Count,
     gamesFinished: Count,

@@ -51,8 +51,12 @@ describe('analytics and the admin page', () => {
     return { token: body.accessToken, id: body.user.id };
   }
 
-  const event = (name: string, visitorId: string = randomUUID()) =>
-    app.inject({ method: 'POST', url: '/analytics/events', payload: { visitorId, name } });
+  const event = (name: string, visitorId: string = randomUUID(), detail?: string) =>
+    app.inject({
+      method: 'POST',
+      url: '/analytics/events',
+      payload: { visitorId, name, ...(detail ? { detail } : {}) },
+    });
 
   const stats = (token: string | null, days?: number) =>
     app.inject({
@@ -69,6 +73,20 @@ describe('analytics and the admin page', () => {
       const rows = await prisma.analyticsEvent.findMany();
       expect(rows).toHaveLength(1);
       expect(rows[0]).toMatchObject({ visitorId, name: 'premium_view' });
+    });
+
+    it('keeps which hint about Premium was shown, and only for the events about hints', async () => {
+      expect((await event('nudge_view', randomUUID(), 'puzzles-soft')).statusCode).toBe(204);
+      expect(await prisma.analyticsEvent.findFirstOrThrow()).toMatchObject({
+        name: 'nudge_view',
+        detail: 'puzzles-soft',
+      });
+      expect((await event('nudge_view')).statusCode).toBe(400);
+      expect((await event('visit', randomUUID(), 'puzzles-soft')).statusCode).toBe(400);
+      expect((await event('nudge_click', randomUUID(), 'a person@example.com')).statusCode).toBe(
+        400,
+      );
+      expect(await prisma.analyticsEvent.count()).toBe(1);
     });
 
     it('refuses a step that is not one of the known and an id that is not an id', async () => {
@@ -183,6 +201,28 @@ describe('analytics and the admin page', () => {
 
       const long = AdminStatsSchema.parse((await stats(token, 90)).json());
       expect(long.funnel.visitors).toBe(3);
+    });
+
+    it('counts the visitors who saw a hint about Premium and who pressed it, each once', async () => {
+      const { token } = await register(OWNER);
+      const first = randomUUID();
+      const second = randomUUID();
+      await event('nudge_view', first, 'puzzles-limit');
+      await event('nudge_view', first, 'puzzles-limit');
+      await event('nudge_view', second, 'puzzles-limit');
+      await event('nudge_click', first, 'puzzles-limit');
+      await event('nudge_view', second, 'analysis-soft');
+
+      const body = AdminStatsSchema.parse((await stats(token)).json());
+      expect(body.nudges).toEqual([
+        { kind: 'puzzles-limit', viewed: 2, clicked: 1 },
+        { kind: 'puzzles-soft', viewed: 0, clicked: 0 },
+        { kind: 'analysis-limit', viewed: 0, clicked: 0 },
+        { kind: 'analysis-soft', viewed: 1, clicked: 0 },
+        { kind: 'cards-limit', viewed: 0, clicked: 0 },
+      ]);
+      // A hint is not a visit
+      expect(body.funnel.visitors).toBe(0);
     });
 
     it('does not count an expired subscription as Premium', async () => {

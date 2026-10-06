@@ -1,4 +1,4 @@
-import type { AdminStats } from '@kotgambit/contracts';
+import { NUDGE_KINDS, type AdminStats } from '@kotgambit/contracts';
 import { Injectable } from '@nestjs/common';
 import { hasPremium } from '../billing/subscription-machine.js';
 import type { Prisma } from '../generated/prisma/client.js';
@@ -21,14 +21,31 @@ export class AdminService {
   /** The numbers of the admin page for the last `days` UTC days, today included. */
   async stats(days: number, now: Date = new Date()): Promise<AdminStats> {
     const since = periodStart(now, days);
-    const [funnel, daily, users, premium, usage] = await Promise.all([
+    const [funnel, daily, users, premium, nudges, usage] = await Promise.all([
       this.funnel(since),
       this.daily(now, days, since),
       this.users(now, since),
       this.premium(now, since),
+      this.nudges(since),
       this.usage(since),
     ]);
-    return { days, funnel, daily, users, premium, usage };
+    return { days, funnel, daily, users, premium, nudges, usage };
+  }
+
+  /** Per hint about Premium: the visitors who saw it and the ones who pressed its button. */
+  private async nudges(since: Date): Promise<AdminStats['nudges']> {
+    const rows = await this.prisma.$queryRaw<{ detail: string; name: string; n: number }[]>`
+      SELECT detail, name::text AS name, count(DISTINCT visitor_id)::int AS n
+      FROM analytics_events
+      WHERE name IN ('nudge_view', 'nudge_click') AND detail IS NOT NULL AND created_at >= ${since}
+      GROUP BY detail, name`;
+    const count = (kind: string, name: string) =>
+      rows.find((row) => row.detail === kind && row.name === name)?.n ?? 0;
+    return NUDGE_KINDS.map((kind) => ({
+      kind,
+      viewed: count(kind, 'nudge_view'),
+      clicked: count(kind, 'nudge_click'),
+    }));
   }
 
   private async funnel(since: Date): Promise<AdminStats['funnel']> {

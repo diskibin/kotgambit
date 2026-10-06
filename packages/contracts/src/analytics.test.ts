@@ -17,6 +17,16 @@ describe('analytics contracts', () => {
     ).toBe(false);
   });
 
+  it('wants the kind of hint with the events about hints, and with them only', () => {
+    const parse = (event: object) =>
+      AnalyticsEventRequestSchema.safeParse({ visitorId: ID, ...event }).success;
+    expect(parse({ name: 'nudge_view', detail: 'puzzles-soft' })).toBe(true);
+    expect(parse({ name: 'nudge_click', detail: 'cards-limit' })).toBe(true);
+    expect(parse({ name: 'nudge_view' })).toBe(false);
+    expect(parse({ name: 'visit', detail: 'puzzles-soft' })).toBe(false);
+    expect(parse({ name: 'nudge_view', detail: 'free text about a person' })).toBe(false);
+  });
+
   it('reads the period from a query string and falls back to 30 days', () => {
     expect(StatsQuerySchema.parse('7')).toBe(7);
     expect(StatsQuerySchema.parse(undefined)).toBe(30);

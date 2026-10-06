@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router';
 import { useMeQuery } from './app/api';
+import { AdminPage } from './features/admin/AdminPage';
+import { Analytics } from './features/analytics/Analytics';
 import { AnalysisPage } from './features/analysis/AnalysisPage';
 import { ReviewPage } from './features/analysis/ReviewPage';
 import { CardsPage } from './features/profile/CardsPage';
@@ -33,6 +35,7 @@ export function App() {
   return (
     <>
       <ThemeSync />
+      <Analytics />
       <ApplyOnboarding />
       <OfflineBanner />
       <Routes>
@@ -54,6 +57,7 @@ export function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/billing/return" element={<BillingReturnPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/cards" element={<CardsPage />} />
         <Route path="/review/:id" element={<ReviewPage />} />
         <Route path="/play" element={<BotsPage />} />

@@ -16,6 +16,7 @@ import { redirect } from '../../shared/redirect';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { CheckIcon } from '../../shared/ui/icons';
+import { useTrack } from '../analytics/useTrack';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
 
@@ -68,6 +69,7 @@ function Offer({ expired }: { expired: boolean }) {
   const scheme = useScheme();
   const plans = usePlansQuery();
   const [checkout, order] = useCheckoutMutation();
+  const track = useTrack();
   const [plan, setPlan] = useState<PlanKeyValue>('year');
   const [autoRenew, setAutoRenew] = useState(false);
 
@@ -76,6 +78,7 @@ function Offer({ expired }: { expired: boolean }) {
   const yearly = list.find((item) => item.key === 'year');
 
   async function start() {
+    track('checkout_start');
     const result = await checkout({ plan, client: 'web', autoRenew });
     if ('data' in result && result.data) redirect(result.data.confirmationUrl);
   }

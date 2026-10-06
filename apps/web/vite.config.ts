@@ -9,6 +9,8 @@ export default defineConfig({
     globals: true,
     // The long screens are drawn with many board squares, and the files run side by side: 5 s is too tight
     testTimeout: 20_000,
+    // The visits are counted by a request that the tests do not expect, the tracker's own tests turn it on
+    env: { VITE_ANALYTICS: 'off' },
     setupFiles: ['./src/test-setup.ts'],
   },
 });

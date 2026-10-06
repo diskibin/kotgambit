@@ -441,7 +441,7 @@ describe('the review', () => {
       const heights = marks.map((node) => Number(node.getAttribute('y')));
       // Higher on the screen is a smaller number
       expect([...heights].sort((a, b) => a - b)).toEqual(heights);
-      // Zero stands in the middle of the graph
+      // The plot is 170 high, zero stands in the middle of it (the marks are drawn inside the plot, under its band)
       expect(heights[2]).toBeCloseTo(85 + 4, 0);
     });
 
@@ -456,6 +456,30 @@ describe('the review', () => {
       expect(words).toContain('Выигрывают белые');
       expect(words).toContain('Выигрывают чёрные');
       expect(words).not.toContain('Лучше белым');
+    });
+
+    it('keeps the words about who is winning out of the plot, above it and below it', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      const graph = await screen.findByRole(
+        'img',
+        { name: /Шансы белых по ходам/ },
+        { timeout: 6000 },
+      );
+      const y = (word: string) =>
+        Number(
+          [...graph.querySelectorAll('text')]
+            .find((node) => node.textContent === word)
+            ?.getAttribute('y'),
+        );
+      const marks = [...graph.querySelectorAll('text')]
+        .filter((node) => /^([+−]\d|0)$/.test(node.textContent ?? ''))
+        // The marks are drawn inside the plot, which starts under the band of the words
+        .map((node) => Number(node.getAttribute('y')) + 24);
+      // Higher than the highest mark and lower than the lowest, so that the line never runs under them
+      expect(y('Выигрывают белые')).toBeLessThan(Math.min(...marks) - 12);
+      expect(y('Выигрывают чёрные')).toBeGreaterThan(Math.max(...marks) + 12);
+      // And the picture is taller than the plot by the two bands
+      expect(graph.getAttribute('viewBox')).toBe('0 0 482 218');
     });
 
     it('draws the line alone: no dots on it, the mistakes are in the list below', async () => {

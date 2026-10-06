@@ -34,6 +34,8 @@ const GRAPH_WIDTH = 440;
 const GRAPH_HEIGHT = 170;
 // The room on the left for the numbers of the scale, and a little on the right so that the last point is not cut
 const SCALE_WIDTH = 34;
+// The bands above and below the plot, for the words about who is winning: they do not take room from the plot
+const LABEL_BAND = 24;
 const GRAPH_RIGHT = 8;
 // The marks of the scale, in pawns for White: the numbers of the evaluation under the board
 const SCALE_PAWNS = [4, 2, 0, -2, -4] as const;
@@ -77,7 +79,7 @@ function Graph({
     <svg
       role="img"
       aria-label={t('review.result.graphLabel')}
-      viewBox={`0 0 ${viewWidth} ${GRAPH_HEIGHT}`}
+      viewBox={`0 0 ${viewWidth} ${GRAPH_HEIGHT + LABEL_BAND * 2}`}
       className="h-auto w-full cursor-pointer rounded-card border-2 border-line bg-surface"
       onClick={(event) => {
         const box = event.currentTarget.getBoundingClientRect();
@@ -88,50 +90,56 @@ function Graph({
         onPick(Math.max(0, Math.min(points.length - 1, index)));
       }}
     >
-      {SCALE_PAWNS.map((pawns) => (
-        <g key={pawns}>
-          <line
-            x1={SCALE_WIDTH}
-            x2={SCALE_WIDTH + GRAPH_WIDTH}
-            y1={yOfPawns(pawns)}
-            y2={yOfPawns(pawns)}
-            className={pawns === 0 ? 'stroke-text-muted' : 'stroke-line'}
-            strokeDasharray={pawns === 0 ? undefined : '4 4'}
-          />
-          <text
-            x={SCALE_WIDTH - 6}
-            y={yOfPawns(pawns) + 4}
-            textAnchor="end"
-            className="fill-text-2 text-[11px] font-bold"
-          >
-            {pawns > 0 ? `+${pawns}` : pawns < 0 ? `${MINUS}${Math.abs(pawns)}` : '0'}
-          </text>
-        </g>
-      ))}
-      <text x={SCALE_WIDTH + 6} y="13" className="fill-text-2 text-[11px] font-bold">
+      <text x={SCALE_WIDTH + 6} y={LABEL_BAND - 8} className="fill-text-2 text-[12px] font-bold">
         {t('review.result.graphWhite')}
       </text>
-      <text x={SCALE_WIDTH + 6} y={GRAPH_HEIGHT - 6} className="fill-text-2 text-[11px] font-bold">
+      <text
+        x={SCALE_WIDTH + 6}
+        y={LABEL_BAND + GRAPH_HEIGHT + 16}
+        className="fill-text-2 text-[12px] font-bold"
+      >
         {t('review.result.graphBlack')}
       </text>
-      <g transform={`translate(${SCALE_WIDTH} 0)`}>
-        <path
-          d={graphPath(points)}
-          fill="none"
-          className="stroke-brand"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        {marker && (
-          <line
-            x1={marker.x}
-            x2={marker.x}
-            y1="0"
-            y2={GRAPH_HEIGHT}
-            className="stroke-edge"
-            strokeWidth="2"
+      <g transform={`translate(0 ${LABEL_BAND})`}>
+        {SCALE_PAWNS.map((pawns) => (
+          <g key={pawns}>
+            <line
+              x1={SCALE_WIDTH}
+              x2={SCALE_WIDTH + GRAPH_WIDTH}
+              y1={yOfPawns(pawns)}
+              y2={yOfPawns(pawns)}
+              className={pawns === 0 ? 'stroke-text-muted' : 'stroke-line'}
+              strokeDasharray={pawns === 0 ? undefined : '4 4'}
+            />
+            <text
+              x={SCALE_WIDTH - 6}
+              y={yOfPawns(pawns) + 4}
+              textAnchor="end"
+              className="fill-text-2 text-[11px] font-bold"
+            >
+              {pawns > 0 ? `+${pawns}` : pawns < 0 ? `${MINUS}${Math.abs(pawns)}` : '0'}
+            </text>
+          </g>
+        ))}
+        <g transform={`translate(${SCALE_WIDTH} 0)`}>
+          <path
+            d={graphPath(points)}
+            fill="none"
+            className="stroke-brand"
+            strokeWidth="3"
+            strokeLinejoin="round"
           />
-        )}
+          {marker && (
+            <line
+              x1={marker.x}
+              x2={marker.x}
+              y1="0"
+              y2={GRAPH_HEIGHT}
+              className="stroke-edge"
+              strokeWidth="2"
+            />
+          )}
+        </g>
       </g>
     </svg>
   );

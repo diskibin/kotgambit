@@ -73,6 +73,11 @@ interface BoardProps {
    * Used where the learner marks squares instead of moving.
    */
   onSquarePress?: (square: Square) => void;
+  /**
+   * With `onSquarePress`: lets the learner drag any piece to any square and reports it here,
+   * for the position editor.
+   */
+  onPieceMove?: (from: Square, to: Square) => void;
   /** Overrides the last move of the state, for the positions of a demo. */
   lastMove?: { from: Square; to: Square } | null;
 }
@@ -377,6 +382,7 @@ export function Board({
   marked = [],
   pieces: piecesOverride,
   onSquarePress,
+  onPieceMove,
   lastMove: lastMoveOverride,
 }: BoardProps) {
   const { t } = useTranslation();
@@ -416,6 +422,7 @@ export function Board({
     dispatch,
     disabled,
     onSquarePress,
+    onPieceMove,
     inner,
     cell,
   });
@@ -429,6 +436,7 @@ export function Board({
       dispatch,
       disabled,
       onSquarePress,
+      onPieceMove,
       inner,
       cell,
     };
@@ -451,7 +459,9 @@ export function Board({
         current.y - DRAG_LIFT_SQUARES * squareSize,
       );
       if (target && target !== current.from) {
-        latest.current.dispatch({ type: 'move/attempt', from: current.from, to: target });
+        const { onPieceMove: movePiece } = latest.current;
+        if (movePiece) movePiece(current.from, target);
+        else latest.current.dispatch({ type: 'move/attempt', from: current.from, to: target });
       }
     }
 
@@ -466,7 +476,7 @@ export function Board({
         const piece = start && latest.current.pieces.get(start.from);
         if (!start || !piece) return;
         // Selecting shows the target dots while the piece is in the air
-        if (latest.current.selected !== start.from) {
+        if (!latest.current.onPieceMove && latest.current.selected !== start.from) {
           latest.current.dispatch({ type: 'square/select', square: start.from });
         }
         const next = {
@@ -499,10 +509,10 @@ export function Board({
 
   const handleTouchStart = useCallback((square: Square, x: number, y: number) => {
     const { disabled: off, pendingPromotion: promoting, movable: canMove } = latest.current;
+    const { onSquarePress: press, onPieceMove: movePiece, pieces: placed } = latest.current;
+    const draggable = movePiece ? placed.has(square) : !press && canMove.has(square);
     pending.current =
-      !off && !promoting && !latest.current.onSquarePress && canMove.has(square)
-        ? { from: square, startX: x, startY: y }
-        : null;
+      !off && !promoting && draggable ? { from: square, startX: x, startY: y } : null;
   }, []);
 
   function labelFor(square: Square, piece: PlacedPiece | undefined): string {

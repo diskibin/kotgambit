@@ -60,6 +60,11 @@ interface BoardProps {
    * Used where the learner marks squares instead of moving.
    */
   onSquarePress?: (square: Square) => void;
+  /**
+   * With `onSquarePress`: lets the learner drag any piece to any square and reports it here,
+   * for the position editor.
+   */
+  onPieceMove?: (from: Square, to: Square) => void;
   /** Overrides the last move of the state, for the positions of a demo. */
   lastMove?: { from: Square; to: Square } | null;
 }
@@ -94,6 +99,7 @@ export function Board({
   marked = [],
   pieces: piecesOverride,
   onSquarePress,
+  onPieceMove,
   lastMove: lastMoveOverride,
 }: BoardProps) {
   const { t } = useTranslation();
@@ -155,9 +161,10 @@ export function Board({
   }
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (disabled || onSquarePress || pendingPromotion || event.button !== 0) return;
+    if (disabled || (onSquarePress && !onPieceMove) || pendingPromotion || event.button !== 0)
+      return;
     const square = squareOf(event.target);
-    if (!square || !movable.has(square)) return;
+    if (!square || !(onPieceMove ? pieces.has(square) : movable.has(square))) return;
     pending.current = {
       from: square,
       startX: event.clientX,
@@ -180,7 +187,8 @@ export function Board({
     if (distance < DRAG_THRESHOLD_PX || !piece) return;
     boardRef.current?.setPointerCapture?.(start.pointerId);
     // Selecting here shows the target dots while the piece is in the air
-    if (selected !== start.from) dispatch({ type: 'square/select', square: start.from });
+    if (!onPieceMove && selected !== start.from)
+      dispatch({ type: 'square/select', square: start.from });
     setDrag({
       from: start.from,
       piece,
@@ -199,7 +207,8 @@ export function Board({
     const target =
       rect && drop ? squareAtPoint(orientation, rect, event.clientX, event.clientY - lift) : null;
     if (target && target !== drag.from) {
-      dispatch({ type: 'move/attempt', from: drag.from, to: target });
+      if (onPieceMove) onPieceMove(drag.from, target);
+      else dispatch({ type: 'move/attempt', from: drag.from, to: target });
     }
     setDrag(null);
     // The click that follows pointerup must not toggle the selection made by the drag

@@ -86,6 +86,20 @@ describe('editorReducer', () => {
     expect(run([{ type: 'square/pressed', square: 'd1' }], state).pieces).toEqual({});
   });
 
+  it('moves a piece to any square, replacing what stands there', () => {
+    const moved = run([{ type: 'piece/moved', from: 'e2', to: 'e5' }], initialEditorState());
+    expect(moved.pieces.e2).toBeUndefined();
+    expect(moved.pieces.e5).toEqual({ color: 'w', type: 'p' });
+    const taken = run([{ type: 'piece/moved', from: 'd1', to: 'd8' }], initialEditorState());
+    expect(taken.pieces.d8).toEqual({ color: 'w', type: 'q' });
+    expect(Object.keys(taken.pieces)).toHaveLength(31);
+  });
+
+  it('ignores a move from an empty square', () => {
+    const state = initialEditorState();
+    expect(run([{ type: 'piece/moved', from: 'e4', to: 'e5' }], state)).toBe(state);
+  });
+
   it('wipes a square with the eraser', () => {
     const state = run(
       [

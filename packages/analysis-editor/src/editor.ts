@@ -28,6 +28,7 @@ export interface EditorState {
 export type EditorAction =
   | { type: 'tool/chosen'; tool: EditorTool | null }
   | { type: 'square/pressed'; square: Square }
+  | { type: 'piece/moved'; from: Square; to: Square }
   | { type: 'board/cleared' }
   | { type: 'board/reset' }
   | { type: 'orientation/flipped' }
@@ -139,6 +140,16 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       } else {
         pieces[action.square] = tool.piece;
       }
+      return { ...state, pieces };
+    }
+
+    case 'piece/moved': {
+      const piece = state.pieces[action.from];
+      if (!piece || action.from === action.to) return state;
+      // Any square is allowed and a piece there is replaced: the editor sets up positions, it does not play chess
+      const pieces = { ...state.pieces };
+      delete pieces[action.from];
+      pieces[action.to] = piece;
       return { ...state, pieces };
     }
 

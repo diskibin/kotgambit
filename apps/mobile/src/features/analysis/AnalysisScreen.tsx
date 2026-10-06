@@ -192,6 +192,7 @@ export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
         dispatch={() => undefined}
         pieces={pieces}
         onSquarePress={(square) => dispatch({ type: 'square/pressed', square })}
+        onPieceMove={(from, to) => dispatch({ type: 'piece/moved', from, to })}
         hintSquares={hintSquaresFor(problem, pieces)}
         arrows={arrows}
         size={boardSize}
@@ -278,6 +279,9 @@ export function AnalysisScreen({ onPremium }: { onPremium: () => void }) {
       <View accessibilityLabel={t('analysis.editor.castling')} style={{ gap: space[1] }}>
         <Text style={[typography.small, { color: colors.text }]}>
           {t('analysis.editor.castling')}
+        </Text>
+        <Text style={[typography.small, { color: colors.text2 }]}>
+          {t('analysis.editor.castlingHint')}
         </Text>
         {RIGHTS.map((right) => {
           const possible = canCastle(editor, right);

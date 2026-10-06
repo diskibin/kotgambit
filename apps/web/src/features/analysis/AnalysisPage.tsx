@@ -175,6 +175,7 @@ export function AnalysisPage() {
                 dispatch={() => undefined}
                 pieces={pieces}
                 onSquarePress={(square) => dispatch({ type: 'square/pressed', square })}
+                onPieceMove={(from, to) => dispatch({ type: 'piece/moved', from, to })}
                 hintSquares={hintSquaresFor(problem, pieces)}
                 arrows={arrows}
               />
@@ -242,6 +243,9 @@ export function AnalysisPage() {
               <legend className="mb-1 p-0 text-[15px] font-extrabold">
                 {t('analysis.editor.castling')}
               </legend>
+              <p className="m-0 mb-1 text-[14px] font-semibold text-text-2">
+                {t('analysis.editor.castlingHint')}
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 {RIGHTS.map((right) => {
                   const possible = canCastle(editor, right);

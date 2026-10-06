@@ -1,5 +1,6 @@
 import {
   ActiveGameSchema,
+  AdminStatsSchema,
   IdentitiesResponseSchema,
   OAuthLinkStartResponseSchema,
   OAuthProvidersResponseSchema,
@@ -36,6 +37,8 @@ import {
   PuzzleThemeListSchema,
   UserSchema,
   type ActiveGame,
+  type AdminStats,
+  type AnalyticsEventRequest,
   type Settings,
   type SetAccessoryRequest,
   type UpdateSettingsRequest,
@@ -356,6 +359,15 @@ export function endpoints(build: Builder) {
       }),
       responseSchema: MakeCardsResponseSchema,
       invalidatesTags: ['Cards'],
+    }),
+    // A step of an anonymous visitor, for the funnel of the admin page. Fire and forget: nothing waits for it
+    trackEvent: build.mutation<void, AnalyticsEventRequest>({
+      query: (body) => ({ url: '/analytics/events', method: 'POST', body }),
+    }),
+    // Only for the accounts in ADMIN_EMAILS, the others get a 404
+    adminStats: build.query<AdminStats, number>({
+      query: (days) => `/admin/stats?days=${days}`,
+      responseSchema: AdminStatsSchema,
     }),
     plans: build.query<PlansResponse, void>({
       query: () => '/billing/plans',

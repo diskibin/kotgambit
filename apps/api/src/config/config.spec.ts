@@ -16,6 +16,7 @@ describe('loadConfig', () => {
       accessTokenTtlSeconds: 900,
       refreshTokenTtlDays: 30,
       corsOrigins: [],
+      adminEmails: [],
       trustProxy: false,
       webUrl: 'http://localhost:5173',
       smtpUrl: undefined,
@@ -65,6 +66,14 @@ describe('loadConfig', () => {
     expect(config.port).toBe(8080);
     expect(config.isProduction).toBe(true);
     expect(config.corsOrigins).toEqual(['https://a.example.com', 'https://b.example.com']);
+  });
+
+  it('reads the admin emails in lower case', () => {
+    const config = loadConfig({
+      ...VALID_ENV,
+      ADMIN_EMAILS: ' Owner@Example.com, ,second@example.com',
+    });
+    expect(config.adminEmails).toEqual(['owner@example.com', 'second@example.com']);
   });
 
   it('fails when a required variable is missing', () => {

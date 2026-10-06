@@ -1002,3 +1002,61 @@ describe('billing endpoints', () => {
     expect(result.data?.url).toContain('/auth/oauth/google/start');
   });
 });
+
+describe('analytics and the admin page', () => {
+  it('reports a step of a visitor and reads the stats of a period', async () => {
+    let event: unknown;
+    let url = '';
+    server.use(
+      http.post(`${BASE_URL}/analytics/events`, async ({ request }) => {
+        event = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.get(`${BASE_URL}/admin/stats`, ({ request }) => {
+        url = request.url;
+        const zero = {
+          funnel: { visitors: 5, signedIn: 3, premiumView: 2, checkoutStart: 1, paid: 1 },
+          daily: [
+            {
+              day: '2026-10-06',
+              visitors: 5,
+              registrations: 1,
+              payments: 1,
+              revenueKopecks: 29900,
+            },
+          ],
+          users: { total: 9, registered: 1, dau: 1, wau: 2, mau: 3 },
+          premium: {
+            active: 1,
+            month: 1,
+            year: 0,
+            autoRenew: 1,
+            canceledPaid: 0,
+            newInPeriod: 1,
+            renewalsInPeriod: 0,
+            failedPayments: 0,
+            revenueKopecks: 29900,
+            totalRevenueKopecks: 29900,
+          },
+          usage: {
+            gamesStarted: 0,
+            gamesFinished: 0,
+            puzzlesStarted: 0,
+            puzzlesSolved: 0,
+            lessonsCompleted: 0,
+            reviewsDone: 0,
+          },
+        };
+        return HttpResponse.json({ days: 1, ...zero });
+      }),
+    );
+    const { api, store } = setup();
+    const visitorId = '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11';
+    await store.dispatch(api.endpoints.trackEvent.initiate({ visitorId, name: 'visit' }));
+    expect(event).toEqual({ visitorId, name: 'visit' });
+
+    const stats = await store.dispatch(api.endpoints.adminStats.initiate(7));
+    expect(url).toContain('days=7');
+    expect(stats.data?.funnel.visitors).toBe(5);
+  });
+});

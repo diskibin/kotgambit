@@ -95,6 +95,16 @@ const EnvSchema = z.object({
     .int()
     .min(0)
     .default(DEFAULT_RENEWAL_CHECK_MINUTES),
+  /** Comma-separated emails of the people who may open the admin page. Empty: nobody can. */
+  ADMIN_EMAILS: z
+    .string()
+    .default('')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ),
   /** Comma-separated list of origins allowed to call the API from a browser. */
   CORS_ORIGINS: z
     .string()
@@ -159,6 +169,8 @@ export interface AppConfig {
   accessTokenTtlSeconds: number;
   refreshTokenTtlDays: number;
   corsOrigins: string[];
+  /** In lower case, like the emails of the users. */
+  adminEmails: string[];
   isProduction: boolean;
 }
 
@@ -250,6 +262,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     accessTokenTtlSeconds: values.ACCESS_TOKEN_TTL_SECONDS,
     refreshTokenTtlDays: values.REFRESH_TOKEN_TTL_DAYS,
     corsOrigins: values.CORS_ORIGINS,
+    adminEmails: values.ADMIN_EMAILS,
     isProduction: values.NODE_ENV === 'production',
   };
 }

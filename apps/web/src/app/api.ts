@@ -42,6 +42,8 @@ export const api = createApi({
 });
 
 export const {
+  useAdminStatsQuery,
+  useTrackEventMutation,
   useActiveGameQuery,
   useDeleteAccountMutation,
   useSettingsQuery,

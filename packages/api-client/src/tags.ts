@@ -9,6 +9,7 @@ export const TAG_TYPES = [
   'Billing',
   'Settings',
   'Identities',
+  'Admin',
 ] as const;
 export type TagType = (typeof TAG_TYPES)[number];
 

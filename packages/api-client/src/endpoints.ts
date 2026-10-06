@@ -1,6 +1,11 @@
 import {
   ActiveGameSchema,
   AdminStatsSchema,
+  AdminUserListSchema,
+  AdminUserSchema,
+  LearningStatsSchema,
+  PaymentsStatsSchema,
+  ServerHealthSchema,
   IdentitiesResponseSchema,
   OAuthLinkStartResponseSchema,
   OAuthProvidersResponseSchema,
@@ -38,6 +43,13 @@ import {
   UserSchema,
   type ActiveGame,
   type AdminStats,
+  type AdminUser,
+  type AdminUserList,
+  type GrantPremiumRequest,
+  type LearningStats,
+  type PaymentsStats,
+  type RevokePremiumRequest,
+  type ServerHealth,
   type AnalyticsEventRequest,
   type Settings,
   type SetAccessoryRequest,
@@ -368,6 +380,47 @@ export function endpoints(build: Builder) {
     adminStats: build.query<AdminStats, number>({
       query: (days) => `/admin/stats?days=${days}`,
       responseSchema: AdminStatsSchema,
+    }),
+    adminLearning: build.query<LearningStats, number>({
+      query: (days) => `/admin/learning?days=${days}`,
+      responseSchema: LearningStatsSchema,
+    }),
+    adminPayments: build.query<PaymentsStats, number>({
+      query: (days) => `/admin/payments?days=${days}`,
+      responseSchema: PaymentsStatsSchema,
+    }),
+    adminHealth: build.query<ServerHealth, void>({
+      query: () => '/admin/health',
+      responseSchema: ServerHealthSchema,
+    }),
+    adminUsers: build.query<AdminUserList, string>({
+      query: (q) => `/admin/users?q=${encodeURIComponent(q)}`,
+      responseSchema: AdminUserListSchema,
+      providesTags: ['Admin'],
+    }),
+    adminUser: build.query<AdminUser, string>({
+      query: (id) => `/admin/users/${encodeURIComponent(id)}`,
+      responseSchema: AdminUserSchema,
+      providesTags: ['Admin'],
+    }),
+    // Both answer with the account as it is after the change
+    grantPremium: build.mutation<AdminUser, GrantPremiumRequest & { id: string }>({
+      query: ({ id, ...body }) => ({
+        url: `/admin/users/${encodeURIComponent(id)}/premium`,
+        method: 'POST',
+        body,
+      }),
+      responseSchema: AdminUserSchema,
+      invalidatesTags: ['Admin'],
+    }),
+    revokePremium: build.mutation<AdminUser, RevokePremiumRequest & { id: string }>({
+      query: ({ id, ...body }) => ({
+        url: `/admin/users/${encodeURIComponent(id)}/premium/revoke`,
+        method: 'POST',
+        body,
+      }),
+      responseSchema: AdminUserSchema,
+      invalidatesTags: ['Admin'],
     }),
     plans: build.query<PlansResponse, void>({
       query: () => '/billing/plans',

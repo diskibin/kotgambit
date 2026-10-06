@@ -1060,3 +1060,50 @@ describe('analytics and the admin page', () => {
     expect(stats.data?.funnel.visitors).toBe(5);
   });
 });
+
+describe('the account tools of the admin page', () => {
+  const ID = '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11';
+  const ACCOUNT = {
+    id: ID,
+    email: 'cat@example.com',
+    displayName: null,
+    emailVerified: true,
+    createdAt: '2026-10-01T10:00:00.000Z',
+    lastActiveDay: null,
+    xpTotal: 0,
+    lessonsCompleted: 0,
+    puzzlesSolved: 0,
+    gamesPlayed: 0,
+    hasPassword: true,
+    providers: [],
+    subscription: null,
+    payments: [],
+    actions: [],
+  };
+
+  it('searches, opens an account, and sends the days and the reason without the id in the body', async () => {
+    let body: unknown;
+    let query = '';
+    server.use(
+      http.get(`${BASE_URL}/admin/users`, ({ request }) => {
+        query = new URL(request.url).searchParams.get('q') ?? '';
+        return HttpResponse.json({ users: [] });
+      }),
+      http.get(`${BASE_URL}/admin/users/${ID}`, () => HttpResponse.json(ACCOUNT)),
+      http.post(`${BASE_URL}/admin/users/${ID}/premium`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(ACCOUNT);
+      }),
+    );
+    const { api, store } = setup();
+    await store.dispatch(api.endpoints.adminUsers.initiate('a+b@x'));
+    expect(query).toBe('a+b@x');
+    expect((await store.dispatch(api.endpoints.adminUser.initiate(ID))).data?.email).toBe(
+      'cat@example.com',
+    );
+    await store.dispatch(
+      api.endpoints.grantPremium.initiate({ id: ID, days: 30, reason: 'Подарок' }),
+    );
+    expect(body).toEqual({ days: 30, reason: 'Подарок' });
+  });
+});

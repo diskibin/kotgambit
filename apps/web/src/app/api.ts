@@ -42,7 +42,14 @@ export const api = createApi({
 });
 
 export const {
+  useAdminHealthQuery,
+  useAdminLearningQuery,
+  useAdminPaymentsQuery,
   useAdminStatsQuery,
+  useAdminUserQuery,
+  useAdminUsersQuery,
+  useGrantPremiumMutation,
+  useRevokePremiumMutation,
   useTrackEventMutation,
   useActiveGameQuery,
   useDeleteAccountMutation,

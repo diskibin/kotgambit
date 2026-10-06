@@ -292,15 +292,6 @@ export function SettingsScreen({
           </View>
         )}
 
-        <Group title={t('settings.appearance.title')}>
-          <Tabs
-            label={t('settings.appearance.theme')}
-            tabs={THEMES.map((id) => ({ id, label: t(`settings.appearance.${id}`) }))}
-            value={preferences.theme}
-            onChange={(id) => dispatch(themeChanged(id))}
-          />
-        </Group>
-
         <Group title={t('settings.board.title')}>
           <View
             accessibilityRole="radiogroup"
@@ -335,6 +326,15 @@ export function SettingsScreen({
             text={t('settings.board.coordinates.text')}
             value={preferences.coordinates}
             onChange={(value) => dispatch(coordinatesChanged(value))}
+          />
+        </Group>
+
+        <Group title={t('settings.appearance.title')}>
+          <Tabs
+            label={t('settings.appearance.theme')}
+            tabs={THEMES.map((id) => ({ id, label: t(`settings.appearance.${id}`) }))}
+            value={preferences.theme}
+            onChange={(id) => dispatch(themeChanged(id))}
           />
         </Group>
 

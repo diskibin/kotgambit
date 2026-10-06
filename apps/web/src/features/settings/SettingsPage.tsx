@@ -225,48 +225,6 @@ export function SettingsPage() {
           />
         </Card>
 
-        <Card title={t('settings.account.title')}>
-          <dl className="m-0 grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-3 text-[15px]">
-            <dt className="font-semibold text-text-2">{t('settings.account.email')}</dt>
-            <dd className="m-0 font-bold">
-              {me.data?.email}
-              <span className="ml-2 font-semibold text-text-2">
-                ·{' '}
-                {me.data?.emailVerified
-                  ? t('settings.account.verified')
-                  : t('settings.account.unverified')}
-              </span>
-            </dd>
-            <dd className="m-0" />
-            <dt className="font-semibold text-text-2">{t('settings.account.password')}</dt>
-            <dd className="m-0 text-[14px] font-semibold text-text-2">
-              {t('settings.account.passwordText')}
-            </dd>
-            <dd className="m-0">
-              <Button variant="text" onClick={() => void navigate('/reset')}>
-                {t('settings.account.change')}
-              </Button>
-            </dd>
-            <dt className="font-semibold text-text-2">{t('settings.account.subscription')}</dt>
-            <dd className="m-0 font-bold">
-              {premium ? t('settings.account.premium') : t('settings.account.free')}
-            </dd>
-            <dd className="m-0">
-              <Button variant="text" onClick={() => void navigate('/premium')}>
-                {t('settings.account.manage')}
-              </Button>
-            </dd>
-          </dl>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => void logout()}>
-              {t('settings.account.signOut')}
-            </Button>
-            <Button variant="caution" onClick={() => setConfirming(true)}>
-              {t('settings.account.delete')}
-            </Button>
-          </div>
-        </Card>
-
         <Card title={t('settings.appearance.title')}>
           <div className="flex flex-col gap-2">
             <span className="text-[15px] font-extrabold">{t('settings.appearance.theme')}</span>
@@ -312,6 +270,48 @@ export function SettingsPage() {
             onChange={(id) => void updateSettings({ dailyGoalMinutes: Number(id) as 5 | 10 | 15 })}
           />
           {updating.isError && <Banner>{t('settings.goal.error')}</Banner>}
+        </Card>
+
+        <Card title={t('settings.account.title')}>
+          <dl className="m-0 grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-3 text-[15px]">
+            <dt className="font-semibold text-text-2">{t('settings.account.email')}</dt>
+            <dd className="m-0 font-bold">
+              {me.data?.email}
+              <span className="ml-2 font-semibold text-text-2">
+                ·{' '}
+                {me.data?.emailVerified
+                  ? t('settings.account.verified')
+                  : t('settings.account.unverified')}
+              </span>
+            </dd>
+            <dd className="m-0" />
+            <dt className="font-semibold text-text-2">{t('settings.account.password')}</dt>
+            <dd className="m-0 text-[14px] font-semibold text-text-2">
+              {t('settings.account.passwordText')}
+            </dd>
+            <dd className="m-0">
+              <Button variant="text" onClick={() => void navigate('/reset')}>
+                {t('settings.account.change')}
+              </Button>
+            </dd>
+            <dt className="font-semibold text-text-2">{t('settings.account.subscription')}</dt>
+            <dd className="m-0 font-bold">
+              {premium ? t('settings.account.premium') : t('settings.account.free')}
+            </dd>
+            <dd className="m-0">
+              <Button variant="text" onClick={() => void navigate('/premium')}>
+                {t('settings.account.manage')}
+              </Button>
+            </dd>
+          </dl>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={() => void logout()}>
+              {t('settings.account.signOut')}
+            </Button>
+            <Button variant="caution" onClick={() => setConfirming(true)}>
+              {t('settings.account.delete')}
+            </Button>
+          </div>
         </Card>
       </div>
 

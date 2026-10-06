@@ -3,6 +3,15 @@ nodeLinker: hoisted
 packages:
   - apps/*
   - packages/*
+# Versions that fix advisories in packages that come only through tools (the Prisma CLI, Vite). Each line says
+# what it is for; remove it when the tool that brings the package has a version that is not affected
+overrides:
+  # DoS in the indexed source maps, comes through postcss of Vite and Tailwind
+  source-map-js: '>=1.2.2'
+  # Leaks a password through a downgraded auth plugin and an unbounded inflate, comes through the Prisma CLI
+  mysql2: '>=3.23.1'
+  # Stack exhaustion on recursive objects, comes through the Prisma CLI
+  deepmerge-ts: '>=8.0.0'
 allowBuilds:
   '@prisma/engines': true
   '@swc/core': true

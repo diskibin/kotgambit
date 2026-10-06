@@ -47,6 +47,8 @@ export function homeHandlers(lessons: unknown[] = LESSONS) {
     http.get(`${API_URL}/lessons`, () => HttpResponse.json({ lessons })),
     http.get(`${API_URL}/progress/summary`, () => HttpResponse.json(PROGRESS)),
     http.get(`${API_URL}/puzzles/daily`, () => HttpResponse.json(DAILY)),
+    // The weak theme on the home screen is a nicety: without a profile there is just no card
+    http.get(`${API_URL}/profile`, () => new HttpResponse(null, { status: 500 })),
     http.get(`${API_URL}/billing/subscription`, () =>
       HttpResponse.json({
         premium: false,

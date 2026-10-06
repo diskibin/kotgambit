@@ -1,8 +1,10 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { homeHandlers, LESSONS } from '../../test/handlers';
+import { PROFILE } from '../../test/profile';
 import { API_URL, renderApp, USER } from '../../test/renderApp';
 
 const AUTH = { accessToken: 'token-1', expiresIn: 900, user: USER };
@@ -35,6 +37,48 @@ beforeEach(() => {
   );
 });
 afterEach(() => server.resetHandlers());
+
+describe('the weakest theme on the home screen', () => {
+  it('offers to train the theme that goes worst, and starts it', async () => {
+    const user = userEvent.setup();
+    const asked: unknown[] = [];
+    server.use(
+      // The first handler that fits wins, so the ones of this test come before the usual ones
+      http.get(`${API_URL}/profile`, () => HttpResponse.json(PROFILE)),
+      http.post(`${API_URL}/puzzles/next`, async ({ request }) => {
+        asked.push(await request.json());
+        return HttpResponse.json(
+          { code: 'puzzle.none', message: 'Подходящих задач пока нет.' },
+          { status: 404 },
+        );
+      }),
+      ...homeHandlers(),
+    );
+    renderApp('/learn');
+    const card = (await screen.findByText('Подтяни слабую тему')).closest('section') as HTMLElement;
+    expect(within(card).getByText('Связка')).toBeInTheDocument();
+    expect(within(card).getByText(/Решено с первой попытки: 31%/)).toBeInTheDocument();
+    await user.click(within(card).getByRole('button', { name: 'Тренировать' }));
+    await waitFor(() => expect(asked[0]).toMatchObject({ mode: 'theme', theme: 'pin' }));
+  });
+
+  it('says nothing while there is no theme with enough tries', async () => {
+    server.use(
+      http.get(`${API_URL}/profile`, () => HttpResponse.json({ ...PROFILE, themes: [] })),
+      ...homeHandlers(),
+    );
+    renderApp('/learn');
+    await screen.findByText('Задача дня');
+    expect(screen.queryByText('Подтяни слабую тему')).not.toBeInTheDocument();
+  });
+
+  it('is not missed when the profile cannot be read', async () => {
+    server.use(...homeHandlers());
+    renderApp('/learn');
+    await screen.findByText('Задача дня');
+    expect(screen.queryByText('Подтяни слабую тему')).not.toBeInTheDocument();
+  });
+});
 
 describe('the home screen', () => {
   it('shows the puzzle of the day and the sections ahead', async () => {

@@ -1061,6 +1061,11 @@ export const ru = {
       streak_many: 'Серия: {{count}} дней',
       streak_other: 'Серия: {{count}} дня',
     },
+    weak: {
+      title: 'Подтяни слабую тему',
+      text: 'Решено с первой попытки: {{accuracy}}%. Потренируйся, и станет легче.',
+      action: 'Тренировать',
+    },
     afterTrack: {
       basics: 'Основ',
       openings: 'Дебютов',

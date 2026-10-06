@@ -3,7 +3,7 @@ import type { LessonSummary } from '@kotgambit/contracts';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
-import { useDailyPuzzleQuery, useLessonsQuery } from '../../app/api';
+import { useDailyPuzzleQuery, useLessonsQuery, useProfileQuery } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { localDateKey } from '../../shared/localDate';
 import { AppShell } from '../../shared/ui/AppShell';
@@ -141,6 +141,8 @@ export function PathPage() {
   const signedIn = status === 'authenticated';
   const lessons = useLessonsQuery(undefined, { skip: !signedIn });
   const daily = useDailyPuzzleQuery(localDateKey(), { skip: !signedIn });
+  // The profile is shared with its page through the cache, only the weakest theme is read here
+  const weakest = useProfileQuery(localDateKey(), { skip: !signedIn }).data?.themes[0];
   const [showAll, setShowAll] = useState(false);
   const ribbon = useRef<HTMLDivElement>(null);
   const currentId = lessons.data?.lessons.find((lesson) => lesson.status === 'available')?.id;
@@ -343,6 +345,26 @@ export function PathPage() {
                 />
               );
             })}
+          </section>
+        )}
+
+        {weakest && (
+          <section
+            aria-label={t('path.weak.title')}
+            className="flex flex-wrap items-center gap-4 rounded-chapter border-2 border-edge bg-brand-tint px-5 py-4 shadow-shashka"
+          >
+            <div className="flex min-w-[220px] flex-1 flex-col gap-0.5">
+              <b className="text-[12px] font-extrabold tracking-[0.06em] text-text-2 uppercase">
+                {t('path.weak.title')}
+              </b>
+              <span className="font-heading text-[19px] leading-7 font-bold">{weakest.title}</span>
+              <span className="text-[14px] font-semibold text-text-2">
+                {t('path.weak.text', { accuracy: weakest.accuracy })}
+              </span>
+            </div>
+            <Button onClick={() => void navigate(`/puzzles/solve?mode=theme&theme=${weakest.key}`)}>
+              {t('path.weak.action')}
+            </Button>
           </section>
         )}
       </div>

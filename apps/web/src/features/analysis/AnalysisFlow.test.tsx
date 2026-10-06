@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
@@ -256,6 +256,13 @@ describe('the review', () => {
     counts: { best: 3, good: 2, inaccuracy: 0, mistake: 0, blunder: 2 },
     chances: [50, 50, 20, 20, 0],
     qualities: ['best', 'best', 'blunder', 'best'],
+    evals: [{ cp: 20 }, { cp: 20 }, { cp: 30 }, { mate: -1 }, { over: 'black' }],
+    best: [
+      { uci: 'e2e4', san: 'e4' },
+      { uci: 'e7e5', san: 'e5' },
+      { uci: 'e2e4', san: 'e4' },
+      { uci: 'd8h4', san: 'Qh4#' },
+    ],
     mistakes: [],
     keyMoments: [
       {
@@ -339,7 +346,7 @@ describe('the review', () => {
     expect(screen.getByText('Поражение · мат на 2-м ходу')).toBeInTheDocument();
     expect(screen.getByText('★ 3 лучших')).toBeInTheDocument();
     expect(screen.getByText('?? 2 зевков')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Шансы белых по ходам' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Шансы белых по ходам/ })).toBeInTheDocument();
   }, 10_000);
 
   it('points at a key moment on the board with the move and the better one', async () => {
@@ -350,9 +357,83 @@ describe('the review', () => {
       screen.getByText('После g4 у соперника мат в 1 ход. Лучше было e4.'),
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Показать' }));
-    expect(screen.getByText('Ты сыграл: g4 · Лучше: e4')).toBeInTheDocument();
+    const info = screen.getByRole('region', { name: 'Выбранный ход' });
+    expect(within(info).getByText('Лучше: e4')).toBeInTheDocument();
+    expect(within(info).getByText('Оценка: было +0.3, стало −#1')).toBeInTheDocument();
+    expect(within(info).getByText(/После g4 у соперника мат в 1 ход/)).toBeInTheDocument();
     expect(screen.getByText('Ход 2 из 4')).toBeInTheDocument();
   }, 10_000);
+
+  describe('clicking the graph', () => {
+    /** The graph is 400 wide in a test, so that the half-move under a click is easy to count: 100 px each. */
+    async function graph() {
+      const svg = (await screen.findByRole(
+        'img',
+        { name: /Шансы белых по ходам/ },
+        { timeout: 6000 },
+      )) as unknown as SVGSVGElement;
+      svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 400, height: 100 }) as DOMRect;
+      return svg;
+    }
+
+    it('shows the move under the click, the numbers before and after it, and the better move', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      fireEvent.click(await graph(), { clientX: 100 });
+      const info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(within(info).getByText(/1\. f3/)).toBeInTheDocument();
+      expect(within(info).getByText(/твой ход/)).toBeInTheDocument();
+      expect(within(info).getByText('Оценка: было +0.2, стало +0.2')).toBeInTheDocument();
+      expect(within(info).getByText('Лучше: e4')).toBeInTheDocument();
+      expect(within(info).getByText(/плюс — лучше у белых/)).toBeInTheDocument();
+      // The board stands before the move, to show it and the better one
+      expect(screen.getByText('Ход 0 из 4')).toBeInTheDocument();
+    });
+
+    it('says when the move was the best one, and whose move it was', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      fireEvent.click(await graph(), { clientX: 200 });
+      const info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(within(info).getByText(/1… e5/)).toBeInTheDocument();
+      expect(within(info).getByText(/ход соперника/)).toBeInTheDocument();
+      expect(within(info).getByText('Это лучший ход')).toBeInTheDocument();
+    });
+
+    it('writes a mate and the end of the game the way a chess player does', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      fireEvent.click(await graph(), { clientX: 400 });
+      const info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(
+        within(info).getByText('Оценка: было −#1, стало Мат: победа чёрных'),
+      ).toBeInTheDocument();
+    });
+
+    it('goes back to the start of the game from the left edge', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      const svg = await graph();
+      fireEvent.click(svg, { clientX: 300 });
+      expect(screen.getByRole('region', { name: 'Выбранный ход' })).toBeInTheDocument();
+      fireEvent.click(svg, { clientX: 0 });
+      expect(screen.queryByRole('region', { name: 'Выбранный ход' })).not.toBeInTheDocument();
+      expect(screen.getByText('Ход 0 из 4')).toBeInTheDocument();
+    });
+
+    it('leaves out what an older review does not have, and keeps the move itself', async () => {
+      const older: Partial<typeof REVIEW> = { ...REVIEW };
+      delete older.evals;
+      delete older.best;
+      server.use(
+        http.get(`${API_URL}/games/${GAME_ID}/review`, () =>
+          HttpResponse.json({ status: 'done', done: 5, total: 5, review: older, full: true }),
+        ),
+      );
+      renderApp(`/review/${GAME_ID}`);
+      fireEvent.click(await graph(), { clientX: 100 });
+      const info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(within(info).getByText(/1\. f3/)).toBeInTheDocument();
+      expect(within(info).queryByText(/Оценка:/)).not.toBeInTheDocument();
+      expect(within(info).queryByText(/Лучше:/)).not.toBeInTheDocument();
+    });
+  });
 
   it('steps through the game', async () => {
     const user = userEvent.setup();

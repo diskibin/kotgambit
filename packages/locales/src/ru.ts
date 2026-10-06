@@ -1373,6 +1373,9 @@ export const ru = {
     },
   },
   review: {
+    eval: {
+      over: { white: 'Мат: победа белых', black: 'Мат: победа чёрных', draw: 'Ничья' },
+    },
     title: 'Разбор партии',
     close: 'К партии',
     loading: {
@@ -1412,7 +1415,16 @@ export const ru = {
       quality_mistake: 'ошибок',
       quality_blunder: 'зевков',
       graph: 'График оценки',
-      graphLabel: 'Шансы белых по ходам',
+      graphHint: 'Нажми на любое место графика, чтобы посмотреть ход.',
+      graphLabel: 'Шансы белых по ходам. Нажми на график, чтобы посмотреть ход.',
+      graphWhite: 'Лучше белым',
+      graphBlack: 'Лучше чёрным',
+      moveInfo: 'Выбранный ход',
+      yourMove: 'твой ход',
+      theirMove: 'ход соперника',
+      evalChange: 'Оценка: было {{before}}, стало {{after}}',
+      wasBest: 'Это лучший ход',
+      evalHint: 'Оценка, как в шахматах: плюс — лучше у белых, минус — у чёрных.',
       moments: 'Ключевые моменты',
       noMoments: 'Ярких моментов не нашлось: партия прошла ровно.',
       moveOf: '{{number}}. {{san}}',

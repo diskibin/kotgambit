@@ -7,7 +7,7 @@ import {
   type EngineScore,
   type MoveQuality,
 } from '@kotgambit/chess-core';
-import type { GameReview, KeyMoment } from '@kotgambit/contracts';
+import type { GameReview, KeyMoment, PositionEvalValue } from '@kotgambit/contracts';
 import { pluralMoves } from './explain.js';
 
 type Side = 'w' | 'b';
@@ -39,6 +39,14 @@ function whiteChance(position: PositionEval): number {
   if (position.ending === 'checkmate') return position.turn === 'w' ? 0 : 100;
   if (position.ending === 'draw' || position.score === null) return 50;
   return winPercent(whiteScore(position.score, position.turn));
+}
+
+/** The evaluation of a position from White's side, as the review shows it. */
+function evalOf(position: PositionEval): PositionEvalValue {
+  if (position.ending === 'checkmate') return { over: position.turn === 'w' ? 'black' : 'white' };
+  if (position.ending === 'draw' || position.score === null) return { over: 'draw' };
+  const score = whiteScore(position.score, position.turn);
+  return score.kind === 'mate' ? { mate: score.value } : { cp: Math.round(score.value) };
 }
 
 /** The SAN of a move that the engine proposed for a position, which is legal by construction. */
@@ -177,6 +185,13 @@ export function buildReview(
     counts,
     chances: chances.map(rounded),
     qualities,
+    evals: positions.map(evalOf),
+    best: moves.map((_move, index) => {
+      const before = positions[index] as PositionEval;
+      return before.bestUci
+        ? { uci: before.bestUci, san: sanOf(before.fen, before.bestUci) }
+        : null;
+    }),
     keyMoments,
     mistakes: mistakes.slice(0, MAX_MISTAKES),
   };
@@ -191,5 +206,8 @@ export function briefReview(review: GameReview): GameReview {
     review.keyMoments.find((moment) => moment.kind === 'blunder') ??
     review.keyMoments.find((moment) => moment.kind === 'mistake') ??
     review.keyMoments[0];
-  return { ...review, keyMoments: worst ? [worst] : [], mistakes: [] };
+  // The best move of every ply is part of the full look, like the other moments and the cards
+  const brief = { ...review, keyMoments: worst ? [worst] : [], mistakes: [] };
+  delete brief.best;
+  return brief;
 }

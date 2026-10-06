@@ -95,6 +95,17 @@ export const ReviewMistakeSchema = z.object({
 });
 export type ReviewMistake = z.infer<typeof ReviewMistakeSchema>;
 
+/**
+ * How good a position is for White, as a chess player writes it: pawns (`cp` in hundredths: 150 is +1.5),
+ * a mate in so many moves (positive when White mates), or the end of the game.
+ */
+export const PositionEvalSchema = z.union([
+  z.object({ cp: z.number().int() }),
+  z.object({ mate: z.number().int() }),
+  z.object({ over: z.enum(['white', 'black', 'draw']) }),
+]);
+export type PositionEvalValue = z.infer<typeof PositionEvalSchema>;
+
 export const GameReviewSchema = z.object({
   /** Accuracy from 0 to 100, `null` for a side that made no moves. */
   accuracy: z.object({ player: z.number().int().nullable(), bot: z.number().int().nullable() }),
@@ -110,6 +121,18 @@ export const GameReviewSchema = z.object({
   chances: z.array(z.number().min(0).max(100)),
   /** The quality of every half-move, in order. */
   qualities: z.array(MoveQualitySchema),
+  /**
+   * The evaluation of every position, before the first move and after every half-move, from White's side.
+   * Reviews made before this was kept do not have it.
+   */
+  evals: z.array(PositionEvalSchema).optional(),
+  /**
+   * What the engine preferred in the position before every half-move, `null` where it had nothing to say.
+   * Premium: a brief review leaves it out. Reviews made before this was kept do not have it.
+   */
+  best: z
+    .array(z.object({ uci: z.string().regex(UCI_MOVE), san: z.string() }).nullable())
+    .optional(),
   keyMoments: z.array(KeyMomentSchema),
   /** Every mistake and blunder of the learner, for making cards. */
   mistakes: z.array(ReviewMistakeSchema),

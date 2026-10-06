@@ -1,7 +1,7 @@
 import { STARTING_FEN, playGame } from '@kotgambit/chess-core';
 import { describe, expect, it } from 'vitest';
 import { describeVerdict, explainMove, lineToSan, pluralMoves } from './explain.js';
-import { buildReview, type PositionEval, type ReviewMove } from './review.js';
+import { briefReview, buildReview, type PositionEval, type ReviewMove } from './review.js';
 
 const FOOLS_MATE = ['f2f3', 'e7e5', 'g2g4', 'd8h4'];
 
@@ -147,6 +147,49 @@ describe('buildReview', () => {
     expect(review.chances).toHaveLength(5);
     expect(review.chances[0]).toBeGreaterThan(50);
     expect(review.chances.at(-1)).toBe(0);
+  });
+
+  it('gives the evaluation of every position from the side of White, the end of the game as it is', () => {
+    const { evals } = buildReview(moves, positions, 'w');
+    expect(evals).toEqual([
+      { cp: 20 },
+      // Black to move with +150 is -150 for White
+      { cp: -150 },
+      { cp: -140 },
+      { mate: -1 },
+      { over: 'black' },
+    ]);
+  });
+
+  it('says a draw and an unknown score as a draw', () => {
+    const drawn = [position(0, 'w', null, null, 'draw'), position(1, 'b', null, null, null)];
+    expect(buildReview(moves.slice(0, 1), drawn, 'w').evals).toEqual([
+      { over: 'draw' },
+      { over: 'draw' },
+    ]);
+  });
+
+  it('keeps what the engine preferred before every move, with the move written out', () => {
+    const { best } = buildReview(moves, positions, 'w');
+    expect(best).toHaveLength(4);
+    expect(best?.map((move) => move?.uci)).toEqual(['e2e4', 'e7e5', 'e2e4', 'd8h4']);
+    expect(best?.[0]).toEqual({ uci: 'e2e4', san: 'e4' });
+    expect(best?.[3]?.san).toBe('Qh4#');
+  });
+
+  it('has nothing for a move where the engine had no move to offer', () => {
+    const quiet = [
+      position(0, 'w', { kind: 'cp', value: 0 }, null),
+      position(1, 'b', { kind: 'cp', value: 0 }, null),
+    ];
+    expect(buildReview(moves.slice(0, 1), quiet, 'w').best).toEqual([null]);
+  });
+
+  it('keeps the numbers in the brief review and takes the best moves out of it', () => {
+    const brief = briefReview(buildReview(moves, positions, 'w'));
+    expect(brief.evals).toHaveLength(5);
+    expect(brief.best).toBeUndefined();
+    expect(brief.mistakes).toEqual([]);
   });
 
   it('rates the side that played the engine’s moves higher', () => {

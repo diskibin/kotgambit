@@ -27,6 +27,7 @@ import { ProgressBar } from '../../shared/ui/ProgressBar';
 import { Board } from '../board';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
+import { formatEval } from './formatEval';
 
 const POLL_MS = 1500;
 const GRAPH_WIDTH = 440;
@@ -45,7 +46,17 @@ function Ring({ label, value, name }: { label: string; value: number | null; nam
   );
 }
 
-function Graph({ review, current }: { review: GameReview; current: number }) {
+function Graph({
+  review,
+  current,
+  onPick,
+}: {
+  review: GameReview;
+  /** The position shown on the board: the line stands on it. */
+  current: number;
+  /** A click on the graph: the half-move it is over, 0 for the start. */
+  onPick: (ply: number) => void;
+}) {
   const { t } = useTranslation();
   const points = chancesGraph(review.chances, GRAPH_WIDTH, GRAPH_HEIGHT);
   const marker = points[Math.min(current, points.length - 1)];
@@ -54,8 +65,20 @@ function Graph({ review, current }: { review: GameReview; current: number }) {
       role="img"
       aria-label={t('review.result.graphLabel')}
       viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
-      className="h-auto w-full rounded-card border-2 border-line bg-surface"
+      className="h-auto w-full cursor-pointer rounded-card border-2 border-line bg-surface"
+      onClick={(event) => {
+        const box = event.currentTarget.getBoundingClientRect();
+        if (box.width === 0) return;
+        const share = (event.clientX - box.left) / box.width;
+        onPick(Math.max(0, Math.min(points.length - 1, Math.round(share * (points.length - 1)))));
+      }}
     >
+      <text x="6" y="14" className="fill-text-2 text-[11px] font-bold">
+        {t('review.result.graphWhite')}
+      </text>
+      <text x="6" y={GRAPH_HEIGHT - 6} className="fill-text-2 text-[11px] font-bold">
+        {t('review.result.graphBlack')}
+      </text>
       <line
         x1="0"
         x2={GRAPH_WIDTH}
@@ -146,7 +169,8 @@ export function ReviewPage() {
   const ready = signedIn && game.data?.status === 'finished';
   const review = useReviewPolling(id, ready);
   const [ply, setPly] = useState<number | null>(null);
-  const [shown, setShown] = useState<KeyMoment | null>(null);
+  // The half-move that is being looked at: the board stands before it, with its move and the better one drawn
+  const [focus, setFocus] = useState<number | null>(null);
 
   // Asking twice is fine for the server, but there is no reason to ask more than once per screen
   useEffect(() => {
@@ -217,24 +241,36 @@ export function ReviewPage() {
     );
   }
 
-  const arrows = shown
-    ? [
-        {
-          from: shown.played.uci.slice(0, 2),
-          to: shown.played.uci.slice(2, 4),
-          color: 'sun' as const,
-        },
-        ...(shown.better
-          ? [
-              {
-                from: shown.better.uci.slice(0, 2),
-                to: shown.better.uci.slice(2, 4),
-                color: 'mint' as const,
-              },
-            ]
-          : []),
-      ]
-    : [];
+  const focused = focus !== null ? (moves[focus - 1] ?? null) : null;
+  const moment = focus !== null ? result.keyMoments.find((item) => item.ply === focus) : undefined;
+  // The best move is Premium's for every half-move, the key moment brings its own for the ones it points at
+  const better = (focus !== null ? result.best?.[focus - 1] : null) ?? moment?.better ?? null;
+  const evalBefore = focus !== null ? result.evals?.[focus - 1] : undefined;
+  const evalAfter = focus !== null ? result.evals?.[focus] : undefined;
+  const arrows =
+    focused && focus !== null
+      ? [
+          {
+            from: focused.uci.slice(0, 2),
+            to: focused.uci.slice(2, 4),
+            color: 'sun' as const,
+          },
+          ...(better && better.uci !== focused.uci
+            ? [
+                {
+                  from: better.uci.slice(0, 2),
+                  to: better.uci.slice(2, 4),
+                  color: 'mint' as const,
+                },
+              ]
+            : []),
+        ]
+      : [];
+  function pick(index: number) {
+    // The start of the game has no move to look at
+    setFocus(index === 0 ? null : index);
+    setPly(index === 0 ? 0 : index - 1);
+  }
   const total = moves.length;
 
   return (
@@ -252,18 +288,59 @@ export function ReviewPage() {
             </div>
           )}
           <Board state={boardState} dispatch={() => undefined} disabled arrows={arrows} />
-          {shown && (
-            <p className="m-0 text-[14px] font-semibold text-text-2">
-              {t('review.result.played', { san: shown.played.san })}
-              {shown.better ? ` · ${t('review.result.better', { san: shown.better.san })}` : ''}
-            </p>
+          {focused && focus !== null && (
+            <section
+              aria-label={t('review.result.moveInfo')}
+              className="flex flex-col gap-1 rounded-card border-2 border-line bg-surface p-3"
+            >
+              <strong className="text-[16px]">
+                {t(focus % 2 === 1 ? 'review.result.moveOf' : 'review.result.moveOfBlack', {
+                  number: Math.ceil(focus / 2),
+                  san: focused.san,
+                })}
+                <span className="font-semibold text-text-2">
+                  {' · '}
+                  {t(
+                    (focus % 2 === 1 ? 'w' : 'b') === (game.data?.userColor ?? 'w')
+                      ? 'review.result.yourMove'
+                      : 'review.result.theirMove',
+                  )}
+                </span>
+              </strong>
+              {evalBefore && evalAfter && (
+                <span className="text-[15px] font-semibold">
+                  {t('review.result.evalChange', {
+                    before: formatEval(evalBefore, t),
+                    after: formatEval(evalAfter, t),
+                  })}
+                </span>
+              )}
+              {better &&
+                (better.uci === focused.uci ? (
+                  <span className="text-[15px] font-semibold text-mint-text">
+                    {t('review.result.wasBest')}
+                  </span>
+                ) : (
+                  <span className="text-[15px] font-semibold">
+                    {t('review.result.better', { san: better.san })}
+                  </span>
+                ))}
+              {moment && (
+                <span className="text-[14px] font-semibold text-text-2">{moment.explanation}</span>
+              )}
+              {result.evals && (
+                <span className="text-[13px] font-semibold text-text-muted">
+                  {t('review.result.evalHint')}
+                </span>
+              )}
+            </section>
           )}
           <div className="flex items-center justify-between gap-2">
             <Button
               variant="secondary"
               aria-label={t('review.result.start')}
               onClick={() => {
-                setShown(null);
+                setFocus(null);
                 setPly(0);
               }}
             >
@@ -274,7 +351,7 @@ export function ReviewPage() {
               aria-label={t('review.result.previous')}
               disabled={current === 0}
               onClick={() => {
-                setShown(null);
+                setFocus(null);
                 setPly(Math.max(0, current - 1));
               }}
             >
@@ -288,7 +365,7 @@ export function ReviewPage() {
               aria-label={t('review.result.next')}
               disabled={current === total}
               onClick={() => {
-                setShown(null);
+                setFocus(null);
                 setPly(Math.min(total, current + 1));
               }}
             >
@@ -298,7 +375,7 @@ export function ReviewPage() {
               variant="secondary"
               aria-label={t('review.result.end')}
               onClick={() => {
-                setShown(null);
+                setFocus(null);
                 setPly(total);
               }}
             >
@@ -340,7 +417,10 @@ export function ReviewPage() {
 
           <div className="flex flex-col gap-2">
             <h2 className="m-0 text-[16px] font-extrabold">{t('review.result.graph')}</h2>
-            <Graph review={result} current={current} />
+            <p className="m-0 text-[13px] font-semibold text-text-2">
+              {t('review.result.graphHint')}
+            </p>
+            <Graph review={result} current={focus ?? current} onPick={pick} />
           </div>
 
           <div className="flex flex-col gap-3">
@@ -367,8 +447,7 @@ export function ReviewPage() {
                   <Button
                     variant="secondary"
                     onClick={() => {
-                      setPly(moment.ply - 1);
-                      setShown(moment);
+                      pick(moment.ply);
                     }}
                   >
                     {t('review.result.show')}

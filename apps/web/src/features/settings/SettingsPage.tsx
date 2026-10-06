@@ -112,10 +112,16 @@ function PiecePreview({ set }: { set: PieceSet }) {
   return (
     <span
       aria-hidden="true"
-      className="flex h-16 items-center justify-center rounded-[10px] bg-board-b"
+      className="flex h-16 w-full items-center justify-center overflow-hidden rounded-[10px] bg-board-b"
     >
       {PREVIEW_PIECES.map(({ color, type }) => (
-        <img key={`${color}${type}`} src={pieceUrl(color, type, set)} alt="" className="size-12" />
+        <img
+          key={`${color}${type}`}
+          src={pieceUrl(color, type, set)}
+          alt=""
+          // Shrinks with the card instead of pushing the pieces out of it
+          className="aspect-square min-w-0 max-w-12 flex-1"
+        />
       ))}
     </span>
   );
@@ -166,40 +172,6 @@ export function SettingsPage() {
       )}
 
       <div className="grid gap-6 laptop:grid-cols-2">
-        <Card title={t('settings.appearance.title')}>
-          <div className="flex flex-col gap-2">
-            <span className="text-[15px] font-extrabold">{t('settings.appearance.theme')}</span>
-            <div
-              role="radiogroup"
-              aria-label={t('settings.appearance.theme')}
-              className="grid grid-cols-3 gap-3"
-            >
-              {THEME_CHOICES.map((choice) => (
-                <button
-                  key={choice}
-                  type="button"
-                  role="radio"
-                  aria-checked={theme === choice}
-                  onClick={() => dispatch(preferenceChanged(choice))}
-                  className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-card border-2 p-2 text-[15px] font-extrabold ${theme === choice ? 'border-brand bg-brand-tint' : 'border-line bg-surface'}`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`h-6 w-12 rounded-[8px] border-2 border-edge ${choice === 'dark' ? 'bg-ink' : choice === 'light' ? 'bg-white' : 'bg-gradient-to-r from-white to-ink'}`}
-                  />
-                  {t(`settings.appearance.${choice}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <Switch
-            label={t('settings.appearance.reduce.title')}
-            text={t('settings.appearance.reduce.text')}
-            checked={ui.reduceMotion}
-            onChange={(value) => dispatch(reduceMotionChanged(value))}
-          />
-        </Card>
-
         <Card title={t('settings.board.title')}>
           <div className="flex flex-col gap-2">
             <span className="text-[15px] font-extrabold">{t('settings.board.theme')}</span>
@@ -237,7 +209,7 @@ export function SettingsPage() {
                   role="radio"
                   aria-checked={ui.pieceSet === choice}
                   onClick={() => dispatch(pieceSetChanged(choice))}
-                  className={`flex flex-col items-center gap-2 rounded-card border-2 p-2 text-[14px] font-extrabold ${ui.pieceSet === choice ? 'border-brand bg-brand-tint' : 'border-line bg-surface'}`}
+                  className={`flex min-w-0 flex-col items-center gap-2 rounded-card border-2 p-2 text-[14px] font-extrabold ${ui.pieceSet === choice ? 'border-brand bg-brand-tint' : 'border-line bg-surface'}`}
                 >
                   <PiecePreview set={choice} />
                   {t(`settings.board.pieceSets.${choice}`)}
@@ -251,19 +223,6 @@ export function SettingsPage() {
             checked={ui.coordinates}
             onChange={(value) => dispatch(coordinatesChanged(value))}
           />
-        </Card>
-
-        <Card title={t('settings.goal.title')}>
-          <Tabs
-            label={t('settings.goal.title')}
-            tabs={DAILY_GOAL_MINUTES.map((minutes) => ({
-              id: String(minutes),
-              label: t('settings.goal.minutes', { count: minutes }),
-            }))}
-            value={String(settings.data?.dailyGoalMinutes ?? 10)}
-            onChange={(id) => void updateSettings({ dailyGoalMinutes: Number(id) as 5 | 10 | 15 })}
-          />
-          {updating.isError && <Banner>{t('settings.goal.error')}</Banner>}
         </Card>
 
         <Card title={t('settings.account.title')}>
@@ -306,6 +265,53 @@ export function SettingsPage() {
               {t('settings.account.delete')}
             </Button>
           </div>
+        </Card>
+
+        <Card title={t('settings.appearance.title')}>
+          <div className="flex flex-col gap-2">
+            <span className="text-[15px] font-extrabold">{t('settings.appearance.theme')}</span>
+            <div
+              role="radiogroup"
+              aria-label={t('settings.appearance.theme')}
+              className="grid grid-cols-3 gap-3"
+            >
+              {THEME_CHOICES.map((choice) => (
+                <button
+                  key={choice}
+                  type="button"
+                  role="radio"
+                  aria-checked={theme === choice}
+                  onClick={() => dispatch(preferenceChanged(choice))}
+                  className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-card border-2 p-2 text-[15px] font-extrabold ${theme === choice ? 'border-brand bg-brand-tint' : 'border-line bg-surface'}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`h-6 w-12 rounded-[8px] border-2 border-edge ${choice === 'dark' ? 'bg-ink' : choice === 'light' ? 'bg-white' : 'bg-gradient-to-r from-white to-ink'}`}
+                  />
+                  {t(`settings.appearance.${choice}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Switch
+            label={t('settings.appearance.reduce.title')}
+            text={t('settings.appearance.reduce.text')}
+            checked={ui.reduceMotion}
+            onChange={(value) => dispatch(reduceMotionChanged(value))}
+          />
+        </Card>
+
+        <Card title={t('settings.goal.title')}>
+          <Tabs
+            label={t('settings.goal.title')}
+            tabs={DAILY_GOAL_MINUTES.map((minutes) => ({
+              id: String(minutes),
+              label: t('settings.goal.minutes', { count: minutes }),
+            }))}
+            value={String(settings.data?.dailyGoalMinutes ?? 10)}
+            onChange={(id) => void updateSettings({ dailyGoalMinutes: Number(id) as 5 | 10 | 15 })}
+          />
+          {updating.isError && <Banner>{t('settings.goal.error')}</Banner>}
         </Card>
       </div>
 

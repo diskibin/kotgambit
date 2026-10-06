@@ -197,7 +197,8 @@ function PieceChoice({
       accessibilityState={{ selected }}
       onPress={onSelect}
       style={{
-        flexBasis: '22%',
+        // Three pieces do not fit into a quarter of the row
+        flexBasis: '45%',
         flexGrow: 1,
         minHeight: size.tapMin,
         alignItems: 'center',

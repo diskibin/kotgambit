@@ -67,6 +67,18 @@ interface BoardProps {
   onPieceMove?: (from: Square, to: Square) => void;
   /** Overrides the last move of the state, for the positions of a demo. */
   lastMove?: { from: Square; to: Square } | null;
+  /** Small round marks in the corner of squares, such as the quality of the move that was played there. */
+  badges?: readonly BoardBadge[];
+}
+
+export interface BoardBadge {
+  square: Square;
+  /** What is written in the mark, such as `??`. */
+  text: string;
+  /** What the mark says in words, for a screen reader. */
+  label: string;
+  /** Classes of the color of the mark. */
+  className: string;
 }
 
 interface Drag {
@@ -101,6 +113,7 @@ export function Board({
   onSquarePress,
   onPieceMove,
   lastMove: lastMoveOverride,
+  badges = [],
 }: BoardProps) {
   const { t } = useTranslation();
   const preferences = useUiPreferences();
@@ -295,6 +308,18 @@ export function Board({
               )}
               {isTarget && !piece && <span className="board-dot absolute" aria-hidden="true" />}
               {hints.has(square) && <span className="board-hint absolute" aria-hidden="true" />}
+              {badges
+                .filter((badge) => badge.square === square)
+                .map((badge) => (
+                  <span
+                    key={badge.label}
+                    role="img"
+                    aria-label={badge.label}
+                    className={`absolute right-[2px] top-[2px] flex min-h-[22px] min-w-[22px] items-center justify-center rounded-full border-2 border-edge px-1 text-[12px] leading-none font-extrabold text-on-accent ${badge.className}`}
+                  >
+                    {badge.text}
+                  </span>
+                ))}
               {checked === square && (
                 <span
                   className="absolute right-[3px] top-[3px] h-[18px] w-[18px] rounded-full border-2 border-surface bg-coral text-center text-[12px] font-extrabold leading-[14px] text-on-accent"

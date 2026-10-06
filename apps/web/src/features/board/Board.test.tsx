@@ -27,6 +27,28 @@ describe('Board', () => {
     expect(document.querySelector('[data-square="h1"]')).toHaveClass('bg-board-b');
   });
 
+  it('puts a mark in the corner of a square, with its words for a screen reader', () => {
+    const state = createBoardState();
+    render(
+      <Board
+        state={state}
+        dispatch={() => undefined}
+        badges={[{ square: 'e4', text: '??', label: 'Зевок', className: 'bg-coral' }]}
+      />,
+    );
+    const mark = screen.getByRole('img', { name: 'Зевок' });
+    expect(mark).toHaveTextContent('??');
+    expect(mark).toHaveClass('bg-coral');
+    // It is inside the square it was given for and in no other
+    expect(document.querySelector('[data-square="e4"]')).toContainElement(mark);
+    expect(document.querySelectorAll('[role="img"]')).toHaveLength(1);
+  });
+
+  it('draws no marks unless it is given some', () => {
+    render(<Harness />);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
   it('labels squares for screen readers', () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: 'Белый конь g1' })).toBeInTheDocument();

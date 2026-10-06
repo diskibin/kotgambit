@@ -34,6 +34,9 @@ const GRAPH_WIDTH = 440;
 const GRAPH_HEIGHT = 170;
 // The room on the left for the numbers of the scale, and a little on the right so that the last point is not cut
 const SCALE_WIDTH = 34;
+// A row of small squares under the plot, one for every move, colored by how good the move was
+const STRIP_BAND = 16;
+const STRIP_SIZE = 9;
 // The bands above and below the plot, for the words about who is winning: they do not take room from the plot
 const LABEL_BAND = 24;
 const GRAPH_RIGHT = 8;
@@ -42,6 +45,15 @@ const SCALE_PAWNS = [4, 2, 0, -2, -4] as const;
 const CENTIPAWNS = 100;
 const PERCENT = 100;
 const MINUS = '−';
+// The color of a quality is the same on the board, under the graph and in the list: green is good, yellow is a
+// slip, coral is a mistake and a darker coral a blunder. The mark is written in too, so that color is not alone
+const QUALITY_TONE: Record<Quality, { bg: string; fill: string; text: string }> = {
+  best: { bg: 'bg-mint', fill: 'fill-mint', text: 'text-on-accent' },
+  good: { bg: 'bg-sky', fill: 'fill-sky', text: 'text-on-accent' },
+  inaccuracy: { bg: 'bg-sun', fill: 'fill-sun', text: 'text-on-accent' },
+  mistake: { bg: 'bg-coral', fill: 'fill-coral', text: 'text-on-accent' },
+  blunder: { bg: 'bg-coral-depth', fill: 'fill-coral-depth', text: 'text-white' },
+};
 const QUALITIES: readonly Quality[] = ['best', 'good', 'inaccuracy', 'mistake', 'blunder'];
 
 function Ring({ label, value, name }: { label: string; value: number | null; name: string }) {
@@ -79,7 +91,7 @@ function Graph({
     <svg
       role="img"
       aria-label={t('review.result.graphLabel')}
-      viewBox={`0 0 ${viewWidth} ${GRAPH_HEIGHT + LABEL_BAND * 2}`}
+      viewBox={`0 0 ${viewWidth} ${GRAPH_HEIGHT + STRIP_BAND + LABEL_BAND * 2}`}
       className="h-auto w-full cursor-pointer rounded-card border-2 border-line bg-surface"
       onClick={(event) => {
         const box = event.currentTarget.getBoundingClientRect();
@@ -95,7 +107,7 @@ function Graph({
       </text>
       <text
         x={SCALE_WIDTH + 6}
-        y={LABEL_BAND + GRAPH_HEIGHT + 16}
+        y={LABEL_BAND + GRAPH_HEIGHT + STRIP_BAND + 16}
         className="fill-text-2 text-[12px] font-bold"
       >
         {t('review.result.graphBlack')}
@@ -129,6 +141,25 @@ function Graph({
             strokeWidth="3"
             strokeLinejoin="round"
           />
+          {review.qualities.map((quality, index) => {
+            const point = points[index + 1];
+            if (!point) return null;
+            const gap = GRAPH_WIDTH / Math.max(1, review.qualities.length);
+            const size = Math.max(2, Math.min(STRIP_SIZE, gap - 1.5));
+            return (
+              <rect
+                key={index}
+                data-quality={quality}
+                x={point.x - size / 2}
+                y={GRAPH_HEIGHT + 5}
+                width={size}
+                height={STRIP_SIZE}
+                rx="2"
+                className={`${QUALITY_TONE[quality].fill} ${index + 1 === current ? 'stroke-edge' : 'stroke-transparent'}`}
+                strokeWidth="2"
+              />
+            );
+          })}
           {marker && (
             <line
               x1={marker.x}
@@ -269,6 +300,7 @@ export function ReviewPage() {
   const moment = focus !== null ? result.keyMoments.find((item) => item.ply === focus) : undefined;
   // The best move is Premium's for every half-move, the key moment brings its own for the ones it points at
   const better = (focus !== null ? result.best?.[focus - 1] : null) ?? moment?.better ?? null;
+  const focusQuality = focus !== null ? result.qualities[focus - 1] : undefined;
   const evalBefore = focus !== null ? result.evals?.[focus - 1] : undefined;
   const evalAfter = focus !== null ? result.evals?.[focus] : undefined;
   const arrows =
@@ -307,7 +339,24 @@ export function ReviewPage() {
               </span>
             </div>
           )}
-          <Board state={boardState} dispatch={() => undefined} disabled arrows={arrows} />
+          <Board
+            state={boardState}
+            dispatch={() => undefined}
+            disabled
+            arrows={arrows}
+            badges={
+              focused && focusQuality
+                ? [
+                    {
+                      square: focused.uci.slice(2, 4),
+                      text: QUALITY_MARKS[focusQuality],
+                      label: t(`review.result.qualityOne.${focusQuality}`),
+                      className: `${QUALITY_TONE[focusQuality].bg} ${QUALITY_TONE[focusQuality].text}`,
+                    },
+                  ]
+                : []
+            }
+          />
           {focused && focus !== null && (
             <section
               aria-label={t('review.result.moveInfo')}
@@ -327,6 +376,13 @@ export function ReviewPage() {
                   )}
                 </span>
               </strong>
+              {focusQuality && (
+                <span
+                  className={`self-start rounded-pill px-3 py-0.5 text-[14px] font-extrabold ${QUALITY_TONE[focusQuality].bg} ${QUALITY_TONE[focusQuality].text}`}
+                >
+                  {QUALITY_MARKS[focusQuality]} {t(`review.result.qualityOne.${focusQuality}`)}
+                </span>
+              )}
               {evalBefore && evalAfter && (
                 <span className="text-[15px] font-semibold">
                   {t('review.result.evalChange', {
@@ -401,6 +457,31 @@ export function ReviewPage() {
         </section>
 
         <section className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <h2 className="m-0 text-[16px] font-extrabold">{t('review.result.graph')}</h2>
+            <p className="m-0 text-[13px] font-semibold text-text-2">
+              {t('review.result.graphHint')}
+            </p>
+            <Graph review={result} current={current} onPick={pick} />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h2 className="m-0 text-[16px] font-extrabold">{t('review.result.quality')}</h2>
+            <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+              {QUALITIES.filter(
+                (quality) => quality !== 'inaccuracy' || result.counts.inaccuracy > 0,
+              ).map((quality) => (
+                <li
+                  key={quality}
+                  className={`rounded-pill px-3.5 py-1 text-[14px] font-bold ${QUALITY_TONE[quality].bg} ${QUALITY_TONE[quality].text}`}
+                >
+                  {QUALITY_MARKS[quality]} {result.counts[quality]}{' '}
+                  {t(`review.result.quality_${quality}`)}
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div className="flex gap-3">
             <Ring
               label={t('review.result.you')}
@@ -412,31 +493,6 @@ export function ReviewPage() {
               name={t('review.result.accuracy')}
               value={result.accuracy.bot}
             />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h2 className="m-0 text-[16px] font-extrabold">{t('review.result.quality')}</h2>
-            <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-              {QUALITIES.filter(
-                (quality) => quality !== 'inaccuracy' || result.counts.inaccuracy > 0,
-              ).map((quality) => (
-                <li
-                  key={quality}
-                  className="rounded-pill bg-surface-2 px-3.5 py-1 text-[14px] font-bold"
-                >
-                  {QUALITY_MARKS[quality]} {result.counts[quality]}{' '}
-                  {t(`review.result.quality_${quality}`)}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h2 className="m-0 text-[16px] font-extrabold">{t('review.result.graph')}</h2>
-            <p className="m-0 text-[13px] font-semibold text-text-2">
-              {t('review.result.graphHint')}
-            </p>
-            <Graph review={result} current={current} onPick={pick} />
           </div>
 
           <div className="flex flex-col gap-3">

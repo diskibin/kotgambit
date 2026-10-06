@@ -426,6 +426,70 @@ describe('the review', () => {
     });
   });
 
+  describe('how good every move was', () => {
+    it('puts the graph first, then the quality of the moves, then the accuracy', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      const graph = await screen.findByRole(
+        'heading',
+        { name: 'График оценки' },
+        { timeout: 6000 },
+      );
+      const quality = screen.getByRole('heading', { name: 'Качество ходов' });
+      const accuracy = screen.getByText('Твоя точность');
+      const follows = (a: Element, b: Element) =>
+        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(graph, quality)).toBe(true);
+      expect(follows(quality, accuracy)).toBe(true);
+      // The key moments come after all three
+      expect(follows(accuracy, screen.getByRole('heading', { name: 'Ключевые моменты' }))).toBe(
+        true,
+      );
+    });
+
+    it('draws a square under the graph for every move, in the color of how good it was', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      const graph = await screen.findByRole(
+        'img',
+        { name: /Шансы белых по ходам/ },
+        { timeout: 6000 },
+      );
+      const squares = [...graph.querySelectorAll('rect[data-quality]')];
+      expect(squares.map((square) => square.getAttribute('data-quality'))).toEqual([
+        'best',
+        'best',
+        'blunder',
+        'best',
+      ]);
+      expect(squares[2]?.getAttribute('class')).toContain('fill-coral-depth');
+      expect(squares[0]?.getAttribute('class')).toContain('fill-mint');
+      // The one that is looked at has an outline
+      expect(squares[3]?.getAttribute('class')).toContain('stroke-edge');
+      expect(squares[0]?.getAttribute('class')).toContain('stroke-transparent');
+    });
+
+    it('says the quality of the move in the description and on the square it went to', async () => {
+      const user = userEvent.setup();
+      renderApp(`/review/${GAME_ID}`);
+      await screen.findByText('Ход 4 из 4', {}, { timeout: 6000 });
+      // The last move was the best one, on h4
+      const info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(within(info).getByText('★ Лучший ход')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('button', { name: /h4/ })).getByRole('img', { name: 'Лучший ход' }),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Назад' }));
+      expect(within(info).getByText('?? Зевок')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('button', { name: /g4/ })).getByRole('img', { name: 'Зевок' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('img', { name: 'Лучший ход' })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'В начало' }));
+      expect(screen.queryByRole('img', { name: 'Зевок' })).not.toBeInTheDocument();
+    });
+  });
+
   describe('the scale of the graph', () => {
     it('writes the evaluation on the left of the graph, the better for White higher', async () => {
       renderApp(`/review/${GAME_ID}`);
@@ -479,7 +543,7 @@ describe('the review', () => {
       expect(y('Выигрывают белые')).toBeLessThan(Math.min(...marks) - 12);
       expect(y('Выигрывают чёрные')).toBeGreaterThan(Math.max(...marks) + 12);
       // And the picture is taller than the plot by the two bands
-      expect(graph.getAttribute('viewBox')).toBe('0 0 482 218');
+      expect(graph.getAttribute('viewBox')).toBe('0 0 482 234');
     });
 
     it('draws the line alone: no dots on it, the mistakes are in the list below', async () => {

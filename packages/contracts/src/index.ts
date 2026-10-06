@@ -13,3 +13,4 @@ export * from './billing.js';
 export * from './settings.js';
 export * from './wardrobe.js';
 export * from './analytics.js';
+export * from './admin.js';

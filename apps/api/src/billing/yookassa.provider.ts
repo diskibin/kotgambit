@@ -26,6 +26,8 @@ const PaymentResponseSchema = z.object({
     })
     .optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  // Only a code such as `insufficient_funds`, no free text of the bank is read
+  cancellation_details: z.object({ reason: z.string().optional() }).optional(),
 });
 
 /** "149.00" for 14900 kopecks, YooKassa wants the amount as a string with two decimals. */
@@ -49,6 +51,7 @@ function toProviderPayment(raw: z.infer<typeof PaymentResponseSchema>): Provider
         }
       : null,
     metadata,
+    cancelReason: raw.cancellation_details?.reason ?? null,
   };
 }
 

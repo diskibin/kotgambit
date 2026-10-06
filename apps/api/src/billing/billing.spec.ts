@@ -61,8 +61,10 @@ class FakeProvider implements PaymentProvider {
     payment.paymentMethod = saved ? { id: 'pm-1', saved: true, cardLast4: '4477' } : null;
   }
 
-  refuse(id: string): void {
-    (this.payments.get(id) as ProviderPayment).status = 'canceled';
+  refuse(id: string, reason?: string): void {
+    const payment = this.payments.get(id) as ProviderPayment;
+    payment.status = 'canceled';
+    if (reason) payment.cancelReason = reason;
   }
 }
 
@@ -254,11 +256,15 @@ describe('billing', () => {
 
     it('marks a payment that was refused and gives nothing', async () => {
       const { paymentId } = await checkout();
-      provider.refuse(await providerIdOf(paymentId));
+      provider.refuse(await providerIdOf(paymentId), 'insufficient_funds');
       expect(await status(paymentId)).toMatchObject({
         status: 'canceled',
         subscription: { premium: false, status: 'none' },
       });
+      // The admin page shows why
+      expect(
+        (await prisma.payment.findUniqueOrThrow({ where: { id: paymentId } })).cancelReason,
+      ).toBe('insufficient_funds');
     });
 
     it('extends the paid period when the learner pays again early', async () => {

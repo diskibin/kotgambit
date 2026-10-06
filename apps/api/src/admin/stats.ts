@@ -17,3 +17,17 @@ export function periodDays(now: Date, days: number): string[] {
   const start = periodStart(now, days).getTime();
   return Array.from({ length: days }, (_, index) => dayKey(new Date(start + index * MS_IN_DAY)));
 }
+
+const PERCENT = 100;
+
+/** A share as a whole percent, 0 when there is nothing to divide by. */
+export function percent(part: number, whole: number): number {
+  return whole > 0 ? Math.round((part / whole) * PERCENT) : 0;
+}
+
+/** The Monday, UTC, of the week a moment falls in. */
+export function weekStart(date: Date): Date {
+  const day = new Date(`${dayKey(date)}T00:00:00.000Z`);
+  const sinceMonday = (day.getUTCDay() + 6) % 7;
+  return new Date(day.getTime() - sinceMonday * MS_IN_DAY);
+}

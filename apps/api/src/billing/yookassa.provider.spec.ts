@@ -66,6 +66,7 @@ describe('YooKassaProvider', () => {
       confirmationUrl: 'https://yoomoney.ru/pay/abc',
       paymentMethod: null,
       metadata: { paymentId: 'ours-1' },
+      cancelReason: null,
     });
   });
 
@@ -185,6 +186,18 @@ describe('YooKassaProvider', () => {
     expect((await provider(json({ id: 'a', status: 'canceled' })).provider.get('a')).status).toBe(
       'canceled',
     );
+  });
+
+  it('keeps the code that the provider gives for a cancelled payment, and nothing else', async () => {
+    const canceled = json({
+      id: 'a',
+      status: 'canceled',
+      cancellation_details: { party: 'payment_network', reason: 'insufficient_funds' },
+    });
+    expect((await provider(canceled).provider.get('a')).cancelReason).toBe('insufficient_funds');
+    expect(
+      (await provider(json({ id: 'a', status: 'canceled' })).provider.get('a')).cancelReason,
+    ).toBeNull();
   });
 
   it('fails with the status and without any key when the provider refuses', async () => {

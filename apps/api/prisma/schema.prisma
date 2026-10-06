@@ -426,11 +426,14 @@ model Payment {
   // Set once this payment has moved the subscription, so that a repeated notification does nothing
   appliedAt         DateTime?      @map("applied_at")
   paidAt            DateTime?      @map("paid_at")
+  // Why the provider cancelled it (`insufficient_funds`, `card_expired`...), for the admin page. Only the code
+  cancelReason      String?        @map("cancel_reason")
   createdAt         DateTime       @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([status, createdAt])
   @@map("payments")
 }
 
@@ -454,4 +457,20 @@ model AnalyticsEvent {
   // The funnel counts distinct visitors of one kind of step in a period
   @@index([name, createdAt])
   @@map("analytics_events")
+}
+
+// What an admin did to an account. The learner is a bare id on purpose: no foreign key, no email, so that the
+// log neither stops an account from being deleted nor keeps a deleted person's address.
+model AdminAction {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  adminEmail   String   @map("admin_email")
+  // 'grant_premium' or 'revoke_premium'
+  action       String
+  targetUserId String   @map("target_user_id") @db.Uuid
+  // The days given and the reason the admin typed
+  details      String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([targetUserId, createdAt])
+  @@map("admin_actions")
 }

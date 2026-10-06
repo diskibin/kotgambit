@@ -297,7 +297,7 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
     if (remote.status === 'canceled') {
       const { count } = await this.prisma.payment.updateMany({
         where: { id: payment.id, status: 'pending' },
-        data: { status: 'canceled' },
+        data: { status: 'canceled', cancelReason: remote.cancelReason ?? null },
       });
       if (count > 0 && payment.purpose === 'renewal') {
         const row = await this.prisma.subscription.findUnique({

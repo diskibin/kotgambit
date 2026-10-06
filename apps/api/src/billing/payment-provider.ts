@@ -9,6 +9,8 @@ export interface ProviderPayment {
   paymentMethod: { id: string; saved: boolean; cardLast4: string | null } | null;
   /** What we put in at creation, comes back so that a payment can be matched to its learner. */
   metadata: Record<string, string>;
+  /** The code the provider gave for a cancelled payment (`insufficient_funds`), when it gave one. */
+  cancelReason?: string | null;
 }
 
 export interface CreatePaymentInput {

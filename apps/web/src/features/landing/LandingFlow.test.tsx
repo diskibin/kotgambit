@@ -42,6 +42,15 @@ describe('the landing page', () => {
     );
   });
 
+  it('does not make a point of the age of the learner', async () => {
+    renderApp('/');
+    await screen.findByRole('heading', { level: 1, name: /Учись шахматам с.котом Гамбитом/ });
+    expect(screen.getByText('Бесплатно · на русском')).toBeInTheDocument();
+    expect(screen.queryByText(/с 10 лет/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/С какого возраста/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/от 10 лет/)).not.toBeInTheDocument();
+  });
+
   it('shows the prices that the server has', async () => {
     renderApp('/');
     expect(await screen.findByText('299 ₽ в месяц')).toBeInTheDocument();

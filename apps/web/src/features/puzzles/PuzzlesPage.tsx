@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
 import {
   useDailyPuzzleQuery,
+  useCardSummaryQuery,
   useEntitlementsQuery,
   usePuzzleStatsQuery,
   usePuzzleThemesQuery,
@@ -35,6 +36,7 @@ export function PuzzlesPage() {
   const stats = usePuzzleStatsQuery(undefined, { skip: !signedIn });
   const themes = usePuzzleThemesQuery(undefined, { skip: !signedIn });
   const entitlements = useEntitlementsQuery(undefined, { skip: !signedIn });
+  const cards = useCardSummaryQuery(undefined, { skip: !signedIn });
   const [filter, setFilter] = useState<Filter>('all');
 
   const shown = useMemo(
@@ -154,6 +156,22 @@ export function PuzzlesPage() {
                 {t('puzzles.mistakes.text')}
               </span>
             </button>
+            {cards.data && cards.data.total > 0 && (
+              <button
+                type="button"
+                onClick={() => void navigate('/cards')}
+                className="flex min-h-[72px] flex-col items-start gap-1 rounded-card border-2 border-dashed border-sun-depth bg-surface p-5 text-left"
+              >
+                <span className="font-heading text-[18px] font-bold">
+                  {t('puzzles.mistakes.gamesTitle')}
+                </span>
+                <span className="text-[15px] font-semibold text-text-2">
+                  {cards.data.due > 0
+                    ? t('puzzles.mistakes.gamesDue', { count: cards.data.due })
+                    : t('puzzles.mistakes.gamesNone')}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 

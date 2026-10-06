@@ -162,6 +162,49 @@ describe('the month and the rating', () => {
     ).toBeInTheDocument();
   });
 
+  it('says what the picture is, and writes the numbers and the dates on it', async () => {
+    renderApp('/profile');
+    const graph = await screen.findByRole('img', {
+      name: 'Рейтинг в задачах по неделям: с 800 до 1040',
+    });
+    expect(screen.getByText(/Твой рейтинг в задачах на конец каждой недели/)).toBeInTheDocument();
+    expect(screen.getByText(/Слева — рейтинг, снизу — конец недели/)).toBeInTheDocument();
+    // The ends of the line stand for the first and the last week of the fixture, as day and month
+    const texts = [...graph.querySelectorAll('text')].map((node) => node.textContent);
+    expect(texts).toContain('26.09');
+    expect(texts).toContain('03.10');
+    // The scale on the left has three numbers, the highest above the rating now, which is written over its point
+    const numbers = texts.filter((text) => /^\d+$/.test(text ?? '')).map(Number);
+    expect(numbers).toContain(1040);
+    expect(Math.max(...numbers)).toBeGreaterThan(1040);
+    expect(Math.min(...numbers)).toBeLessThan(800);
+    // Every point tells its week and its rating to whoever points at it
+    const titles = [...graph.querySelectorAll('title')].map((node) => node.textContent);
+    expect(titles).toContain('Конец недели 26.09: рейтинг 800');
+    expect(titles).toContain('Конец недели 03.10: рейтинг 1040');
+  });
+
+  it('draws a rating that has not moved in the middle, without dividing by nothing', async () => {
+    server.use(
+      http.get(`${API_URL}/profile`, () =>
+        HttpResponse.json({
+          ...PROFILE,
+          ratingHistory: [
+            { day: '2026-09-26', rating: 1000 },
+            { day: '2026-10-03', rating: 1000 },
+          ],
+        }),
+      ),
+    );
+    renderApp('/profile');
+    const graph = await screen.findByRole('img', {
+      name: 'Рейтинг в задачах по неделям: с 1000 до 1000',
+    });
+    expect(screen.getByText('+0 за 8 недель')).toBeInTheDocument();
+    const points = [...graph.querySelectorAll('polyline')][0]?.getAttribute('points') ?? '';
+    expect(points).not.toMatch(/NaN|Infinity/);
+  });
+
   it('asks for the first puzzles when there is no rating line yet', async () => {
     server.use(
       http.get(`${API_URL}/profile`, () => HttpResponse.json({ ...PROFILE, ratingHistory: [] })),

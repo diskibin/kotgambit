@@ -82,6 +82,11 @@ describe('on a wide screen', () => {
     expect(
       await screen.findByRole('group', { name: /Цель дня: 6 из 10 минут/ }),
     ).toBeInTheDocument();
+    // What counts towards the minutes is said to whoever holds the pointer over the bar
+    expect(screen.getByRole('group', { name: /Цель дня/ })).toHaveAttribute(
+      'title',
+      'В цель идёт время в главах, задачах и партиях с ботами.',
+    );
     const avatar = screen.getByRole('link', { name: 'Профиль cat@example.com' });
     expect(avatar).toHaveAttribute('href', '/profile');
     expect(avatar).toHaveTextContent('C');
@@ -106,9 +111,50 @@ describe('on a wide screen', () => {
     await screen.findByRole('group', { name: /Цель дня/ });
     expect(within(nav).queryByText('Учись без ограничений')).not.toBeInTheDocument();
   });
+
+  it('says to a subscriber that they have Premium, until when, and leads to the page of it', async () => {
+    setWidth(1440);
+    subscription = {
+      ...FREE,
+      premium: true,
+      status: 'active',
+      plan: 'year',
+      currentPeriodEnd: '2027-10-03T12:00:00.000Z',
+    };
+    renderApp('/puzzles');
+    const nav = await screen.findByRole('navigation', { name: 'Основная навигация' });
+    expect(await within(nav).findByText('Ты в Премиуме')).toBeInTheDocument();
+    expect(within(nav).getByText('Действует до 3 октября 2027')).toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: 'Управлять' })).toHaveAttribute(
+      'href',
+      '/premium',
+    );
+    expect(within(nav).queryByText('Подробнее')).not.toBeInTheDocument();
+  });
+
+  it('says nothing of the end when the server did not tell it', async () => {
+    setWidth(1440);
+    subscription = { ...FREE, premium: true, status: 'active', plan: 'year' };
+    renderApp('/puzzles');
+    const nav = await screen.findByRole('navigation', { name: 'Основная навигация' });
+    expect(await within(nav).findByText('Ты в Премиуме')).toBeInTheDocument();
+    expect(within(nav).queryByText(/Действует до/)).not.toBeInTheDocument();
+  });
 });
 
 describe('on a tablet', () => {
+  it('marks a subscriber with a crown that is not the offer to buy', async () => {
+    setWidth(820);
+    subscription = { ...FREE, premium: true, status: 'active', plan: 'year' };
+    renderApp('/puzzles');
+    const nav = await screen.findByRole('navigation', { name: 'Основная навигация' });
+    expect(await within(nav).findByRole('link', { name: 'Ты в Премиуме' })).toHaveAttribute(
+      'href',
+      '/premium',
+    );
+    expect(within(nav).queryByRole('link', { name: 'Премиум' })).not.toBeInTheDocument();
+  });
+
   it('has the sidebar of icons: the names are in the labels, not on the screen', async () => {
     setWidth(820);
     renderApp('/analysis');

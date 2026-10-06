@@ -85,6 +85,7 @@ beforeEach(() => {
     http.get(`${API_URL}/puzzles/daily`, () => HttpResponse.json(DAILY)),
     http.get(`${API_URL}/puzzles/stats`, () => HttpResponse.json(STATS)),
     http.get(`${API_URL}/entitlements`, () => HttpResponse.json(entitlements(null))),
+    http.get(`${API_URL}/cards/summary`, () => HttpResponse.json({ due: 0, total: 0 })),
     http.get(`${API_URL}/puzzles/themes`, () => HttpResponse.json(THEMES)),
     http.post(`${API_URL}/puzzles/next`, async ({ request }) => {
       nextBodies.push(await request.json());
@@ -407,6 +408,50 @@ describe('when there is nothing to solve', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Когда ошибёшься в задаче, она появится здесь/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'К задачам' })).toBeInTheDocument();
+  });
+
+  it('leads from the empty review of puzzles to the mistakes of the games, when there are some', async () => {
+    server.use(
+      http.get(`${API_URL}/cards/summary`, () => HttpResponse.json({ due: 2, total: 3 })),
+      http.post(`${API_URL}/puzzles/next`, () =>
+        HttpResponse.json({ code: 'puzzle.none', message: 'Нет.' }, { status: 404 }),
+      ),
+    );
+    renderApp('/puzzles/solve?mode=review');
+    await screen.findByRole('heading', { name: 'Пока нет ошибок для повтора' });
+    expect(await screen.findByRole('button', { name: 'К ошибкам из партий' })).toBeInTheDocument();
+  });
+
+  it('does not lead to the mistakes of the games when there are none', async () => {
+    server.use(
+      http.post(`${API_URL}/puzzles/next`, () =>
+        HttpResponse.json({ code: 'puzzle.none', message: 'Нет.' }, { status: 404 }),
+      ),
+    );
+    renderApp('/puzzles/solve?mode=review');
+    await screen.findByRole('heading', { name: 'Пока нет ошибок для повтора' });
+    expect(screen.queryByRole('button', { name: 'К ошибкам из партий' })).not.toBeInTheDocument();
+  });
+
+  it('shows the mistakes of the games next to the review of the puzzles', async () => {
+    server.use(http.get(`${API_URL}/cards/summary`, () => HttpResponse.json({ due: 2, total: 3 })));
+    renderApp('/puzzles');
+    const card = await screen.findByRole('button', { name: /Ошибки из партий/ });
+    expect(card).toHaveTextContent('Карточек к повторению: 2');
+    expect(screen.getByRole('button', { name: /Повтор ошибок/ })).toBeInTheDocument();
+  });
+
+  it('says it is all repeated when no card is due today, and shows nothing without cards', async () => {
+    server.use(http.get(`${API_URL}/cards/summary`, () => HttpResponse.json({ due: 0, total: 3 })));
+    const view = renderApp('/puzzles');
+    expect(await screen.findByRole('button', { name: /Ошибки из партий/ })).toHaveTextContent(
+      'Всё повторено на сегодня',
+    );
+    view.unmount();
+    server.use(http.get(`${API_URL}/cards/summary`, () => HttpResponse.json({ due: 0, total: 0 })));
+    renderApp('/puzzles');
+    await screen.findByRole('heading', { name: 'Мат в 2 хода' });
+    expect(screen.queryByRole('button', { name: /Ошибки из партий/ })).not.toBeInTheDocument();
   });
 
   it('shows the message of the server when a theme has no puzzles left', async () => {

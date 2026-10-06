@@ -1,3 +1,4 @@
+import { formatDay } from '@kotgambit/game-player';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router';
 import { useMeQuery, useProgressQuery, useSubscriptionQuery } from '../../app/api';
@@ -64,10 +65,13 @@ function SideNav({
   active,
   layout,
   premium,
+  until,
 }: {
   active: NavId | null;
   layout: NavLayout;
   premium: boolean;
+  /** The end of the paid period, when there is one to say. */
+  until: string | null;
 }) {
   const { t } = useTranslation();
   const scheme = useScheme();
@@ -101,6 +105,36 @@ function SideNav({
           </NavLink>
         );
       })}
+      {premium &&
+        (compact ? (
+          <Link
+            to="/premium"
+            aria-label={t('nav.premium.active.title')}
+            title={t('nav.premium.active.title')}
+            className="mt-auto flex size-14 items-center justify-center rounded-[16px] border-2 border-edge bg-mint text-on-accent shadow-shashka"
+          >
+            <Icon path={CROWN} size={26} stroke={2.6} />
+          </Link>
+        ) : (
+          <div className="mt-auto flex flex-col gap-2.5 rounded-[24px] border-2 border-edge bg-mint p-5 text-on-accent shadow-shashka">
+            <span className="inline-flex h-7 items-center gap-1.5 self-start rounded-pill bg-white px-2.5 text-[13px] font-extrabold">
+              <Icon path={CROWN} size={14} stroke={2.8} />
+              {t('nav.premium.chip')}
+            </span>
+            <b className="text-[18px] leading-6">{t('nav.premium.active.title')}</b>
+            {until && (
+              <span className="text-[14px] leading-5 font-bold">
+                {t('nav.premium.active.until', { date: formatDay(until) })}
+              </span>
+            )}
+            <Link
+              to="/premium"
+              className="flex h-11 items-center justify-center rounded-[12px] border-2 border-edge bg-white text-[16px] font-extrabold text-on-accent no-underline shadow-shashka"
+            >
+              {t('nav.premium.active.manage')}
+            </Link>
+          </div>
+        ))}
       {!premium &&
         (compact ? (
           <Link
@@ -206,7 +240,14 @@ export function AppShell({
   const premium = subscription.data?.premium === true;
   return (
     <div className="flex min-h-screen bg-bg text-text">
-      {layout !== 'bottom' && <SideNav active={active} layout={layout} premium={premium} />}
+      {layout !== 'bottom' && (
+        <SideNav
+          active={active}
+          layout={layout}
+          premium={premium}
+          until={subscription.data?.currentPeriodEnd ?? null}
+        />
+      )}
       <div className={`flex min-w-0 flex-1 flex-col ${layout === 'bottom' ? 'pb-[76px]' : ''}`}>
         <TopBar title={title} layout={layout} />
         <main className="flex flex-1 flex-col gap-6 px-4 py-8 pr-6 tablet:px-7 desktop:px-10">

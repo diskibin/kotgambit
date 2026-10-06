@@ -2,7 +2,7 @@ import { apiErrorOf, type Puzzle, type PuzzleMode } from '@kotgambit/contracts';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
-import { useNextPuzzleMutation, usePuzzleStatsQuery } from '../../app/api';
+import { useCardSummaryQuery, useNextPuzzleMutation, usePuzzleStatsQuery } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { localDateKey } from '../../shared/localDate';
 import { Button } from '../../shared/ui/Button';
@@ -45,6 +45,8 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
   const authStatus = useAppSelector((state) => state.auth.status);
   const [nextPuzzle] = useNextPuzzleMutation();
   const stats = usePuzzleStatsQuery(undefined, { skip: authStatus !== 'authenticated' });
+  // The mistakes of games are kept apart from the puzzles that went wrong, the way to them is shown beside
+  const cards = useCardSummaryQuery(undefined, { skip: authStatus !== 'authenticated' });
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [load, setLoad] = useState<Load>('loading');
   const [serverMessage, setServerMessage] = useState('');
@@ -214,6 +216,9 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
           <Button variant="secondary" onClick={leave}>
             {t('puzzles.mistakes.back')}
           </Button>
+          {load === 'none' && mode === 'review' && (cards.data?.total ?? 0) > 0 && (
+            <Button onClick={() => void navigate('/cards')}>{t('puzzles.mistakes.toCards')}</Button>
+          )}
           {state.retry && <Button onClick={start}>{t('puzzles.busy.retry')}</Button>}
         </div>
       )}

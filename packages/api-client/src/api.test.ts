@@ -1107,3 +1107,34 @@ describe('the account tools of the admin page', () => {
     expect(body).toEqual({ days: 30, reason: 'Подарок' });
   });
 });
+
+describe('reminders and the export of the data', () => {
+  it('unsubscribes with the token of the link, and reads the whole export without keeping it', async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE_URL}/reminders/unsubscribe`, async ({ request }) => {
+        body = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.get(`${BASE_URL}/users/me/export`, () =>
+        HttpResponse.json({
+          exportedAt: '2026-10-06T10:00:00.000Z',
+          account: { id: USER.id, email: USER.email },
+          lessons: [{ lesson: 'l1' }],
+        }),
+      ),
+    );
+    const { api, store } = setup();
+    await store.dispatch(api.endpoints.unsubscribeReminders.initiate({ token: 'a.b' }));
+    expect(body).toEqual({ token: 'a.b' });
+
+    const subscription = store.dispatch(api.endpoints.exportData.initiate());
+    const result = await subscription;
+    // The parts the server adds are kept, only the shape of the first two is checked
+    expect(result.data).toMatchObject({
+      account: { email: USER.email },
+      lessons: [{ lesson: 'l1' }],
+    });
+    subscription.unsubscribe();
+  });
+});

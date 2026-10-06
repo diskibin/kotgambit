@@ -18,6 +18,10 @@ model User {
   dailyGoalMinutes Int       @default(10) @map("daily_goal_minutes")
   // What the cat wears (a key of the wardrobe), `none` is the plain cat. Only an opened item can be chosen
   accessory        String    @default("none")
+  // The learner agreed to letters that remind them to come back. Off until they switch it on in the settings
+  remindersEnabled Boolean   @default(false) @map("reminders_enabled")
+  // When the last reminder went out, so that nobody gets one more often than the rule allows
+  lastReminderAt   DateTime? @map("last_reminder_at")
   createdAt        DateTime  @default(now()) @map("created_at")
 
   credential     Credential?

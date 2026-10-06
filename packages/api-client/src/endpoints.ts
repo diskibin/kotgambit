@@ -1,6 +1,7 @@
 import {
   ActiveGameSchema,
   AdminStatsSchema,
+  DataExportSchema,
   AdminUserListSchema,
   AdminUserSchema,
   LearningStatsSchema,
@@ -43,6 +44,8 @@ import {
   UserSchema,
   type ActiveGame,
   type AdminStats,
+  type DataExport,
+  type UnsubscribeRequest,
   type AdminUser,
   type AdminUserList,
   type GrantPremiumRequest,
@@ -473,6 +476,16 @@ export function endpoints(build: Builder) {
       query: (body) => ({ url: '/profile/accessory', method: 'PUT', body }),
       responseSchema: WardrobeSchema,
       invalidatesTags: ['Me', 'Progress'],
+    }),
+    // The link in a reminder letter: works without signing in, the token says who
+    unsubscribeReminders: build.mutation<void, UnsubscribeRequest>({
+      query: (body) => ({ url: '/reminders/unsubscribe', method: 'POST', body }),
+    }),
+    // All the learner's data. Never kept: a copy in the cache would be one more place for it to leak from
+    exportData: build.query<DataExport, void>({
+      query: () => '/users/me/export',
+      responseSchema: DataExportSchema,
+      keepUnusedDataFor: 0,
     }),
     // Final: the screen asks the learner to type the word first, and signs out afterwards
     deleteAccount: build.mutation<undefined, void>({

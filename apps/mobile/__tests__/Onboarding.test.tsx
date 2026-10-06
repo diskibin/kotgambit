@@ -24,9 +24,10 @@ beforeEach(async () => {
     'PATCH /users/me/settings': async (request) => {
       const body = (await request.json()) as { dailyGoalMinutes: number };
       patches.push(body);
-      return json({ dailyGoalMinutes: body.dailyGoalMinutes, displayName: null });
+      return json({ dailyGoalMinutes: body.dailyGoalMinutes, displayName: null, reminders: false });
     },
-    'GET /users/me/settings': () => json({ dailyGoalMinutes: 10, displayName: null }),
+    'GET /users/me/settings': () =>
+      json({ dailyGoalMinutes: 10, displayName: null, reminders: false }),
     'GET /lessons/basics-board': () => empty(404),
   });
 });

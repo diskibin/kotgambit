@@ -11,6 +11,7 @@ import { BillingReturnPage } from './features/premium/BillingReturnPage';
 import { PremiumPage } from './features/premium/PremiumPage';
 import { AuthPage } from './features/auth/AuthPage';
 import { RecoverPage } from './features/auth/RecoverPage';
+import { UnsubscribePage } from './features/auth/UnsubscribePage';
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
 import { LegalPage } from './features/legal/LegalPage';
 import { CompletePage } from './features/lessons/CompletePage';
@@ -45,6 +46,7 @@ export function App() {
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/reset" element={<RecoverPage />} />
+        <Route path="/unsubscribe" element={<UnsubscribePage />} />
         <Route path="/verify" element={<VerifyEmailPage />} />
         <Route path="/offer" element={<LegalPage document="offer" />} />
         <Route path="/privacy" element={<LegalPage document="privacy" />} />

@@ -25,6 +25,23 @@ export class MailService {
     });
   }
 
+  /** Only for a learner who switched reminders on. Every letter carries the way out. */
+  sendReminder(
+    to: string,
+    options: { name: string | null; goalMinutes: number; learnUrl: string; unsubscribeUrl: string },
+  ): Promise<void> {
+    return this.transport.send({
+      to,
+      subject: 'Гамбит ждёт тебя',
+      text: [
+        options.name ? `Привет, ${options.name}! Это Гамбит.` : 'Привет! Это Гамбит.',
+        `Ты давно не заглядывал. Выдели ${options.goalMinutes} минут: одна глава или пара задач — и снова в ритме.`,
+        options.learnUrl,
+        `Ты получаешь это письмо, потому что сам включил напоминания в настройках. Отписаться можно одним нажатием: ${options.unsubscribeUrl}`,
+      ].join('\n\n'),
+    });
+  }
+
   sendPasswordReset(to: string, link: string): Promise<void> {
     return this.transport.send({
       to,

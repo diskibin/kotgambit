@@ -41,6 +41,8 @@ export const ERROR_MESSAGES = {
   'billing.payment_not_found': 'Такого платежа не нашлось.',
   'billing.no_subscription': 'У тебя пока нет подписки.',
   'billing.cannot_resume': 'Подписку уже нельзя возобновить. Оформи её заново.',
+  'settings.email_unverified': 'Сначала подтверди почту, тогда мы сможем писать тебе.',
+  'reminders.bad_link': 'Эта ссылка не подходит. Отписаться можно в настройках сайта.',
   'puzzle.limit': 'На сегодня задачи закончились. Завтра будут новые.',
   'analysis.limit': 'Анализы на сегодня закончились. Завтра лимит обновится.',
   'premium.required': 'Это есть в Премиуме.',

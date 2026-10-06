@@ -54,6 +54,8 @@ describe('the privacy policy', () => {
       screen.getByText(/Номер карты, срок действия и код нам не передаются/),
     ).toBeInTheDocument();
     expect(screen.getByText(/Аккаунт можно удалить самому в настройках/)).toBeInTheDocument();
+    expect(screen.getByText(/Свои данные можно скачать одним файлом/)).toBeInTheDocument();
+    expect(screen.getByText(/Письма-напоминания.*Отписаться/)).toBeInTheDocument();
   });
 
   it('has the parts that the links of the site point to: the cookies and the contacts', async () => {

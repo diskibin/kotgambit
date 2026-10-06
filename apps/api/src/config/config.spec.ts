@@ -17,6 +17,7 @@ describe('loadConfig', () => {
       refreshTokenTtlDays: 30,
       corsOrigins: [],
       adminEmails: [],
+      reminders: { checkMinutes: 60, hourUtc: 15 },
       trustProxy: false,
       webUrl: 'http://localhost:5173',
       smtpUrl: undefined,
@@ -66,6 +67,16 @@ describe('loadConfig', () => {
     expect(config.port).toBe(8080);
     expect(config.isProduction).toBe(true);
     expect(config.corsOrigins).toEqual(['https://a.example.com', 'https://b.example.com']);
+  });
+
+  it('takes the reminder hour from 0 to 23 only', () => {
+    expect(loadConfig({ ...VALID_ENV, REMINDERS_HOUR_UTC: '7' }).reminders.hourUtc).toBe(7);
+    expect(() => loadConfig({ ...VALID_ENV, REMINDERS_HOUR_UTC: '24' })).toThrow(
+      /REMINDERS_HOUR_UTC/,
+    );
+    expect(loadConfig({ ...VALID_ENV, REMINDERS_CHECK_MINUTES: '0' }).reminders.checkMinutes).toBe(
+      0,
+    );
   });
 
   it('reads the admin emails in lower case', () => {

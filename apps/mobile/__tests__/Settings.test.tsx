@@ -45,11 +45,12 @@ beforeEach(async () => {
     ...SIGNED_IN,
     ...HOME,
     'GET /profile': () => json(PROFILE),
-    'GET /users/me/settings': () => json({ dailyGoalMinutes: 10, displayName: null }),
+    'GET /users/me/settings': () =>
+      json({ dailyGoalMinutes: 10, displayName: null, reminders: false }),
     'PATCH /users/me/settings': async (request) => {
       const body = (await request.json()) as { dailyGoalMinutes: number };
       patches.push(body);
-      return json({ dailyGoalMinutes: body.dailyGoalMinutes, displayName: null });
+      return json({ dailyGoalMinutes: body.dailyGoalMinutes, displayName: null, reminders: false });
     },
     'GET /billing/subscription': () =>
       json({

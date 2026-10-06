@@ -16,6 +16,10 @@ const DEFAULT_ENGINE_CACHE_TTL_SECONDS = 24 * 60 * SECONDS_IN_MINUTE;
 const DEFAULT_ENGINE_WORKERS = Math.max(1, availableParallelism() - 1);
 
 const DEFAULT_RENEWAL_CHECK_MINUTES = 60;
+const DEFAULT_REMINDERS_CHECK_MINUTES = 60;
+// 15:00 UTC is 18:00 in Moscow, when most people have finished their day
+const DEFAULT_REMINDERS_HOUR_UTC = 15;
+const LAST_HOUR = 23;
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -95,6 +99,15 @@ const EnvSchema = z.object({
     .int()
     .min(0)
     .default(DEFAULT_RENEWAL_CHECK_MINUTES),
+  /** How often the server looks for learners to remind, 0 turns the reminders off. */
+  REMINDERS_CHECK_MINUTES: z.coerce.number().int().min(0).default(DEFAULT_REMINDERS_CHECK_MINUTES),
+  /** The hour of the day (UTC) when reminders go out. */
+  REMINDERS_HOUR_UTC: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(LAST_HOUR)
+    .default(DEFAULT_REMINDERS_HOUR_UTC),
   /** Comma-separated emails of the people who may open the admin page. Empty: nobody can. */
   ADMIN_EMAILS: z
     .string()
@@ -171,6 +184,7 @@ export interface AppConfig {
   corsOrigins: string[];
   /** In lower case, like the emails of the users. */
   adminEmails: string[];
+  reminders: { checkMinutes: number; hourUtc: number };
   isProduction: boolean;
 }
 
@@ -263,6 +277,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     refreshTokenTtlDays: values.REFRESH_TOKEN_TTL_DAYS,
     corsOrigins: values.CORS_ORIGINS,
     adminEmails: values.ADMIN_EMAILS,
+    reminders: { checkMinutes: values.REMINDERS_CHECK_MINUTES, hourUtc: values.REMINDERS_HOUR_UTC },
     isProduction: values.NODE_ENV === 'production',
   };
 }

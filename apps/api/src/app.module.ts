@@ -19,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { ProgressModule } from './progress/progress.module.js';
 import { PuzzlesModule } from './puzzles/puzzles.module.js';
+import { RemindersModule } from './reminders/reminders.module.js';
 import { RateLimitModule } from './rate-limit/rate-limit.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -50,6 +51,7 @@ const REDACTED_PATHS = [
     BillingModule,
     AdminModule,
     AnalyticsModule,
+    RemindersModule,
     EntitlementsModule,
     CardsModule,
     ProfileModule,

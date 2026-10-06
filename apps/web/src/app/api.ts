@@ -43,6 +43,8 @@ export const api = createApi({
 
 export const {
   useAdminHealthQuery,
+  useLazyExportDataQuery,
+  useUnsubscribeRemindersMutation,
   useAdminLearningQuery,
   useAdminPaymentsQuery,
   useAdminStatsQuery,

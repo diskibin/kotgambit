@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
 import {
   useDeleteAccountMutation,
+  useLazyExportDataQuery,
   useLogoutMutation,
   useMeQuery,
   useSettingsQuery,
@@ -34,6 +35,7 @@ import {
   reduceMotionChanged,
 } from './ui.slice';
 import { pieceUrl } from '../board/pieceAssets';
+import { downloadJson } from '../../shared/download';
 
 const THEME_CHOICES: readonly ThemePreference[] = ['light', 'dark', 'system'];
 const PREVIEW_CELLS = 4;
@@ -52,19 +54,22 @@ function Switch({
   text,
   checked,
   onChange,
+  disabled = false,
 }: {
   label: string;
   text: string;
   checked: boolean;
   onChange: (value: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="flex min-h-14 items-center gap-3 rounded-card border-2 border-line bg-surface p-3 text-left"
+      className="flex min-h-14 items-center gap-3 rounded-card border-2 border-line bg-surface p-3 text-left disabled:cursor-not-allowed disabled:opacity-60"
     >
       <span className="flex flex-1 flex-col">
         <strong className="text-[16px]">{label}</strong>
@@ -141,6 +146,7 @@ export function SettingsPage() {
   const settings = useSettingsQuery(undefined, { skip: !signedIn });
   const subscription = useSubscriptionQuery(undefined, { skip: !signedIn });
   const [updateSettings, updating] = useUpdateSettingsMutation();
+  const [exportData, exporting] = useLazyExportDataQuery();
   const [logout] = useLogoutMutation();
   const [deleteAccount, deleting] = useDeleteAccountMutation();
   const [confirming, setConfirming] = useState(false);
@@ -150,6 +156,12 @@ export function SettingsPage() {
 
   const word = t('settings.delete.word');
   const premium = subscription.data?.premium === true;
+
+  async function download() {
+    const result = await exportData();
+    if (result.data)
+      downloadJson(`kotgambit-${new Date().toISOString().slice(0, 10)}.json`, result.data);
+  }
 
   async function remove() {
     const result = await deleteAccount();
@@ -269,6 +281,17 @@ export function SettingsPage() {
             value={String(settings.data?.dailyGoalMinutes ?? 10)}
             onChange={(id) => void updateSettings({ dailyGoalMinutes: Number(id) as 5 | 10 | 15 })}
           />
+          <Switch
+            label={t('settings.reminders.title')}
+            text={
+              me.data && !me.data.emailVerified
+                ? t('settings.reminders.needVerify')
+                : t('settings.reminders.text')
+            }
+            checked={settings.data?.reminders ?? false}
+            disabled={!me.data?.emailVerified}
+            onChange={(reminders) => void updateSettings({ reminders })}
+          />
           {updating.isError && <Banner>{t('settings.goal.error')}</Banner>}
         </Card>
 
@@ -304,6 +327,21 @@ export function SettingsPage() {
               </Button>
             </dd>
           </dl>
+          <div className="flex flex-col gap-2 border-t-2 border-line pt-4">
+            <strong className="text-[16px]">{t('settings.export.title')}</strong>
+            <span className="text-[14px] font-semibold text-text-2">
+              {t('settings.export.text')}
+            </span>
+            {exporting.isError && <Banner>{t('settings.export.error')}</Banner>}
+            <Button
+              variant="secondary"
+              className="self-start"
+              disabled={exporting.isFetching}
+              onClick={() => void download()}
+            >
+              {t('settings.export.button')}
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-3">
             <Button variant="secondary" onClick={() => void logout()}>
               {t('settings.account.signOut')}

@@ -48,6 +48,13 @@ describe('analytics and the admin page', () => {
     const sent = mail.outbox.length;
     await vi.waitFor(() => expect(mail.outbox.length).toBeGreaterThan(sent));
     const body = AuthResponseSchema.parse(res.json());
+    // The owner has confirmed the address, the others have no need to
+    if (email.toLowerCase() === OWNER) {
+      await prisma.user.update({
+        where: { id: body.user.id },
+        data: { emailVerifiedAt: new Date() },
+      });
+    }
     return { token: body.accessToken, id: body.user.id };
   }
 
@@ -109,6 +116,24 @@ describe('analytics and the admin page', () => {
       expect((await stats(null)).statusCode).toBe(401);
       const { token } = await register('learner@example.com');
       expect((await stats(token)).statusCode).toBe(404);
+    });
+
+    it('does not let in an account with the address of the list that has not confirmed it', async () => {
+      // Somebody signed up with the owner's address before the owner confirmed it
+      const { token, id } = await register(OWNER);
+      await prisma.user.update({ where: { id }, data: { emailVerifiedAt: null } });
+      expect((await stats(token)).statusCode).toBe(404);
+      const all = ['/admin/learning', '/admin/payments', '/admin/health', `/admin/users/${id}`];
+      for (const url of all) {
+        const res = await app.inject({
+          method: 'GET',
+          url,
+          headers: { authorization: `Bearer ${token}` },
+        });
+        expect(res.statusCode, url).toBe(404);
+      }
+      await prisma.user.update({ where: { id }, data: { emailVerifiedAt: new Date() } });
+      expect((await stats(token)).statusCode).toBe(200);
     });
 
     it('lets in an account of the list, whatever the case of the list', async () => {

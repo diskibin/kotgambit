@@ -11,7 +11,7 @@ import { CONFIG, type AppConfig } from '../config/config.module.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 /**
- * Lets in the accounts whose email is in ADMIN_EMAILS. Runs after AccessTokenGuard. Everybody else gets a 404,
+ * Lets in the accounts whose email is in ADMIN_EMAILS and has been confirmed. Runs after AccessTokenGuard. Everybody else gets a 404,
  * so that the page does not even show that it exists.
  */
 @Injectable()
@@ -25,9 +25,11 @@ export class AdminGuard implements CanActivate {
     const { userId } = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true },
+      select: { email: true, emailVerifiedAt: true },
     });
-    if (!user || !this.config.adminEmails.includes(user.email)) {
+    // The email must be confirmed: anybody can sign up with any address, and without the check the owner's
+    // address, taken by somebody else before the owner confirms it, would open the admin page to them
+    if (!user || user.emailVerifiedAt === null || !this.config.adminEmails.includes(user.email)) {
       throw new AppError('http.not_found', HttpStatus.NOT_FOUND);
     }
     return true;

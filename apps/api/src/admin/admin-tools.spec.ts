@@ -48,6 +48,13 @@ describe('the tools of the admin page', () => {
     const sent = mail.outbox.length;
     await vi.waitFor(() => expect(mail.outbox.length).toBeGreaterThan(sent));
     const body = AuthResponseSchema.parse(res.json());
+    // The owner has confirmed the address, the others have no need to
+    if (email.toLowerCase() === OWNER) {
+      await prisma.user.update({
+        where: { id: body.user.id },
+        data: { emailVerifiedAt: new Date() },
+      });
+    }
     return { token: body.accessToken, id: body.user.id };
   }
 

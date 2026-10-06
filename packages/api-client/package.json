@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@kotgambit/config": "workspace:*",
-    "@types/node": "24",
+    "@types/node": "26",
     "eslint": "^10.11.0",
     "msw": "^3.0.1",
     "typescript": "~6.0.0",

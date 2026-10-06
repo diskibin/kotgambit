@@ -1,6 +1,6 @@
 import { AppShell } from '../../shared/ui/AppShell';
 import { createBoardState } from '@kotgambit/board-controller';
-import { STARTING_FEN, playGame } from '@kotgambit/chess-core';
+import { STARTING_FEN, playGame, winPercent } from '@kotgambit/chess-core';
 import type { Game, GameReview, KeyMoment } from '@kotgambit/contracts';
 import {
   QUALITY_MARKS,
@@ -31,7 +31,15 @@ import { formatEval } from './formatEval';
 
 const POLL_MS = 1500;
 const GRAPH_WIDTH = 440;
-const GRAPH_HEIGHT = 110;
+const GRAPH_HEIGHT = 130;
+// The room on the left for the numbers of the scale, and a little on the right so that the last point is not cut
+const SCALE_WIDTH = 34;
+const GRAPH_RIGHT = 8;
+// The marks of the scale, in pawns for White: the numbers of the evaluation under the board
+const SCALE_PAWNS = [3, 1, 0, -1, -3] as const;
+const CENTIPAWNS = 100;
+const PERCENT = 100;
+const MINUS = '−';
 const QUALITIES: readonly Quality[] = ['best', 'good', 'inaccuracy', 'mistake', 'blunder'];
 
 function Ring({ label, value, name }: { label: string; value: number | null; name: string }) {
@@ -60,64 +68,85 @@ function Graph({
   const { t } = useTranslation();
   const points = chancesGraph(review.chances, GRAPH_WIDTH, GRAPH_HEIGHT);
   const marker = points[Math.min(current, points.length - 1)];
+  const viewWidth = SCALE_WIDTH + GRAPH_WIDTH + GRAPH_RIGHT;
+  // The line is the chance of White to win, so the scale is drawn where those pawns put the line: the same
+  // numbers that the review writes under the board, at the heights where the line stands for them
+  const yOfPawns = (pawns: number) =>
+    GRAPH_HEIGHT - (winPercent({ kind: 'cp', value: pawns * CENTIPAWNS }) / PERCENT) * GRAPH_HEIGHT;
   return (
     <svg
       role="img"
       aria-label={t('review.result.graphLabel')}
-      viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
+      viewBox={`0 0 ${viewWidth} ${GRAPH_HEIGHT}`}
       className="h-auto w-full cursor-pointer rounded-card border-2 border-line bg-surface"
       onClick={(event) => {
         const box = event.currentTarget.getBoundingClientRect();
         if (box.width === 0) return;
-        const share = (event.clientX - box.left) / box.width;
-        onPick(Math.max(0, Math.min(points.length - 1, Math.round(share * (points.length - 1)))));
+        // The click is in the units of the picture, the scale on the left is not a part of the game
+        const x = ((event.clientX - box.left) / box.width) * viewWidth - SCALE_WIDTH;
+        const index = Math.round((x / GRAPH_WIDTH) * (points.length - 1));
+        onPick(Math.max(0, Math.min(points.length - 1, index)));
       }}
     >
-      <text x="6" y="14" className="fill-text-2 text-[11px] font-bold">
+      {SCALE_PAWNS.map((pawns) => (
+        <g key={pawns}>
+          <line
+            x1={SCALE_WIDTH}
+            x2={SCALE_WIDTH + GRAPH_WIDTH}
+            y1={yOfPawns(pawns)}
+            y2={yOfPawns(pawns)}
+            className={pawns === 0 ? 'stroke-text-muted' : 'stroke-line'}
+            strokeDasharray={pawns === 0 ? undefined : '4 4'}
+          />
+          <text
+            x={SCALE_WIDTH - 6}
+            y={yOfPawns(pawns) + 4}
+            textAnchor="end"
+            className="fill-text-2 text-[11px] font-bold"
+          >
+            {pawns > 0 ? `+${pawns}` : pawns < 0 ? `${MINUS}${Math.abs(pawns)}` : '0'}
+          </text>
+        </g>
+      ))}
+      <text x={SCALE_WIDTH + 6} y="13" className="fill-text-2 text-[11px] font-bold">
         {t('review.result.graphWhite')}
       </text>
-      <text x="6" y={GRAPH_HEIGHT - 6} className="fill-text-2 text-[11px] font-bold">
+      <text x={SCALE_WIDTH + 6} y={GRAPH_HEIGHT - 6} className="fill-text-2 text-[11px] font-bold">
         {t('review.result.graphBlack')}
       </text>
-      <line
-        x1="0"
-        x2={GRAPH_WIDTH}
-        y1={GRAPH_HEIGHT / 2}
-        y2={GRAPH_HEIGHT / 2}
-        className="stroke-line"
-        strokeDasharray="4 4"
-      />
-      <path
-        d={graphPath(points)}
-        fill="none"
-        className="stroke-brand"
-        strokeWidth="3"
-        strokeLinejoin="round"
-      />
-      {review.qualities.map((quality, index) => {
-        const point = points[index + 1];
-        if (!point || (quality !== 'blunder' && quality !== 'mistake')) return null;
-        return (
-          <circle
-            key={index}
-            cx={point.x}
-            cy={point.y}
-            r="5"
-            className="fill-coral stroke-edge"
+      <g transform={`translate(${SCALE_WIDTH} 0)`}>
+        <path
+          d={graphPath(points)}
+          fill="none"
+          className="stroke-brand"
+          strokeWidth="3"
+          strokeLinejoin="round"
+        />
+        {review.qualities.map((quality, index) => {
+          const point = points[index + 1];
+          if (!point || (quality !== 'blunder' && quality !== 'mistake')) return null;
+          return (
+            <circle
+              key={index}
+              cx={point.x}
+              cy={point.y}
+              r="5"
+              className="fill-coral stroke-edge"
+              strokeWidth="2"
+            />
+          );
+        })}
+        {marker && (
+          <line
+            x1={marker.x}
+            x2={marker.x}
+            y1="0"
+            y2={GRAPH_HEIGHT}
+            className="stroke-edge"
             strokeWidth="2"
           />
-        );
-      })}
-      {marker && (
-        <line
-          x1={marker.x}
-          x2={marker.x}
-          y1="0"
-          y2={GRAPH_HEIGHT}
-          className="stroke-edge"
-          strokeWidth="2"
-        />
-      )}
+        )}
+      </g>
     </svg>
   );
 }
@@ -169,8 +198,6 @@ export function ReviewPage() {
   const ready = signedIn && game.data?.status === 'finished';
   const review = useReviewPolling(id, ready);
   const [ply, setPly] = useState<number | null>(null);
-  // The half-move that is being looked at: the board stands before it, with its move and the better one drawn
-  const [focus, setFocus] = useState<number | null>(null);
 
   // Asking twice is fine for the server, but there is no reason to ask more than once per screen
   useEffect(() => {
@@ -181,6 +208,9 @@ export function ReviewPage() {
 
   const moves = useMemo(() => game.data?.moves ?? [], [game.data]);
   const current = ply ?? moves.length;
+  // The move that was just played on the board is the one that is looked at: the arrows, the buttons, the graph
+  // and the list of moments all move the same thing, so they never disagree
+  const focus = current >= 1 ? current : null;
   const fen = useMemo(
     () => playGame(moves.slice(0, current).map((move) => move.uci))?.fen ?? STARTING_FEN,
     [moves, current],
@@ -266,11 +296,7 @@ export function ReviewPage() {
             : []),
         ]
       : [];
-  function pick(index: number) {
-    // The start of the game has no move to look at
-    setFocus(index === 0 ? null : index);
-    setPly(index === 0 ? 0 : index - 1);
-  }
+  const pick = (index: number) => setPly(index);
   const total = moves.length;
 
   return (
@@ -340,7 +366,6 @@ export function ReviewPage() {
               variant="secondary"
               aria-label={t('review.result.start')}
               onClick={() => {
-                setFocus(null);
                 setPly(0);
               }}
             >
@@ -351,7 +376,6 @@ export function ReviewPage() {
               aria-label={t('review.result.previous')}
               disabled={current === 0}
               onClick={() => {
-                setFocus(null);
                 setPly(Math.max(0, current - 1));
               }}
             >
@@ -365,7 +389,6 @@ export function ReviewPage() {
               aria-label={t('review.result.next')}
               disabled={current === total}
               onClick={() => {
-                setFocus(null);
                 setPly(Math.min(total, current + 1));
               }}
             >
@@ -375,7 +398,6 @@ export function ReviewPage() {
               variant="secondary"
               aria-label={t('review.result.end')}
               onClick={() => {
-                setFocus(null);
                 setPly(total);
               }}
             >
@@ -420,7 +442,7 @@ export function ReviewPage() {
             <p className="m-0 text-[13px] font-semibold text-text-2">
               {t('review.result.graphHint')}
             </p>
-            <Graph review={result} current={focus ?? current} onPick={pick} />
+            <Graph review={result} current={current} onPick={pick} />
           </div>
 
           <div className="flex flex-col gap-3">

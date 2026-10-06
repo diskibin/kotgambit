@@ -361,8 +361,90 @@ describe('the review', () => {
     expect(within(info).getByText('Лучше: e4')).toBeInTheDocument();
     expect(within(info).getByText('Оценка: было +0.3, стало −#1')).toBeInTheDocument();
     expect(within(info).getByText(/После g4 у соперника мат в 1 ход/)).toBeInTheDocument();
-    expect(screen.getByText('Ход 2 из 4')).toBeInTheDocument();
+    // The board stands after the move that is being looked at, and the counter says the same number
+    expect(screen.getByText('Ход 3 из 4')).toBeInTheDocument();
   }, 10_000);
+
+  describe('the move that is looked at', () => {
+    it('is described for the last move as soon as the review opens', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      await screen.findByText('Ход 4 из 4', {}, { timeout: 6000 });
+      const info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(within(info).getByText(/2… Qh4#/)).toBeInTheDocument();
+      expect(within(info).getByText('Это лучший ход')).toBeInTheDocument();
+    });
+
+    it('follows the arrow buttons: every move has its description, the start has none', async () => {
+      const user = userEvent.setup();
+      renderApp(`/review/${GAME_ID}`);
+      await screen.findByText('Ход 4 из 4', {}, { timeout: 6000 });
+
+      await user.click(screen.getByRole('button', { name: 'Назад' }));
+      let info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(screen.getByText('Ход 3 из 4')).toBeInTheDocument();
+      expect(within(info).getByText(/2\. g4/)).toBeInTheDocument();
+      expect(within(info).getByText('Лучше: e4')).toBeInTheDocument();
+      expect(within(info).getByText('Оценка: было +0.3, стало −#1')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Назад' }));
+      info = screen.getByRole('region', { name: 'Выбранный ход' });
+      expect(within(info).getByText(/1… e5/)).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Вперёд' }));
+      expect(
+        within(screen.getByRole('region', { name: 'Выбранный ход' })).getByText(/2\. g4/),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'В начало' }));
+      expect(screen.queryByRole('region', { name: 'Выбранный ход' })).not.toBeInTheDocument();
+      expect(screen.getByText('Ход 0 из 4')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Вперёд' }));
+      expect(
+        within(screen.getByRole('region', { name: 'Выбранный ход' })).getByText(/1\. f3/),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Ход 1 из 4')).toBeInTheDocument();
+    });
+
+    it('draws the move and the better one on the board as arrows, the better one in green', async () => {
+      const user = userEvent.setup();
+      const { container } = renderApp(`/review/${GAME_ID}`);
+      await screen.findByText('Ход 4 из 4', {}, { timeout: 6000 });
+      const heads = () =>
+        [...container.querySelectorAll('svg[aria-hidden="true"] polygon')].map((node) =>
+          node.getAttribute('fill'),
+        );
+      // The last move was the best one: only its own arrow
+      expect(heads()).toEqual(['var(--color-sun-depth)']);
+
+      await user.click(screen.getByRole('button', { name: 'Назад' }));
+      // The move g4 and the better e4: two arrows
+      expect(heads()).toEqual(['var(--color-sun-depth)', 'var(--color-mint-depth)']);
+
+      await user.click(screen.getByRole('button', { name: 'В начало' }));
+      expect(heads()).toEqual([]);
+    });
+  });
+
+  describe('the scale of the graph', () => {
+    it('writes the evaluation on the left of the graph, the better for White higher', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      const graph = await screen.findByRole(
+        'img',
+        { name: /Шансы белых по ходам/ },
+        { timeout: 6000 },
+      );
+      const marks = [...graph.querySelectorAll('text')].filter((node) =>
+        /^([+−]\d|0)$/.test(node.textContent ?? ''),
+      );
+      expect(marks.map((node) => node.textContent)).toEqual(['+3', '+1', '0', '−1', '−3']);
+      const heights = marks.map((node) => Number(node.getAttribute('y')));
+      // Higher on the screen is a smaller number
+      expect([...heights].sort((a, b) => a - b)).toEqual(heights);
+      // Zero stands in the middle of the graph
+      expect(heights[2]).toBeCloseTo(65 + 4, 0);
+    });
+  });
 
   describe('clicking the graph', () => {
     /** The graph is 400 wide in a test, so that the half-move under a click is easy to count: 100 px each. */
@@ -385,8 +467,8 @@ describe('the review', () => {
       expect(within(info).getByText('Оценка: было +0.2, стало +0.2')).toBeInTheDocument();
       expect(within(info).getByText('Лучше: e4')).toBeInTheDocument();
       expect(within(info).getByText(/плюс — лучше у белых/)).toBeInTheDocument();
-      // The board stands before the move, to show it and the better one
-      expect(screen.getByText('Ход 0 из 4')).toBeInTheDocument();
+      // The move under the click is the move on the board: the first one, not the one before it
+      expect(screen.getByText('Ход 1 из 4')).toBeInTheDocument();
     });
 
     it('says when the move was the best one, and whose move it was', async () => {
@@ -396,6 +478,7 @@ describe('the review', () => {
       expect(within(info).getByText(/1… e5/)).toBeInTheDocument();
       expect(within(info).getByText(/ход соперника/)).toBeInTheDocument();
       expect(within(info).getByText('Это лучший ход')).toBeInTheDocument();
+      expect(screen.getByText('Ход 2 из 4')).toBeInTheDocument();
     });
 
     it('writes a mate and the end of the game the way a chess player does', async () => {

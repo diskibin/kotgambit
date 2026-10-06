@@ -118,6 +118,17 @@ describe('the settings', () => {
   });
 });
 
+describe('the goal of the day', () => {
+  it('says what the minutes are made of', async () => {
+    renderApp('/settings');
+    expect(
+      await screen.findByText(
+        'В цель идёт время, которое ты проводишь в главах, задачах и партиях с ботами.',
+      ),
+    ).toBeInTheDocument();
+  });
+});
+
 describe('the reminders and the data', () => {
   it('cannot switch the reminders on before the email is confirmed', async () => {
     renderApp('/settings');

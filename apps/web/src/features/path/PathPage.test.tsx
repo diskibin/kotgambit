@@ -80,6 +80,79 @@ describe('the weakest theme on the home screen', () => {
   });
 });
 
+describe('the chapters of a section', () => {
+  const LOCKED_OPENINGS = { ...OPENINGS, status: 'locked' };
+
+  it('shows whether all the chapters are shown, in the look of the switch and not only in its name', async () => {
+    const user = userEvent.setup();
+    server.use(...homeHandlers([...LESSONS, LOCKED_OPENINGS]));
+    renderApp('/learn');
+    const toggle = await screen.findByRole('button', { name: 'Все главы' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(toggle.className).toContain('bg-surface');
+    expect(toggle.querySelector('svg')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Дебюты', level: 2 })).not.toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(toggle.className).toContain('bg-brand');
+    // A tick in the box: the state is in the shape as well as the color
+    expect(toggle.querySelector('svg')).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'Дебюты', level: 2 })).toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('gives the chapters of the ribbon, but the one to do now, the same height of every part', async () => {
+    server.use(
+      ...homeHandlers([
+        { ...LESSONS[0], status: 'completed', stars: 3 },
+        { ...LESSONS[1], status: 'available' },
+        {
+          ...LESSONS[1],
+          id: 'basics-knight',
+          order: 3,
+          status: 'locked',
+          title: 'Очень длинное название главы про коня и его ходы',
+        },
+        { ...LESSONS[1], id: 'basics-bonus', order: 4, status: 'premium' },
+      ]),
+    );
+    const { container } = renderApp('/learn');
+    await screen.findByRole('heading', { name: 'Основы', level: 2 });
+    const cards = [...container.querySelectorAll('article')].filter(
+      (card) => !card.hasAttribute('data-current'),
+    );
+    expect(cards).toHaveLength(3);
+    for (const card of cards) {
+      // The label row, the title of two lines and the foot do not depend on what the card says
+      expect(card.querySelector('h3')?.className).toContain('h-10');
+      expect(card.querySelector('h3')?.className).toContain('line-clamp-2');
+      expect(card.querySelector('[class*="22px"]')).not.toBeNull();
+    }
+  });
+
+  it('says "repeat" only for a chapter that was done, and "start" for one that was not', async () => {
+    server.use(
+      ...homeHandlers([
+        { ...LESSONS[0], status: 'completed', stars: 3 },
+        { ...LESSONS[1], id: 'basics-knight', order: 2, status: 'available' },
+        { ...LESSONS[1], id: 'basics-bishop', order: 3, status: 'available' },
+      ]),
+    );
+    renderApp('/learn');
+    await screen.findByRole('heading', { name: 'Основы', level: 2 }, { timeout: 5000 });
+    // "Repeat" is for the chapter that was done
+    const repeat = screen.getAllByRole('button', { name: /^Повторить/ });
+    expect(repeat).toHaveLength(1);
+    expect(repeat[0]).toHaveTextContent('Доска и фигуры');
+    // The available one that is not the chapter to do now was never done: it is started, with no stars
+    expect(screen.getAllByRole('button', { name: /^Начать/ })).toHaveLength(1);
+    expect(screen.getAllByRole('img', { name: /Звёзд/ })).toHaveLength(1);
+  });
+});
+
 describe('the home screen', () => {
   it('shows the puzzle of the day and the sections ahead', async () => {
     server.use(...homeHandlers([...LESSONS, OPENINGS]));

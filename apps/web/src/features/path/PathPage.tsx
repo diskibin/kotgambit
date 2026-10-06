@@ -241,8 +241,28 @@ export function PathPage() {
               type="button"
               aria-pressed={showAll}
               onClick={() => setShowAll(!showAll)}
-              className="flex min-h-11 items-center text-[15px] font-bold text-brand-text"
+              className={`flex min-h-11 items-center gap-2 rounded-pill border-2 px-4 text-[15px] font-bold ${showAll ? 'border-edge bg-brand text-on-brand' : 'border-line bg-surface text-brand-text'}`}
             >
+              {/* The state is in the shape too, not only in the color: a tick when all the chapters are shown */}
+              <span
+                aria-hidden="true"
+                className={`flex size-5 items-center justify-center rounded-[6px] border-2 ${showAll ? 'border-on-brand' : 'border-line'}`}
+              >
+                {showAll && (
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                  </svg>
+                )}
+              </span>
               {t('path.allChapters')}
             </button>
           )}

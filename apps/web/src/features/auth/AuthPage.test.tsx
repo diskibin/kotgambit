@@ -215,6 +215,25 @@ describe('registration', () => {
     expect(await screen.findByRole('heading', { name: 'Мои курсы' })).toBeInTheDocument();
   });
 
+  it('starts the wait for the next email with the link when the account is created, and not at a sign-in', async () => {
+    const user = userEvent.setup();
+    window.localStorage.clear();
+    server.use(
+      http.post(`${API_URL}/auth/register`, () => {
+        signedIn = true;
+        return HttpResponse.json(AUTH, { status: 201 });
+      }),
+    );
+    const before = Date.now();
+    renderApp('/register');
+    await fillRegister(user, 'cat@example.com', 'gambit2026');
+    await user.click(submit('Создать аккаунт'));
+    await screen.findByRole('heading', { name: 'Мои курсы' });
+    const until = Number(window.localStorage.getItem(`kg.verify.resendAt.${AUTH.user.id}`));
+    expect(until).toBeGreaterThanOrEqual(before + 45_000);
+    expect(until).toBeLessThanOrEqual(Date.now() + 45_000);
+  });
+
   it('asks for the password twice and does not send when they differ', async () => {
     const user = userEvent.setup();
     const sent = vi.fn();

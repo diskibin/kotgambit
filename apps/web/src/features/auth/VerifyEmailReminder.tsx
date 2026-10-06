@@ -5,8 +5,9 @@ import { useMeQuery, useResendVerificationMutation } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { formatClock } from '../../shared/formatClock';
 import { Button } from '../../shared/ui/Button';
+import { readResendAt, startResendWait } from './resendCooldown';
 
-const RESEND_SECONDS = 45;
+const MS_IN_SECOND = 1000;
 
 /**
  * Asks a signed-in learner whose address is not confirmed to open the link from the email, and sends the
@@ -17,16 +18,22 @@ export function VerifyEmailReminder() {
   const signedIn = useAppSelector((state) => state.auth.status === 'authenticated');
   const me = useMeQuery(undefined, { skip: !signedIn });
   const [resend, sending] = useResendVerificationMutation();
-  // The first email went out with the sign-up, so the button starts already counting down
-  const [wait, setWait] = useState(RESEND_SECONDS);
+  const userId = me.data?.id;
+  // When the next email may be asked for. It lives in the browser, so that going to another page or reloading
+  // the site does not start the wait again
+  const [sentUntil, setSentUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const [sent, setSent] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
+  // Read from the browser at every render: it is one value, and another tab may have moved it
+  const until = Math.max(sentUntil, userId ? readResendAt(userId) : 0);
+  const wait = Math.max(0, Math.ceil((until - now) / MS_IN_SECOND));
 
   useEffect(() => {
     if (wait <= 0) return;
-    const timer = setTimeout(() => setWait((seconds) => seconds - 1), 1000);
+    const timer = setTimeout(() => setNow(Date.now()), MS_IN_SECOND);
     return () => clearTimeout(timer);
-  }, [wait]);
+  }, [wait, now]);
 
   // The link is opened in another tab or on another device: look again when the learner comes back here
   const { refetch } = me;
@@ -53,7 +60,8 @@ export function VerifyEmailReminder() {
       return;
     }
     setSent(true);
-    setWait(RESEND_SECONDS);
+    if (userId) setSentUntil(startResendWait(userId));
+    setNow(Date.now());
   }
 
   return (

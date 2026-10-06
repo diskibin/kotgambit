@@ -68,6 +68,10 @@ interface ChapterCardProps {
 }
 
 const FRAME = 'flex shrink-0 flex-col gap-2 rounded-chapter p-3';
+// The cards of the ribbon, other than the one to do now, are one height: the label row, the picture, two lines for
+// the title and a row for the foot are the same in every one of them, whatever they say
+const LABEL_ROW = 'flex h-[22px] items-center justify-between';
+const FOOT_ROW = 'flex min-h-11 items-center justify-between gap-2';
 
 /** A chapter in the ribbon. Its look tells where the learner is: done, now, closed or premium. */
 export function ChapterCard({ lesson, current, onOpen }: ChapterCardProps) {
@@ -76,6 +80,12 @@ export function ChapterCard({ lesson, current, onOpen }: ChapterCardProps) {
   const title = (size: string) => (
     <h3 className={`m-0 font-heading font-bold ${size}`}>{lesson.title}</h3>
   );
+  // Two lines are kept for the title of a card in the ribbon, a longer one is cut
+  const ribbonTitle = (
+    <h3 className="m-0 line-clamp-2 h-10 font-heading text-[15px] leading-5 font-bold">
+      {lesson.title}
+    </h3>
+  );
 
   if (lesson.status === 'premium') {
     return (
@@ -83,15 +93,17 @@ export function ChapterCard({ lesson, current, onOpen }: ChapterCardProps) {
         aria-label={`${label}: ${lesson.title}`}
         className={`${FRAME} w-[200px] border-2 border-dashed border-sun-depth bg-sun-tint`}
       >
-        <div className="flex items-center justify-between">
+        <div className={LABEL_ROW}>
           <span className="text-[12px] font-extrabold text-text-2">{label}</span>
           <span className="flex h-[22px] items-center rounded-pill border-2 border-edge bg-sun px-2 text-[11px] font-extrabold text-on-accent">
             {t('path.premium')}
           </span>
         </div>
         <LockPlate premium />
-        {title('text-[15px] leading-5')}
-        <span className="text-[13px] font-semibold text-text-2">{t('path.premiumText')}</span>
+        {ribbonTitle}
+        <span className={`${FOOT_ROW} text-[13px] font-semibold text-text-2`}>
+          {t('path.premiumText')}
+        </span>
       </article>
     );
   }
@@ -102,10 +114,14 @@ export function ChapterCard({ lesson, current, onOpen }: ChapterCardProps) {
         aria-label={`${label}: ${lesson.title}`}
         className={`${FRAME} w-[200px] border-2 border-dashed border-[color:var(--color-dashed)] bg-surface`}
       >
-        <span className="text-[12px] font-extrabold text-text-2">{label}</span>
+        <div className={LABEL_ROW}>
+          <span className="text-[12px] font-extrabold text-text-2">{label}</span>
+        </div>
         <LockPlate premium={false} />
-        {title('text-[15px] leading-5')}
-        <span className="text-[13px] font-semibold text-text-2">{t('path.locked')}</span>
+        {ribbonTitle}
+        <span className={`${FOOT_ROW} text-[13px] font-semibold text-text-2`}>
+          {t('path.locked')}
+        </span>
       </article>
     );
   }
@@ -137,17 +153,20 @@ export function ChapterCard({ lesson, current, onOpen }: ChapterCardProps) {
       aria-label={`${label}: ${lesson.title}`}
       className={`${FRAME} w-[200px] border-2 border-edge bg-surface`}
     >
-      <span className="text-[12px] font-extrabold text-text-2">{label}</span>
+      <div className={LABEL_ROW}>
+        <span className="text-[12px] font-extrabold text-text-2">{label}</span>
+      </div>
       <MiniBoard piece={lesson.piece} size={DONE_BOARD} />
-      {title('text-[15px] leading-5')}
-      <div className="flex items-center justify-between">
-        <Stars count={lesson.stars} />
+      {ribbonTitle}
+      <div className={FOOT_ROW}>
+        {/* Stars and "repeat" are for a chapter that was done; one that is open but not done yet is started */}
+        {lesson.status === 'completed' && <Stars count={lesson.stars} />}
         <button
           type="button"
           onClick={() => onOpen(lesson.id)}
-          className="relative min-h-11 rounded-control px-2 text-[14px] font-extrabold text-brand-text"
+          className={`relative min-h-11 rounded-control px-2 text-[14px] font-extrabold text-brand-text ${lesson.status === 'completed' ? '' : 'ml-auto'}`}
         >
-          {t('path.repeat')}
+          {t(lesson.status === 'completed' ? 'path.repeat' : 'path.start')}
           <span className="sr-only"> {lesson.title}</span>
         </button>
       </div>

@@ -5,7 +5,7 @@ import {
   type LessonDetail,
   type LessonSummary,
 } from '@kotgambit/contracts';
-import { StepSchema, type Step } from '@kotgambit/content-schema';
+import { StepSchema, TRACKS, type Step } from '@kotgambit/content-schema';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { AppError } from '../common/app-error.js';
@@ -41,16 +41,34 @@ export class LessonsService {
 
   /**
    * Summaries of all chapters with the learner's status. A chapter opens when the one before it in
-   * the same track is finished, and stays open for repetition afterwards.
+   * the same track is finished, and stays open for repetition afterwards. The first chapter of a section opens
+   * when the sections before it are finished: Openings wait for the Basics, as the home screen says.
    */
   private summarize(
     lessons: LessonRow[],
     done: Map<string, Progress>,
     premium: boolean,
   ): LessonSummary[] {
+    // A section is finished when every chapter of it that the learner can take is done. A section whose chapters
+    // are all Premium's, for a free learner, has nothing to finish and does not hold the next one back
+    const finished = new Set<string>(
+      TRACKS.filter((track) =>
+        lessons
+          .filter((lesson) => lesson.track === track && (lesson.access === 'free' || premium))
+          .every((lesson) => done.has(lesson.id)),
+      ),
+    );
+    const present = TRACKS.filter((track) => lessons.some((lesson) => lesson.track === track));
+    const sectionOpen = (track: string) =>
+      present
+        .slice(0, present.indexOf(track as (typeof TRACKS)[number]))
+        .every((before) => finished.has(before));
     return lessons.map((lesson, index) => {
       const previous = lessons[index - 1];
-      const unlocked = !previous || previous.track !== lesson.track || done.has(previous.id);
+      const unlocked =
+        !previous || previous.track !== lesson.track
+          ? sectionOpen(lesson.track)
+          : done.has(previous.id);
       const result = done.get(lesson.id);
       const status =
         lesson.access !== 'free' && !premium

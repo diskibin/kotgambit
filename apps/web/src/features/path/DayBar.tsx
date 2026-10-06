@@ -34,6 +34,8 @@ export function DayBar({
     <div
       role="group"
       aria-label={t('dayBar.label', { done: doneMinutes, goal: goalMinutes, streak })}
+      // What counts towards the minutes, for whoever holds the pointer over the bar
+      title={t('dayBar.explain')}
       className="flex items-center gap-3"
     >
       <div

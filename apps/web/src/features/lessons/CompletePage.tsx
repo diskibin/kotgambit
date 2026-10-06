@@ -70,6 +70,13 @@ export function CompletePage() {
         <Button
           variant="secondary"
           large
+          onClick={() => void navigate('/learn', { replace: true })}
+        >
+          {t('lesson.complete.chapters')}
+        </Button>
+        <Button
+          variant="secondary"
+          large
           onClick={() => void navigate(`/lesson/${id}`, { replace: true })}
         >
           {t('lesson.complete.again')}

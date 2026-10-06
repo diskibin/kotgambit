@@ -21,6 +21,7 @@ import { Tabs } from '../../shared/ui/Tabs';
 import { PasswordField } from '../../shared/ui/PasswordField';
 import { TextField } from '../../shared/ui/TextField';
 import { AuthShell } from './AuthShell';
+import { startResendWait } from './resendCooldown';
 import { SocialSignIn } from './SocialSignIn';
 
 export type AuthMode = 'login' | 'register';
@@ -95,7 +96,11 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     if (nextEmail || nextPassword || nextConfirm) return;
 
     try {
-      await (isLogin ? login({ email, password }) : register({ email, password })).unwrap();
+      const answer = await (
+        isLogin ? login({ email, password }) : register({ email, password })
+      ).unwrap();
+      // The first email with the link went out with the sign-up: the wait for the next one starts now
+      if (!isLogin) startResendWait(answer.user.id);
       // The learner has proven the account is theirs, so the provider account can be tied to it now.
       // If it does not work out, the sign-in itself still did
       if (isLogin && linkTicket) await linkIdentity({ ticket: linkTicket });

@@ -281,6 +281,7 @@ export function SettingsPage() {
             value={String(settings.data?.dailyGoalMinutes ?? 10)}
             onChange={(id) => void updateSettings({ dailyGoalMinutes: Number(id) as 5 | 10 | 15 })}
           />
+          <p className="m-0 text-[14px] font-semibold text-text-2">{t('settings.goal.explain')}</p>
           <Switch
             label={t('settings.reminders.title')}
             text={

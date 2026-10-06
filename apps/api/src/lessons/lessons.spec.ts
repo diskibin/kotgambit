@@ -8,7 +8,7 @@ import {
 } from '@kotgambit/contracts';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestApp } from '../../test/create-app.js';
 import type { MemoryMailTransport } from '../../test/memory-mail.transport.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
@@ -92,6 +92,90 @@ describe('lessons and progress', () => {
       expect(lessons.map((l) => l.status)).toEqual(['available', 'locked', 'locked', 'locked']);
       expect(lessons.every((l) => l.stars === 0)).toBe(true);
       expect(lessons[0]).toMatchObject({ order: 1, title: 'Доска и фигуры', track: 'basics' });
+    });
+
+    describe('the sections one after another', () => {
+      const openings = (id: string, order: number, access: 'free' | 'premium' = 'free') =>
+        prisma.lesson.create({
+          data: {
+            id,
+            track: 'openings',
+            order,
+            access,
+            piece: 'n',
+            title: `Дебют ${order}`,
+            summary: 's',
+            minutes: 5,
+            steps: [{}, {}],
+            contentHash: 'x',
+          },
+        });
+      const finish = async (ids: string[]) => {
+        const user = await prisma.user.findFirstOrThrow();
+        await prisma.lessonProgress.createMany({
+          data: ids.map((lessonId) => ({
+            userId: user.id,
+            lessonId,
+            bestAccuracy: 1,
+            stars: 3,
+            completedAt: new Date(),
+          })),
+        });
+      };
+      // The chapters of these tests are not part of the lessons that the others expect to find
+      afterEach(async () => {
+        await prisma.lesson.deleteMany({
+          where: { id: { in: ['openings-1', 'openings-2', 'basics-bonus'] } },
+        });
+      });
+      const statuses = async () =>
+        Object.fromEntries((await catalog()).map((lesson) => [lesson.id, lesson.status]));
+
+      it('keeps the next section closed until the Basics are done', async () => {
+        await openings('openings-1', 1);
+        await openings('openings-2', 2);
+        expect(await statuses()).toMatchObject({
+          'basics-board': 'available',
+          'openings-1': 'locked',
+          'openings-2': 'locked',
+        });
+        // Not even by its address
+        expect((await get('/lessons/openings-1')).statusCode).toBe(403);
+        await finish(['basics-board', 'basics-rook', 'basics-knight']);
+        expect((await statuses())['openings-1']).toBe('locked');
+      });
+
+      it('opens the first chapter of the next section when the last of the Basics is done', async () => {
+        await openings('openings-1', 1);
+        await openings('openings-2', 2);
+        await finish(['basics-board', 'basics-rook', 'basics-knight', 'basics-check']);
+        expect(await statuses()).toMatchObject({
+          'openings-1': 'available',
+          'openings-2': 'locked',
+        });
+        // Open: the steps of this invented chapter are not real, so only that it is not refused is checked
+        expect((await get('/lessons/openings-1')).statusCode).not.toBe(403);
+      });
+
+      it('does not hold a free learner back for chapters that are only for Premium', async () => {
+        await openings('openings-1', 1);
+        await prisma.lesson.create({
+          data: {
+            id: 'basics-bonus',
+            track: 'basics',
+            order: 9,
+            access: 'premium',
+            piece: 'k',
+            title: 'Бонус',
+            summary: 's',
+            minutes: 5,
+            steps: [{}],
+            contentHash: 'x',
+          },
+        });
+        await finish(['basics-board', 'basics-rook', 'basics-knight', 'basics-check']);
+        expect((await statuses())['openings-1']).toBe('available');
+      });
     });
 
     it('marks a premium chapter without revealing its steps', async () => {

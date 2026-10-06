@@ -437,12 +437,36 @@ describe('the review', () => {
       const marks = [...graph.querySelectorAll('text')].filter((node) =>
         /^([+−]\d|0)$/.test(node.textContent ?? ''),
       );
-      expect(marks.map((node) => node.textContent)).toEqual(['+3', '+1', '0', '−1', '−3']);
+      expect(marks.map((node) => node.textContent)).toEqual(['+4', '+2', '0', '−2', '−4']);
       const heights = marks.map((node) => Number(node.getAttribute('y')));
       // Higher on the screen is a smaller number
       expect([...heights].sort((a, b) => a - b)).toEqual(heights);
       // Zero stands in the middle of the graph
-      expect(heights[2]).toBeCloseTo(65 + 4, 0);
+      expect(heights[2]).toBeCloseTo(85 + 4, 0);
+    });
+
+    it('names the two halves by who is winning there', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      const graph = await screen.findByRole(
+        'img',
+        { name: /Шансы белых по ходам/ },
+        { timeout: 6000 },
+      );
+      const words = [...graph.querySelectorAll('text')].map((node) => node.textContent);
+      expect(words).toContain('Выигрывают белые');
+      expect(words).toContain('Выигрывают чёрные');
+      expect(words).not.toContain('Лучше белым');
+    });
+
+    it('draws the line alone: no dots on it, the mistakes are in the list below', async () => {
+      renderApp(`/review/${GAME_ID}`);
+      const graph = await screen.findByRole(
+        'img',
+        { name: /Шансы белых по ходам/ },
+        { timeout: 6000 },
+      );
+      expect(graph.querySelectorAll('circle')).toHaveLength(0);
+      expect(graph.querySelectorAll('path')).toHaveLength(1);
     });
   });
 

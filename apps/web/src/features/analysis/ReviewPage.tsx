@@ -31,12 +31,12 @@ import { formatEval } from './formatEval';
 
 const POLL_MS = 1500;
 const GRAPH_WIDTH = 440;
-const GRAPH_HEIGHT = 130;
+const GRAPH_HEIGHT = 170;
 // The room on the left for the numbers of the scale, and a little on the right so that the last point is not cut
 const SCALE_WIDTH = 34;
 const GRAPH_RIGHT = 8;
 // The marks of the scale, in pawns for White: the numbers of the evaluation under the board
-const SCALE_PAWNS = [3, 1, 0, -1, -3] as const;
+const SCALE_PAWNS = [4, 2, 0, -2, -4] as const;
 const CENTIPAWNS = 100;
 const PERCENT = 100;
 const MINUS = '−';
@@ -122,20 +122,6 @@ function Graph({
           strokeWidth="3"
           strokeLinejoin="round"
         />
-        {review.qualities.map((quality, index) => {
-          const point = points[index + 1];
-          if (!point || (quality !== 'blunder' && quality !== 'mistake')) return null;
-          return (
-            <circle
-              key={index}
-              cx={point.x}
-              cy={point.y}
-              r="5"
-              className="fill-coral stroke-edge"
-              strokeWidth="2"
-            />
-          );
-        })}
         {marker && (
           <line
             x1={marker.x}

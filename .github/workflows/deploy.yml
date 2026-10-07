@@ -96,7 +96,7 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
       - name: Copy the compose files
         run: |
-          scp -i ~/.ssh/deploy_key infra/compose.prod.yml infra/backup.sh "$DEPLOY_USER@$DEPLOY_HOST:/srv/kotgambit/"
+          scp -i ~/.ssh/deploy_key infra/compose.prod.yml infra/backup.sh infra/restore-check.sh "$DEPLOY_USER@$DEPLOY_HOST:/srv/kotgambit/"
       - name: Pull and restart
         env:
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -109,7 +109,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
           set -euo pipefail
           cd /srv/kotgambit
-          chmod +x backup.sh
+          chmod +x backup.sh restore-check.sh
           export API_IMAGE=ghcr.io/${owner}/kotgambit-api:${SHA}
           export WEB_IMAGE=ghcr.io/${owner}/kotgambit-web:${SHA}
           docker compose -f compose.prod.yml pull

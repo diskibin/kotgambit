@@ -17,6 +17,7 @@ node_modules
 *.pem
 *.key
 *.p12
+backup.env
 *.jks
 *.keystore
 keystore.properties

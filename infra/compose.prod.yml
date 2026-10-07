@@ -91,6 +91,24 @@ services:
         condition: service_completed_successfully
     logging: *logging
 
+  # Loads the puzzles of Lichess from a downloaded file, once and again when the selection changes:
+  # `docker compose run --rm import-puzzles [--dry-run]`. Puzzles that are already there are left alone
+  import-puzzles:
+    image: ${API_IMAGE}
+    profiles: ['tools']
+    command:
+      - /app/node_modules/.bin/tsx
+      - src/seed/import-puzzles.ts
+      - /data/lichess_db_puzzle.csv.zst
+    environment:
+      DATABASE_URL: postgresql://kotgambit:${POSTGRES_PASSWORD}@postgres:5432/kotgambit
+    volumes:
+      - ${PUZZLES_HOST_DIR:-./data}:/data:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    logging: *logging
+
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped

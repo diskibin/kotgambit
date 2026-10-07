@@ -1,0 +1,128 @@
+name: Deploy
+
+# Runs only after CI has passed on main. A workflow_run job always uses the workflow files of the default branch,
+# so a pull request cannot change what gets deployed.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Two deploys at once would fight over the same containers, and a started one is never cut off halfway
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  images:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+      - name: Image names
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "API_IMAGE=ghcr.io/${owner}/kotgambit-api" >> "$GITHUB_ENV"
+          echo "WEB_IMAGE=ghcr.io/${owner}/kotgambit-web" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: infra/Dockerfile.api
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ env.SHA }}
+            ${{ env.API_IMAGE }}:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: infra/Dockerfile.web
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ env.SHA }}
+            ${{ env.WEB_IMAGE }}:latest
+          # Public values: the address of the API and who the offer and the privacy policy speak for
+          build-args: |
+            VITE_API_URL=https://${{ vars.API_DOMAIN }}
+            VITE_LEGAL_OPERATOR=${{ vars.LEGAL_OPERATOR }}
+            VITE_LEGAL_DETAILS=${{ vars.LEGAL_DETAILS }}
+            VITE_LEGAL_EMAIL=${{ vars.LEGAL_EMAIL }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+  deploy:
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      # The server logs in to GHCR with this short-lived token to pull the images, nothing long-lived is stored there
+      packages: read
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+      - name: SSH access
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Copy the compose files
+        run: |
+          scp -i ~/.ssh/deploy_key infra/compose.prod.yml infra/backup.sh "$DEPLOY_USER@$DEPLOY_HOST:/srv/kotgambit/"
+      - name: Pull and restart
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          printf '%s' "$REGISTRY_TOKEN" | ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
+            "docker login ghcr.io -u '$REGISTRY_USER' --password-stdin"
+          # The migration runs before the new API starts (compose waits for it), the lessons are loaded after
+          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
+          set -euo pipefail
+          cd /srv/kotgambit
+          chmod +x backup.sh
+          export API_IMAGE=ghcr.io/${owner}/kotgambit-api:${SHA}
+          export WEB_IMAGE=ghcr.io/${owner}/kotgambit-web:${SHA}
+          docker compose -f compose.prod.yml pull
+          docker compose -f compose.prod.yml up -d --wait --remove-orphans
+          docker compose -f compose.prod.yml --profile tools run --rm seed
+          docker image prune -f
+          EOF
+      - name: Check from outside
+        env:
+          API_DOMAIN: ${{ vars.API_DOMAIN }}
+          SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+        run: |
+          for url in "https://${API_DOMAIN}/health" "https://${SITE_DOMAIN}/"; do
+            curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors -o /dev/null "$url"
+            echo "ok: $url"
+          done

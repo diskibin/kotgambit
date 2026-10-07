@@ -57,13 +57,18 @@ describe('entitlements', () => {
   let token: string;
   let userId: string;
 
+  // CI sets the path of a real engine for the whole run, and this spec relies on there being none
+  const previousPath = process.env.ENGINE_PATH;
+
   beforeAll(async () => {
+    delete process.env.ENGINE_PATH;
     ({ app, prisma, redis, mail } = await createTestApp());
     entitlements = app.get(EntitlementsService);
   });
 
   afterAll(async () => {
     await app.close();
+    if (previousPath !== undefined) process.env.ENGINE_PATH = previousPath;
   });
 
   async function register(email: string): Promise<{ token: string; id: string }> {

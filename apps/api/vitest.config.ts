@@ -10,6 +10,7 @@ export default defineConfig({
     fileParallelism: false,
     // Starts Postgres in Docker and exports its DATABASE_URL to the workers
     globalSetup: ['./test/global-setup.ts'],
+    setupFiles: ['./test/setup.ts'],
     // Real hashing and a database make single tests slower than the default allows
     testTimeout: 20_000,
     hookTimeout: 120_000,

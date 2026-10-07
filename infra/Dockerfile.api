@@ -1,0 +1,35 @@
+# syntax=docker/dockerfile:1
+# The API image. It keeps the layout of the repository, because the API reads content/ relative to its own files.
+
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+RUN corepack enable
+COPY . .
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --filter @kotgambit/api...
+# Turbo builds the workspace packages the API needs and runs the Prisma client generation first
+RUN pnpm turbo run build --filter=@kotgambit/api...
+
+FROM node:24-bookworm-slim AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+
+# The version and checksum are pinned like in CI: an engine that changes under us changes every evaluation
+ARG STOCKFISH_VERSION=sf_19
+ARG STOCKFISH_SHA256=9defc0d4e55d49c65a6d042f3e571a39fcea499ade6dbe741b53b8c65e03611f
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && curl -fsSL -o /tmp/stockfish.tar.gz "https://github.com/official-stockfish/Stockfish/releases/download/${STOCKFISH_VERSION}/stockfish-linux-x86-64-universal.tar.gz" \
+    && echo "${STOCKFISH_SHA256}  /tmp/stockfish.tar.gz" | sha256sum --check \
+    && tar -xzf /tmp/stockfish.tar.gz -C /tmp \
+    && install -m 0755 /tmp/stockfish/stockfish-linux-x86-64-universal /usr/local/bin/stockfish \
+    && rm -rf /tmp/stockfish* /var/lib/apt/lists/* \
+    && apt-get purge -y curl && apt-get autoremove -y
+
+# The whole workspace, not a pruned copy: the migration and the seed run from this image too and need the Prisma CLI and tsx
+COPY --from=build --chown=node:node /app /app
+USER node
+ENV ENGINE_PATH=/usr/local/bin/stockfish
+WORKDIR /app/apps/api
+EXPOSE 3000
+CMD ["node", "dist/main.js"]

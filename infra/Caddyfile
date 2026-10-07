@@ -1,0 +1,28 @@
+# SITE_DOMAIN and API_DOMAIN come from the environment of the container. Caddy gets and renews the HTTPS certificates itself.
+
+{$SITE_DOMAIN} {
+	root * /srv/site
+	encode zstd gzip
+
+	# Files in assets/ have a hash in the name, so they never change under the same address
+	@hashed path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		-Server
+	}
+
+	# A single-page app: every route that is not a file gets index.html, which must not be cached
+	@page not path /assets/* /favicon.svg /og.png
+	header @page Cache-Control "no-cache"
+	try_files {path} /index.html
+	file_server
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:3000
+}

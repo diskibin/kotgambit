@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+# The site and the reverse proxy in one image: Caddy serves the built files and sends the API's domain to the api container.
+
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+RUN corepack enable
+# These end up in the public bundle on purpose, none of them is a secret
+ARG VITE_API_URL
+ARG VITE_LEGAL_OPERATOR
+ARG VITE_LEGAL_DETAILS
+ARG VITE_LEGAL_EMAIL
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_LEGAL_OPERATOR=$VITE_LEGAL_OPERATOR \
+    VITE_LEGAL_DETAILS=$VITE_LEGAL_DETAILS \
+    VITE_LEGAL_EMAIL=$VITE_LEGAL_EMAIL
+COPY . .
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+RUN pnpm turbo run build --filter=@kotgambit/web...
+
+FROM caddy:2-alpine
+COPY infra/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/apps/web/dist /srv/site

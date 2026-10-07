@@ -26,7 +26,9 @@ premium
 content-private
 
 # Not part of any server image
-apps/mobile
+# pnpm checks the lockfile against every workspace, so the manifest of the app stays
+apps/mobile/*
+!apps/mobile/package.json
 kot-gambit-design
 docs
 PLAN.md

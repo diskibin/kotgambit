@@ -46,10 +46,12 @@ export RCLONE_CONFIG_S3_ENDPOINT="${BACKUP_S3_ENDPOINT:-https://s3.ru1.storage.b
 export RCLONE_CONFIG_S3_REGION="${BACKUP_S3_REGION:-ru1}"
 export RCLONE_CONFIG_S3_ACCESS_KEY_ID="$BACKUP_S3_ACCESS_KEY"
 export RCLONE_CONFIG_S3_SECRET_ACCESS_KEY="$BACKUP_S3_SECRET_KEY"
+# The bucket is made in the panel and the keys may not create one: rclone must not try before an upload
+export RCLONE_CONFIG_S3_NO_CHECK_BUCKET=true
 rclone() {
   docker run --rm \
     -e RCLONE_CONFIG_S3_TYPE -e RCLONE_CONFIG_S3_PROVIDER -e RCLONE_CONFIG_S3_ENDPOINT -e RCLONE_CONFIG_S3_REGION \
-    -e RCLONE_CONFIG_S3_ACCESS_KEY_ID -e RCLONE_CONFIG_S3_SECRET_ACCESS_KEY \
+    -e RCLONE_CONFIG_S3_ACCESS_KEY_ID -e RCLONE_CONFIG_S3_SECRET_ACCESS_KEY -e RCLONE_CONFIG_S3_NO_CHECK_BUCKET \
     -v "$(cd "$dir" && pwd):/backups:ro" rclone/rclone:1 "$@"
 }
 

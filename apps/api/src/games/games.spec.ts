@@ -82,13 +82,14 @@ describe('games', () => {
   });
 
   async function register(email: string): Promise<string> {
+    // Read before the request: the mail can be sent before the answer is back in the test
+    const sent = mail.outbox.length;
     const res = await app.inject({
       method: 'POST',
       url: '/auth/register',
       payload: { email, password: 'long-enough-password' },
     });
     // The verification email goes out after the answer, let it finish before the next test cleans up
-    const sent = mail.outbox.length;
     await vi.waitFor(() => expect(mail.outbox.length).toBeGreaterThan(sent));
     return AuthResponseSchema.parse(res.json()).accessToken;
   }

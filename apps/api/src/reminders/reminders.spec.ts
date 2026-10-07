@@ -39,12 +39,13 @@ describe('reminders', () => {
 
   /** A learner who agreed, confirmed the email and has been away for a while. */
   async function learner(email: string, over: Record<string, unknown> = {}) {
+    // Read before the request: the mail can be sent before the answer is back in the test
+    const sent = mail.outbox.length;
     const res = await app.inject({
       method: 'POST',
       url: '/auth/register',
       payload: { email, password: 'long-enough-password', displayName: 'Маша' },
     });
-    const sent = mail.outbox.length;
     await vi.waitFor(() => expect(mail.outbox.length).toBeGreaterThan(sent));
     const { user } = AuthResponseSchema.parse(res.json());
     await prisma.user.update({

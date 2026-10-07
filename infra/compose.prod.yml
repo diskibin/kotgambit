@@ -1,0 +1,136 @@
+# Production stack on one server. The images come from GHCR, the variables from infra/prod.env.example (copied to .env
+# next to this file on the server, outside of git). Only Caddy is reachable from the internet.
+name: kotgambit
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  caddy:
+    image: ${WEB_IMAGE:?set WEB_IMAGE}
+    restart: unless-stopped
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      # The certificates: losing them means asking for new ones, which has weekly limits
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+    logging: *logging
+
+  api:
+    image: ${API_IMAGE:?set API_IMAGE}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://kotgambit:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/kotgambit
+      REDIS_URL: redis://redis:6379
+      WEB_URL: https://${SITE_DOMAIN}
+      API_URL: https://${API_DOMAIN}
+      CORS_ORIGINS: https://${SITE_DOMAIN}
+      # Caddy is the only thing in front, the API port is not published
+      TRUST_PROXY: 'true'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging: *logging
+
+  # Applies the migrations before the new API starts and exits
+  migrate:
+    image: ${API_IMAGE}
+    command: ['/app/node_modules/.bin/prisma', 'migrate', 'deploy']
+    environment:
+      DATABASE_URL: postgresql://kotgambit:${POSTGRES_PASSWORD}@postgres:5432/kotgambit
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    logging: *logging
+
+  # Loads the lessons into the database. Not started with the stack, the deploy runs it: `docker compose run --rm seed`
+  seed:
+    image: ${API_IMAGE}
+    profiles: ['tools']
+    # Without a checkout of the private content only the free lessons are loaded, and it says so
+    command:
+      - sh
+      - -c
+      - |
+        if [ -d /content-private/lessons ]; then export CONTENT_PRIVATE_DIR=/content-private/lessons; else echo 'no private content, seeding the free lessons only'; fi
+        exec /app/node_modules/.bin/tsx src/seed/seed.ts
+    environment:
+      DATABASE_URL: postgresql://kotgambit:${POSTGRES_PASSWORD}@postgres:5432/kotgambit
+    volumes:
+      - ${CONTENT_PRIVATE_HOST_DIR:-./content-private}:/content-private:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    logging: *logging
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kotgambit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: kotgambit
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kotgambit -d kotgambit']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    # A cache and counters: losing them is harmless, so nothing is written to disk. Only keys with an expiry may be evicted
+    command:
+      [
+        'redis-server',
+        '--save',
+        '',
+        '--appendonly',
+        'no',
+        '--maxmemory',
+        '256mb',
+        '--maxmemory-policy',
+        'volatile-lru',
+      ]
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+volumes:
+  caddy-data:
+  caddy-config:
+  postgres-data:

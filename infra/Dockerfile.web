@@ -9,14 +9,11 @@ ARG VITE_API_URL
 ARG VITE_LEGAL_OPERATOR
 ARG VITE_LEGAL_DETAILS
 ARG VITE_LEGAL_EMAIL
-ENV VITE_API_URL=$VITE_API_URL \
-    VITE_LEGAL_OPERATOR=$VITE_LEGAL_OPERATOR \
-    VITE_LEGAL_DETAILS=$VITE_LEGAL_DETAILS \
-    VITE_LEGAL_EMAIL=$VITE_LEGAL_EMAIL
 COPY . .
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
-RUN pnpm turbo run build --filter=@kotgambit/web...
+# An empty value would show as an empty place in the documents instead of the gap that the page prints for a value that is not set
+RUN for name in VITE_LEGAL_OPERATOR VITE_LEGAL_DETAILS VITE_LEGAL_EMAIL; do       eval "value=\${$name}"; [ -n "$value" ] || unset "$name";     done     && pnpm turbo run build --filter=@kotgambit/web...
 
 FROM caddy:2-alpine
 COPY infra/Caddyfile /etc/caddy/Caddyfile

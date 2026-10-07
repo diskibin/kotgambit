@@ -96,7 +96,8 @@ services:
   import-puzzles:
     image: ${API_IMAGE}
     profiles: ['tools']
-    command:
+    # An entrypoint and not a command: the options typed after the service name are added to it, a command would be replaced
+    entrypoint:
       - /app/node_modules/.bin/tsx
       - src/seed/import-puzzles.ts
       - /data/lichess_db_puzzle.csv.zst

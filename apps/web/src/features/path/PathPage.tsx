@@ -9,6 +9,7 @@ import { localDateKey } from '../../shared/localDate';
 import { AppShell } from '../../shared/ui/AppShell';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
+import { DragStrip } from '../../shared/ui/DragStrip';
 import { useNavLayout } from '../../shared/useNavLayout';
 import { pieceUrl } from '../board/pieceAssets';
 import { Mascot } from '../mascot/Mascot';
@@ -269,7 +270,7 @@ export function PathPage() {
         </div>
 
         <div className="flex flex-wrap items-end gap-[18px] pt-2 pb-3 laptop:flex-nowrap">
-          <div
+          <DragStrip
             ref={section === track ? ribbon : undefined}
             className="flex min-w-0 flex-1 items-end gap-[18px] overflow-x-auto pr-2 pb-3"
           >
@@ -281,7 +282,7 @@ export function PathPage() {
                 onOpen={open}
               />
             ))}
-          </div>
+          </DragStrip>
           {section === track && bubble && wide && (
             <CatSays text={bubble} mood={current ? 'wave' : 'proud'} dark={dark} />
           )}

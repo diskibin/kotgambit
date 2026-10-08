@@ -89,7 +89,7 @@ function OtherSection({
 }: {
   track: Track;
   lessons: LessonSummary[];
-  /** Under the name of an open section, in place of the count. */
+  /** Under the name of the section, in place of the count. */
   note: string;
   onOpen: (id: string) => void;
 }) {
@@ -97,6 +97,9 @@ function OtherSection({
   const first = lessons.find(
     (lesson) => lesson.status === 'available' || lesson.status === 'completed',
   );
+  // Done when every chapter that the learner can take is done, the Premium ones do not count for a free learner
+  const takable = lessons.filter((lesson) => lesson.status !== 'premium');
+  const done = takable.length > 0 && takable.every((lesson) => lesson.status === 'completed');
   const body = (
     <>
       <img src={pieceUrl('w', OTHER_PIECE[track])} alt="" className="size-12 shrink-0" />
@@ -111,7 +114,7 @@ function OtherSection({
       <button
         type="button"
         onClick={() => onOpen(first.id)}
-        className="flex items-center gap-3 rounded-chapter border-2 border-edge bg-sky px-4 py-3.5 text-left text-on-accent"
+        className={`flex items-center gap-3 rounded-chapter border-2 px-4 py-3.5 text-left ${done ? 'border-mint-border bg-mint-tint text-mint-text' : 'border-edge bg-sky text-on-accent'}`}
       >
         {body}
       </button>
@@ -356,19 +359,20 @@ export function PathPage() {
             ) : (
               <span />
             )}
-            {others.slice(0, 3).map((item, index) => {
+            {others.slice(0, 3).map((item) => {
               const lessonsOf = catalog.filter((lesson) => lesson.track === item);
-              // A section that is still closed says what it waits for: the Basics, the first section
+              // The section that comes right after the current one says that it opens after it
               const opened = lessonsOf.some(
                 (lesson) => lesson.status === 'available' || lesson.status === 'completed',
               );
+              const next = track ? tracks[tracks.indexOf(track) + 1] : undefined;
               const note =
                 lessonsOf.length === 0
                   ? t('path.other.soon')
-                  : !opened && index === 0
+                  : !opened && track && item === next
                     ? t('path.other.chapters', {
                         count: lessonsOf.length,
-                        after: t(`path.afterTrack.${tracks[0] ?? 'basics'}`),
+                        after: t(`path.afterTrack.${track}`),
                       })
                     : t('path.other.count', { count: lessonsOf.length });
               return (

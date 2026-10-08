@@ -161,7 +161,7 @@ describe('the home screen', () => {
     expect(await screen.findByText('Задача дня')).toBeInTheDocument();
     expect(screen.getByText('Мат в 1 ход')).toBeInTheDocument();
     expect(screen.getByText('Дебюты')).toBeInTheDocument();
-    expect(screen.getByText('1 глава · после «Основ»')).toBeInTheDocument();
+    expect(screen.getByText('1 глава · откроется после «Основ»')).toBeInTheDocument();
   });
 
   it('marks a finished section and moves on to the next one', async () => {
@@ -237,6 +237,33 @@ describe('the home screen', () => {
     expect(screen.getByText('Типовые маты')).toBeInTheDocument();
     expect(screen.queryByText('Эндшпиль')).not.toBeInTheDocument();
     expect(screen.queryByText('Практика')).not.toBeInTheDocument();
+  });
+
+  it('marks a passed section green and says only on the next closed one that it opens later', async () => {
+    const chapter = (id: string, track: string, title: string, status: string) => ({
+      ...OPENINGS,
+      id,
+      track,
+      title,
+      status,
+      stars: status === 'completed' ? 3 : 0,
+    });
+    server.use(
+      ...homeHandlers([
+        chapter('b-1', 'basics', 'Основа', 'completed'),
+        chapter('p-1', 'practice', 'Практика глава', 'available'),
+        chapter('o-1', 'openings', 'Дебют глава', 'locked'),
+        chapter('t-1', 'tactics', 'Приём глава', 'locked'),
+      ]),
+    );
+    renderApp('/learn');
+    await screen.findByRole('heading', { name: 'Практика', level: 2 });
+    const passed = screen.getByRole('button', { name: /Основы/ });
+    expect(passed).toHaveClass('bg-mint-tint');
+    expect(screen.getByText('1 глава · откроется после «Практики»')).toBeInTheDocument();
+    // The one after it only has its number of chapters, it is closed as well
+    expect(screen.getAllByText(/откроется после/)).toHaveLength(1);
+    expect(screen.getAllByText('1 глава', { selector: 'span' })).toHaveLength(2);
   });
 
   it('shows the section as passed when everything in it is done', async () => {

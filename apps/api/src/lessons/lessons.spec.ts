@@ -161,7 +161,7 @@ describe('lessons and progress', () => {
         expect((await get('/lessons/openings-1')).statusCode).not.toBe(403);
       });
 
-      it('opens every section once the Basics are done, they do not wait for each other', async () => {
+      it('opens a section only when the one before it is done, in the order of the path', async () => {
         await openings('openings-1', 1);
         await prisma.lesson.create({
           data: {
@@ -179,10 +179,13 @@ describe('lessons and progress', () => {
         });
         expect(await statuses()).toMatchObject({ 'openings-1': 'locked', 'endgame-1': 'locked' });
         await finish(['basics-board', 'basics-rook', 'basics-knight', 'basics-check']);
+        // The endgames wait for the openings, which come before them on the path
         expect(await statuses()).toMatchObject({
           'openings-1': 'available',
-          'endgame-1': 'available',
+          'endgame-1': 'locked',
         });
+        await finish(['openings-1']);
+        expect((await statuses())['endgame-1']).toBe('available');
       });
 
       it('lists the sections in the order of the path, so that the first open chapter is of the next one', async () => {

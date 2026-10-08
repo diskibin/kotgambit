@@ -34,6 +34,8 @@ export function DemoStep({ step, context }: { step: DemoStepData; context: StepC
   const index = chosen ?? (reducedMotion ? last : 0);
   const playing = !paused && !reducedMotion;
   const setIndex = (next: number) => setChosen(next);
+  // "Now me" only when the next step is the learner's turn
+  const practice = context.nextType === 'move' || context.nextType === 'find-squares';
   const message = useMemo(
     () => context.coach.message({ type: 'DEMO', detail: step.body }),
     [context.coach, step.body],
@@ -109,11 +111,14 @@ export function DemoStep({ step, context }: { step: DemoStepData; context: StepC
                 setPaused(false);
               }}
             />
-            <Button label={t('lesson.demo.now')} onPress={advance} />
+            <Button
+              label={t(practice ? 'lesson.demo.now' : 'lesson.demo.following')}
+              onPress={advance}
+            />
           </>
         }
       >
-        {message.text} {t('lesson.demo.line')}
+        {message.text} {t(practice ? 'lesson.demo.line' : 'lesson.demo.lineFollowing')}
       </ReplyCard>
     </StepFrame>
   );

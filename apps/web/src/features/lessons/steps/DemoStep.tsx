@@ -26,6 +26,9 @@ export function DemoStep({ step, context }: { step: DemoStepData; context: StepC
   const last = frames.length - 1;
   const [index, setIndex] = useState(reducedMotion ? last : 0);
   const [playing, setPlaying] = useState(!reducedMotion);
+  // "Now me" only when the next step is the learner's turn, after a demo that leads to another demo or to
+  // some text it would promise something that does not come
+  const practice = context.nextType === 'move' || context.nextType === 'find-squares';
   const message = useMemo(
     () => context.coach.message({ type: 'DEMO', detail: step.body }),
     [context.coach, step.body],
@@ -109,12 +112,12 @@ export function DemoStep({ step, context }: { step: DemoStepData; context: StepC
               {t('lesson.demo.again')}
             </Button>
             <Button onClick={advance} data-autofocus>
-              {t('lesson.demo.now')}
+              {t(practice ? 'lesson.demo.now' : 'lesson.demo.following')}
             </Button>
           </>
         }
       >
-        {message.text} {t('lesson.demo.line')}
+        {message.text} {t(practice ? 'lesson.demo.line' : 'lesson.demo.lineFollowing')}
       </ReplyCard>
     </StepFrame>
   );

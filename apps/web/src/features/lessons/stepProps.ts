@@ -9,4 +9,6 @@ export interface StepContext {
   coach: Coach;
   /** "Основы · глава 9 · шаг 2 из 5" */
   caption: string;
+  /** What the next step is, to tell whether the learner goes on to try it themselves. */
+  nextType: LessonDetail['steps'][number]['type'] | null;
 }

@@ -125,6 +125,7 @@ function LessonScreen({ id }: { id: string }) {
       step: session.index + 1,
       total: lesson.steps.length,
     }),
+    nextType: lesson.steps[session.index + 1]?.type ?? null,
   };
 
   return (

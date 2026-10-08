@@ -147,6 +147,7 @@ export function LessonScreen({ id, onExit, onFinished }: LessonScreenProps) {
       step: session.index + 1,
       total: lesson.steps.length,
     }),
+    nextType: lesson.steps[session.index + 1]?.type ?? null,
   };
 
   return (

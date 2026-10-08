@@ -148,6 +148,23 @@ describe('lesson', () => {
     expect(screen.getByText('Две клетки в одну сторону и одна в сторону.')).toBeInTheDocument();
   });
 
+  it('says "Дальше" and not "Теперь я" when no move of the learner follows the demo', async () => {
+    const steps = LESSON.steps;
+    server.use(
+      http.get(`${API_URL}/lessons/basics-board`, () =>
+        HttpResponse.json({ ...LESSON, steps: [steps[0], steps[1], steps[0]] }),
+      ),
+    );
+    const user = userEvent.setup();
+    await startLesson(user);
+    await click(user, 'Продолжить');
+    await screen.findByRole('heading', { name: 'Смотри' });
+    expect(screen.queryByRole('button', { name: 'Теперь я' })).not.toBeInTheDocument();
+    expect(screen.getByText(/иди дальше/)).toBeInTheDocument();
+    await click(user, 'Дальше');
+    expect(await screen.findByRole('heading', { name: 'Теория' })).toBeInTheDocument();
+  });
+
   it('goes through every kind of step and reports a clean run', async () => {
     const user = userEvent.setup();
     await startLesson(user);

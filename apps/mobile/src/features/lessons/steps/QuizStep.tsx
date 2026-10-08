@@ -103,7 +103,7 @@ export function QuizStep({ step, context }: { step: QuizStepData; context: StepC
           />
         }
       >
-        {t('lesson.quiz.chooseText')}
+        {t(step.board ? 'lesson.quiz.chooseText' : 'lesson.quiz.chooseTextPlain')}
       </ReplyCard>
     );
   }

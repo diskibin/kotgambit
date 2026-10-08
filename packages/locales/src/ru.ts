@@ -401,6 +401,8 @@ export const ru = {
       line: 'Досмотри показ, потом попробуешь сам.',
       again: 'Ещё раз',
       now: 'Теперь я',
+      following: 'Дальше',
+      lineFollowing: 'Досмотри показ и иди дальше.',
       play: 'Продолжить показ',
       pause: 'Пауза',
       back: 'Предыдущий ход',
@@ -425,6 +427,8 @@ export const ru = {
     quiz: {
       choose: 'Выбери ответ',
       chooseText: 'Посмотри на доску и подумай.',
+      // For a question that has no board to look at
+      chooseTextPlain: 'Подумай и выбери ответ.',
       chooseFirst: 'Сначала выбери ответ',
       selected: 'Выбран ответ {{key}}',
       selectedText: 'Хороший выбор? Сейчас узнаем, жми «Проверить».',

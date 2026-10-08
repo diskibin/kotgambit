@@ -101,7 +101,18 @@ export type StepType = Step['type'];
 export const PIECES = ['p', 'n', 'b', 'r', 'q', 'k'] as const;
 export type Piece = (typeof PIECES)[number];
 
-export const TRACKS = ['basics', 'openings', 'middlegame', 'endgame'] as const;
+// The order of the sections on the path. New sections go in between, the chapters of a section are numbered from 1
+export const TRACKS = [
+  'basics',
+  'practice',
+  'openings',
+  'tactics',
+  'middlegame',
+  'strategy',
+  'mates',
+  'endgame',
+  'games',
+] as const;
 export type Track = (typeof TRACKS)[number];
 
 const MIN_STEPS = 3;

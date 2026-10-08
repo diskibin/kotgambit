@@ -129,7 +129,7 @@ describe('lessons and progress', () => {
       // The chapters of these tests are not part of the lessons that the others expect to find
       afterEach(async () => {
         await prisma.lesson.deleteMany({
-          where: { id: { in: ['openings-1', 'openings-2', 'basics-bonus'] } },
+          where: { id: { in: ['openings-1', 'openings-2', 'basics-bonus', 'endgame-1'] } },
         });
       });
       const statuses = async () =>
@@ -159,6 +159,30 @@ describe('lessons and progress', () => {
         });
         // Open: the steps of this invented chapter are not real, so only that it is not refused is checked
         expect((await get('/lessons/openings-1')).statusCode).not.toBe(403);
+      });
+
+      it('opens every section once the Basics are done, they do not wait for each other', async () => {
+        await openings('openings-1', 1);
+        await prisma.lesson.create({
+          data: {
+            id: 'endgame-1',
+            track: 'endgame',
+            order: 1,
+            access: 'free',
+            piece: 'r',
+            title: 'Эндшпиль 1',
+            summary: 's',
+            minutes: 5,
+            steps: [{}, {}],
+            contentHash: 'x',
+          },
+        });
+        expect(await statuses()).toMatchObject({ 'openings-1': 'locked', 'endgame-1': 'locked' });
+        await finish(['basics-board', 'basics-rook', 'basics-knight', 'basics-check']);
+        expect(await statuses()).toMatchObject({
+          'openings-1': 'available',
+          'endgame-1': 'available',
+        });
       });
 
       it('does not hold a free learner back for chapters that are only for Premium', async () => {

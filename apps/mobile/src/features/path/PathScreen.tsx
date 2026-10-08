@@ -113,7 +113,7 @@ export function PathScreen({
                   style={[typography.caption, { color: colors.text2, textTransform: 'uppercase' }]}
                 >
                   {t('path.sectionCount', {
-                    n: TRACKS.indexOf(track) + 1,
+                    n: tracks.indexOf(track) + 1,
                     done,
                     total: items.length,
                   })}

@@ -56,7 +56,7 @@ describe('the first steps', () => {
     await press('Дальше');
 
     expect(await screen.findByText('Доска и фигуры')).toBeOnTheScreen();
-    expect(screen.getByText('5 шагов · около 5 минут')).toBeOnTheScreen();
+    expect(screen.getByText('12 шагов · около 8 минут')).toBeOnTheScreen();
     expect(screen.getByRole('progressbar')).toHaveProp('accessibilityValue', {
       min: 1,
       max: 4,

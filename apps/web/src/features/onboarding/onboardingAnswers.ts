@@ -15,7 +15,7 @@ export const FIRST_LESSON: Record<
   Level,
   { id: string; piece: 'k' | 'n' | 'b'; minutes: number; steps: number }
 > = {
-  novice: { id: 'basics-board', piece: 'k', minutes: 5, steps: 5 },
+  novice: { id: 'basics-board', piece: 'k', minutes: 8, steps: 12 },
   basics: { id: 'basics-knight', piece: 'n', minutes: 6, steps: 6 },
   player: { id: 'openings-italian', piece: 'b', minutes: 6, steps: 5 },
 };

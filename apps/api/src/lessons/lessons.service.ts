@@ -42,7 +42,8 @@ export class LessonsService {
   /**
    * Summaries of all chapters with the learner's status. A chapter opens when the one before it in
    * the same track is finished, and stays open for repetition afterwards. The first chapter of a section opens
-   * when the sections before it are finished: Openings wait for the Basics, as the home screen says.
+   * when the Basics are finished, as the home screen says. The other sections do not wait for each other:
+   * there are many of them now, and a learner may want the endgames before the openings.
    */
   private summarize(
     lessons: LessonRow[],
@@ -59,10 +60,9 @@ export class LessonsService {
       ),
     );
     const present = TRACKS.filter((track) => lessons.some((lesson) => lesson.track === track));
+    const first = present[0];
     const sectionOpen = (track: string) =>
-      present
-        .slice(0, present.indexOf(track as (typeof TRACKS)[number]))
-        .every((before) => finished.has(before));
+      track === first || (first !== undefined && finished.has(first));
     return lessons.map((lesson, index) => {
       const previous = lessons[index - 1];
       const unlocked =

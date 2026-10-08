@@ -8,7 +8,7 @@ export type Goal = (typeof GOALS)[number];
 
 // The first chapter of every level. The numbers are those of the lesson files in content/lessons
 export const FIRST_LESSON: Record<Level, { id: string; minutes: number; steps: number }> = {
-  novice: { id: 'basics-board', minutes: 5, steps: 5 },
+  novice: { id: 'basics-board', minutes: 8, steps: 12 },
   basics: { id: 'basics-knight', minutes: 6, steps: 6 },
   player: { id: 'openings-italian', minutes: 6, steps: 5 },
 };

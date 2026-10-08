@@ -370,9 +370,14 @@ export const ru = {
   },
   tracks: {
     basics: 'Основы',
+    practice: 'Практика',
     openings: 'Дебюты',
+    tactics: 'Тактика',
     middlegame: 'Миттельшпиль',
+    strategy: 'Стратегия',
+    mates: 'Типовые маты',
     endgame: 'Эндшпиль',
+    games: 'Разбор партий',
   },
   lesson: {
     loading: 'Гамбит раскладывает фигуры…',
@@ -1116,9 +1121,14 @@ export const ru = {
     },
     afterTrack: {
       basics: 'Основ',
+      practice: 'Практики',
       openings: 'Дебютов',
+      tactics: 'Тактики',
       middlegame: 'Миттельшпиля',
+      strategy: 'Стратегии',
+      mates: 'Типовых матов',
       endgame: 'Эндшпиля',
+      games: 'Разбора партий',
     },
     other: {
       chapters_one: '{{count}} глава · после «{{after}}»',

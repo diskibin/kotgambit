@@ -20,7 +20,17 @@ import { StreakToast } from './StreakToast';
 
 const PERCENT = 100;
 const SKELETON_CARDS = 4;
-const OTHER_PIECE = { openings: 'n', middlegame: 'b', endgame: 'r', basics: 'k' } as const;
+const OTHER_PIECE = {
+  basics: 'k',
+  practice: 'p',
+  openings: 'n',
+  tactics: 'q',
+  middlegame: 'b',
+  strategy: 'r',
+  mates: 'k',
+  endgame: 'r',
+  games: 'n',
+} as const;
 
 type Track = (typeof TRACKS)[number];
 
@@ -163,7 +173,10 @@ export function PathPage() {
   const current = catalog.find((lesson) => lesson.status === 'available');
   // The section being learned is the one with the chapter to do now, the last one when everything is done
   const track: Track | undefined = current?.track ?? tracks[tracks.length - 1];
-  const others = TRACKS.filter((item) => item !== track);
+  // The sections that have chapters come first, those that are only announced follow
+  const others = TRACKS.filter((item) => item !== track).sort(
+    (a, b) => Number(tracks.includes(b)) - Number(tracks.includes(a)),
+  );
 
   let bubble = '';
   if (current) {
@@ -181,7 +194,7 @@ export function PathPage() {
     const finished = items.length > 0 && done === items.length;
     const percent = Math.round((done / items.length) * PERCENT);
     const about = t(`path.sectionAbout.${section}`, { defaultValue: '' });
-    const number = TRACKS.indexOf(section) + 1;
+    const number = tracks.indexOf(section) + 1;
     return (
       <section key={section} aria-labelledby={`track-${section}`} className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-4">

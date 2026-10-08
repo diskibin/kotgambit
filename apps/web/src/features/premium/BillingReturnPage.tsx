@@ -38,7 +38,9 @@ export function BillingReturnPage() {
 
   // A paid subscription changes what every screen may show, so they are told to ask again
   useEffect(() => {
-    if (status === 'succeeded') dispatch(api.util.invalidateTags(['Billing', 'Puzzles']));
+    if (status === 'succeeded') {
+      dispatch(api.util.invalidateTags(['Billing', 'Puzzles', 'Lessons', 'Cards', 'Reviews']));
+    }
   }, [status, dispatch]);
 
   if (!valid) return <Navigate to="/premium" replace />;

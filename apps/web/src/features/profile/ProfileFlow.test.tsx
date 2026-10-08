@@ -72,6 +72,24 @@ afterEach(() => server.resetHandlers());
 const square = (name: string) => screen.findByRole('button', { name: new RegExp(` ${name}(,|$)`) });
 
 describe('the profile', () => {
+  it('has the way to Premium and its status, which the bottom bar of a phone has no room for', async () => {
+    server.use(
+      http.get(`${API_URL}/billing/subscription`, () =>
+        HttpResponse.json({
+          premium: true,
+          status: 'active',
+          plan: 'month',
+          currentPeriodEnd: '2026-11-08T00:00:00.000Z',
+          autoRenew: true,
+          cardLast4: '4444',
+        }),
+      ),
+    );
+    renderApp('/profile');
+    expect(await screen.findByText('Ты в Премиуме')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Управлять' })).toHaveAttribute('href', '/premium');
+  });
+
   it('shows the level, the name and how long the learner has been learning', async () => {
     renderApp('/profile');
     expect(await screen.findByText('Дмитрий')).toBeInTheDocument();

@@ -61,6 +61,45 @@ function Icon({ path, size, stroke = 2.4 }: { path: string; size: number; stroke
   );
 }
 
+/** The Premium card of the design: what the learner has, or what they could have, with the way to the page. */
+export function PremiumCard({
+  premium,
+  until,
+  className = '',
+}: {
+  premium: boolean;
+  /** The end of the paid period, when there is one to say. */
+  until: string | null;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className={`flex flex-col gap-2.5 rounded-[24px] border-2 border-edge p-5 text-on-accent shadow-shashka ${premium ? 'bg-mint' : 'bg-sun'} ${className}`}
+    >
+      <span className="inline-flex h-7 items-center gap-1.5 self-start rounded-pill bg-white px-2.5 text-[13px] font-extrabold">
+        <Icon path={CROWN} size={14} stroke={2.8} />
+        {t('nav.premium.chip')}
+      </span>
+      <b className="text-[18px] leading-6">
+        {t(premium ? 'nav.premium.active.title' : 'nav.premium.title')}
+      </b>
+      {premium && until && (
+        <span className="text-[14px] leading-5 font-bold">
+          {t('nav.premium.active.until', { date: formatDay(until) })}
+        </span>
+      )}
+      {!premium && <span className="text-[14px] leading-5 font-bold">{t('nav.premium.text')}</span>}
+      <Link
+        to="/premium"
+        className="flex h-11 items-center justify-center rounded-[12px] border-2 border-edge bg-white text-[16px] font-extrabold text-on-accent no-underline shadow-shashka"
+      >
+        {t(premium ? 'nav.premium.active.manage' : 'nav.premium.more')}
+      </Link>
+    </div>
+  );
+}
+
 function SideNav({
   active,
   layout,
@@ -116,24 +155,7 @@ function SideNav({
             <Icon path={CROWN} size={26} stroke={2.6} />
           </Link>
         ) : (
-          <div className="mt-auto flex flex-col gap-2.5 rounded-[24px] border-2 border-edge bg-mint p-5 text-on-accent shadow-shashka">
-            <span className="inline-flex h-7 items-center gap-1.5 self-start rounded-pill bg-white px-2.5 text-[13px] font-extrabold">
-              <Icon path={CROWN} size={14} stroke={2.8} />
-              {t('nav.premium.chip')}
-            </span>
-            <b className="text-[18px] leading-6">{t('nav.premium.active.title')}</b>
-            {until && (
-              <span className="text-[14px] leading-5 font-bold">
-                {t('nav.premium.active.until', { date: formatDay(until) })}
-              </span>
-            )}
-            <Link
-              to="/premium"
-              className="flex h-11 items-center justify-center rounded-[12px] border-2 border-edge bg-white text-[16px] font-extrabold text-on-accent no-underline shadow-shashka"
-            >
-              {t('nav.premium.active.manage')}
-            </Link>
-          </div>
+          <PremiumCard premium until={until} className="mt-auto" />
         ))}
       {!premium &&
         (compact ? (
@@ -146,20 +168,7 @@ function SideNav({
             <Icon path={CROWN} size={26} stroke={2.6} />
           </Link>
         ) : (
-          <div className="mt-auto flex flex-col gap-2.5 rounded-[24px] border-2 border-edge bg-sun p-5 text-on-accent shadow-shashka">
-            <span className="inline-flex h-7 items-center gap-1.5 self-start rounded-pill bg-white px-2.5 text-[13px] font-extrabold">
-              <Icon path={CROWN} size={14} stroke={2.8} />
-              {t('nav.premium.chip')}
-            </span>
-            <b className="text-[18px] leading-6">{t('nav.premium.title')}</b>
-            <span className="text-[14px] leading-5 font-bold">{t('nav.premium.text')}</span>
-            <Link
-              to="/premium"
-              className="flex h-11 items-center justify-center rounded-[12px] border-2 border-edge bg-white text-[16px] font-extrabold text-on-accent no-underline shadow-shashka"
-            >
-              {t('nav.premium.more')}
-            </Link>
-          </div>
+          <PremiumCard premium={false} until={null} className="mt-auto" />
         ))}
     </nav>
   );
@@ -203,7 +212,7 @@ function TopBar({ title, layout }: { title: string; layout: NavLayout }) {
   const initial = name.charAt(0).toUpperCase();
   return (
     <header className="flex min-h-[88px] items-center gap-3 border-b-2 border-line bg-bg px-4 tablet:pr-8 tablet:pl-7 desktop:pl-10">
-      <h1 className="m-0 flex-1 font-heading text-[20px] leading-8 font-bold tablet:text-[24px]">
+      <h1 className="m-0 min-w-0 flex-1 font-heading text-[20px] leading-8 font-bold [overflow-wrap:anywhere] tablet:text-[24px]">
         {title}
       </h1>
       {progress.data && <DayBar progress={progress.data} compact={layout === 'bottom'} />}
@@ -236,7 +245,8 @@ export function AppShell({
 }: AppShellProps & { active?: NavId | null }) {
   const layout = useNavLayout();
   const signedIn = useAppSelector((state) => state.auth.status === 'authenticated');
-  const subscription = useSubscriptionQuery(undefined, { skip: !signedIn });
+  // Read again when the tab gets focus: the payment may have happened in another tab or page
+  const subscription = useSubscriptionQuery(undefined, { skip: !signedIn, refetchOnFocus: true });
   const premium = subscription.data?.premium === true;
   return (
     <div className="flex min-h-screen bg-bg text-text">

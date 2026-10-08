@@ -3,6 +3,7 @@ import { lessonSessionReducer } from '@kotgambit/lesson-player';
 import { puzzleSessionReducer } from '@kotgambit/puzzle-player';
 import { authSlice, sessionEnded, tokenReceived } from '@kotgambit/api-client';
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import { DEFAULT_PREFERENCES, type Preferences } from '@kotgambit/preferences';
 import { loadPreferences, persistPreferences } from '../features/settings/preferencesStorage';
 import { uiSlice } from '../features/settings/ui.slice';
@@ -59,6 +60,8 @@ export function makeStore(preferences: Preferences = DEFAULT_PREFERENCES) {
 
 export const store = makeStore(loadPreferences());
 persistPreferences(store);
+// Lets the queries that ask for it read again when the tab gets back in focus, such as the Premium status
+setupListeners(store.dispatch);
 
 export type AppStore = ReturnType<typeof makeStore>;
 export type RootState = ReturnType<AppStore['getState']>;

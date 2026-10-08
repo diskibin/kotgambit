@@ -1,10 +1,11 @@
-import { AppShell } from '../../shared/ui/AppShell';
+import { AppShell, PremiumCard } from '../../shared/ui/AppShell';
 import { levelPercent, monthGenitive, weekdayShort, yearOf } from '@kotgambit/game-player';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
-import { useLogoutMutation, useProfileQuery } from '../../app/api';
+import { useLogoutMutation, useProfileQuery, useSubscriptionQuery } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { localDateKey } from '../../shared/localDate';
+import { useNavLayout } from '../../shared/useNavLayout';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { LockIcon } from '../../shared/ui/icons';
@@ -35,6 +36,9 @@ export function ProfilePage() {
   const status = useAppSelector((state) => state.auth.status);
   const profile = useProfileQuery(localDateKey(), { skip: status !== 'authenticated' });
   const [logout] = useLogoutMutation();
+  // The bottom bar of a phone has no place for Premium, so its card and the way to the page are here
+  const phone = useNavLayout() === 'bottom';
+  const subscription = useSubscriptionQuery(undefined, { skip: status !== 'authenticated' });
 
   if (status === 'anonymous') return <Navigate to="/login" replace />;
 
@@ -57,6 +61,13 @@ export function ProfilePage() {
           <p role="status" className="m-0 text-[16px] font-bold text-text-2">
             {t('profile.loading')}
           </p>
+        )}
+
+        {phone && subscription.data && (
+          <PremiumCard
+            premium={subscription.data.premium}
+            until={subscription.data.currentPeriodEnd}
+          />
         )}
 
         {data && (

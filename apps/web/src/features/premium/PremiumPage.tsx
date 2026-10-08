@@ -89,7 +89,7 @@ function Offer({ expired }: { expired: boolean }) {
     <div className="grid gap-8 laptop:grid-cols-[540px_minmax(0,1fr)]">
       <section className="flex flex-col gap-4">
         <Mascot mood="proud" size={150} accessory="crown" dark={scheme === 'dark'} animate />
-        <h2 className="m-0 font-heading text-[31px] leading-10 font-bold">
+        <h2 className="m-0 font-heading text-[26px] tablet:text-[31px] leading-10 font-bold">
           {t('premium.offer.title')}
         </h2>
         <p className="m-0 text-[17px] font-semibold text-text-2">
@@ -174,16 +174,16 @@ function Offer({ expired }: { expired: boolean }) {
         <h2 id="table-title" className="m-0 text-[18px] font-extrabold">
           {t('premium.table.title')}
         </h2>
-        <table className="w-full border-collapse overflow-hidden rounded-card border-2 border-line text-[15px] font-semibold">
+        <table className="w-full border-collapse overflow-hidden rounded-card border-2 border-line text-[14px] font-semibold tablet:text-[15px]">
           <thead>
             <tr className="bg-surface-2 text-left">
-              <th scope="col" className="p-3">
+              <th scope="col" className="p-2 tablet:p-3">
                 {t('premium.table.feature')}
               </th>
-              <th scope="col" className="p-3">
+              <th scope="col" className="p-2 tablet:p-3">
                 {t('premium.table.free')}
               </th>
-              <th scope="col" className="bg-brand-tint p-3">
+              <th scope="col" className="bg-brand-tint p-2 tablet:p-3">
                 {t('premium.table.premium')}
               </th>
             </tr>
@@ -191,13 +191,16 @@ function Offer({ expired }: { expired: boolean }) {
           <tbody>
             {TABLE_ROWS.map((row) => (
               <tr key={row} className="border-t-2 border-line">
-                <th scope="row" className="p-3 text-left font-semibold">
+                <th
+                  scope="row"
+                  className="p-2 text-left font-semibold [overflow-wrap:anywhere] tablet:p-3"
+                >
                   {t(`premium.table.rows.${row}`)}
                 </th>
-                <td className="p-3">
+                <td className="p-2 tablet:p-3">
                   <Cell kind={TABLE_CELLS[row][0]} />
                 </td>
-                <td className="bg-brand-tint p-3 font-bold">
+                <td className="bg-brand-tint p-2 font-bold tablet:p-3">
                   <Cell kind={TABLE_CELLS[row][1]} />
                 </td>
               </tr>
@@ -283,7 +286,12 @@ function Canceled({ subscription }: { subscription: SubscriptionView }) {
 export function PremiumPage() {
   const { t } = useTranslation();
   const status = useAppSelector((state) => state.auth.status);
-  const subscription = useSubscriptionQuery(undefined, { skip: status !== 'authenticated' });
+  // The shell keeps the status in the cache all session, so this page asks again whenever it opens or gets focus
+  const subscription = useSubscriptionQuery(undefined, {
+    skip: status !== 'authenticated',
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
 
   if (status === 'anonymous') return <Navigate to="/login" replace />;
 

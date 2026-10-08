@@ -12,6 +12,7 @@ import {
 } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { localDateKey } from '../../shared/localDate';
+import { useNavLayout } from '../../shared/useNavLayout';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { ProgressBar } from '../../shared/ui/ProgressBar';
@@ -30,6 +31,8 @@ export function PuzzlesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const scheme = useScheme();
+  // On a phone the card of the day is one compact row: no cat, a smaller board
+  const phone = useNavLayout() === 'bottom';
   const status = useAppSelector((state) => state.auth.status);
   const signedIn = status === 'authenticated';
   const daily = useDailyPuzzleQuery(localDateKey(), { skip: !signedIn });
@@ -83,10 +86,10 @@ export function PuzzlesPage() {
           {daily.data && (
             <section
               aria-labelledby="daily-title"
-              className="flex flex-wrap items-center gap-6 rounded-card border-2 border-sun-border bg-sun-tint p-6"
+              className="flex flex-wrap items-center gap-4 rounded-card border-2 border-sun-border bg-sun-tint p-4 tablet:gap-6 tablet:p-6"
             >
-              <Mascot mood="hint" size={120} dark={scheme === 'dark'} />
-              <div className="flex min-w-[220px] flex-1 flex-col items-start gap-3">
+              {!phone && <Mascot mood="hint" size={120} dark={scheme === 'dark'} />}
+              <div className="flex min-w-[150px] flex-1 flex-col items-start gap-3 tablet:min-w-[220px]">
                 <span className="rounded-pill bg-sun px-3.5 py-1 text-[14px] font-extrabold text-on-accent">
                   {t('puzzles.daily.chip')}
                 </span>
@@ -120,7 +123,7 @@ export function PuzzlesPage() {
               <PositionPreview
                 fen={daily.data.fen}
                 orientation={daily.data.solver}
-                size={196}
+                size={phone ? 132 : 196}
                 label={t('puzzles.daily.boardLabel')}
               />
             </section>

@@ -20,7 +20,8 @@ export function SocialSignIn() {
         {t('auth.social.or')}
         <span className="h-0.5 flex-1 bg-line" />
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      {/* One under another on a phone with the whole words of the design, three in a row from a tablet up */}
+      <div className="grid gap-3 tablet:grid-cols-3">
         {providers.map((id) => (
           <a
             key={id}
@@ -33,7 +34,10 @@ export function SocialSignIn() {
             })}
           >
             <ProviderIcon id={id} />
-            {t(`auth.social.names.${id}`)}
+            <span className="tablet:hidden">
+              {t('auth.social.signInWith', { name: t(`auth.social.names.${id}`) })}
+            </span>
+            <span className="hidden tablet:inline">{t(`auth.social.names.${id}`)}</span>
           </a>
         ))}
       </div>

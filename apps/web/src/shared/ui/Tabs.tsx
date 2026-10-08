@@ -23,7 +23,7 @@ export function Tabs<Id extends string>({ label, tabs, value, onChange }: TabsPr
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(tab.id)}
-            className={`h-11 flex-1 rounded-[12px] border-2 text-[16px] font-extrabold ${
+            className={`h-11 min-w-0 flex-1 rounded-[12px] border-2 px-1 text-[14px] font-extrabold tablet:text-[16px] ${
               selected
                 ? 'border-edge bg-surface text-text'
                 : 'border-transparent bg-transparent text-text-2'

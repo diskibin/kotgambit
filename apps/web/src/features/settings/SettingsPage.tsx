@@ -39,6 +39,8 @@ import { downloadJson } from '../../shared/download';
 
 const THEME_CHOICES: readonly ThemePreference[] = ['light', 'dark', 'system'];
 const PREVIEW_CELLS = 4;
+const ACCOUNT_ROW =
+  'grid gap-x-4 gap-y-0.5 tablet:grid-cols-[120px_minmax(0,1fr)_auto] tablet:items-center';
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -297,36 +299,42 @@ export function SettingsPage() {
         </Card>
 
         <Card title={t('settings.account.title')}>
-          <dl className="m-0 grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-3 text-[15px]">
-            <dt className="font-semibold text-text-2">{t('settings.account.email')}</dt>
-            <dd className="m-0 font-bold">
-              {me.data?.email}
-              <span className="ml-2 font-semibold text-text-2">
-                ·{' '}
-                {me.data?.emailVerified
-                  ? t('settings.account.verified')
-                  : t('settings.account.unverified')}
-              </span>
-            </dd>
-            <dd className="m-0" />
-            <dt className="font-semibold text-text-2">{t('settings.account.password')}</dt>
-            <dd className="m-0 text-[14px] font-semibold text-text-2">
-              {t('settings.account.passwordText')}
-            </dd>
-            <dd className="m-0">
-              <Button variant="text" onClick={() => void navigate('/reset')}>
-                {t('settings.account.change')}
-              </Button>
-            </dd>
-            <dt className="font-semibold text-text-2">{t('settings.account.subscription')}</dt>
-            <dd className="m-0 font-bold">
-              {premium ? t('settings.account.premium') : t('settings.account.free')}
-            </dd>
-            <dd className="m-0">
-              <Button variant="text" onClick={() => void navigate('/premium')}>
-                {t('settings.account.manage')}
-              </Button>
-            </dd>
+          {/* A row is one under another on a phone, and a long address must be able to break */}
+          <dl className="m-0 flex flex-col gap-4 text-[15px] tablet:gap-3">
+            <div className={ACCOUNT_ROW}>
+              <dt className="font-semibold text-text-2">{t('settings.account.email')}</dt>
+              <dd className="m-0 min-w-0 font-bold [overflow-wrap:anywhere]">
+                {me.data?.email}
+                <span className="ml-2 font-semibold text-text-2">
+                  ·{' '}
+                  {me.data?.emailVerified
+                    ? t('settings.account.verified')
+                    : t('settings.account.unverified')}
+                </span>
+              </dd>
+            </div>
+            <div className={ACCOUNT_ROW}>
+              <dt className="font-semibold text-text-2">{t('settings.account.password')}</dt>
+              <dd className="m-0 min-w-0 text-[14px] font-semibold text-text-2">
+                {t('settings.account.passwordText')}
+              </dd>
+              <dd className="m-0">
+                <Button variant="text" onClick={() => void navigate('/reset')}>
+                  {t('settings.account.change')}
+                </Button>
+              </dd>
+            </div>
+            <div className={ACCOUNT_ROW}>
+              <dt className="font-semibold text-text-2">{t('settings.account.subscription')}</dt>
+              <dd className="m-0 min-w-0 font-bold">
+                {premium ? t('settings.account.premium') : t('settings.account.free')}
+              </dd>
+              <dd className="m-0">
+                <Button variant="text" onClick={() => void navigate('/premium')}>
+                  {t('settings.account.manage')}
+                </Button>
+              </dd>
+            </div>
           </dl>
           <div className="flex flex-col gap-2 border-t-2 border-line pt-4">
             <strong className="text-[16px]">{t('settings.export.title')}</strong>

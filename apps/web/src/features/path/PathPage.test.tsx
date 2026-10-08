@@ -201,7 +201,7 @@ describe('the home screen', () => {
     expect(screen.queryByText(/после «/)).not.toBeInTheDocument();
   });
 
-  it('shows the sections that are ahead in the bottom row, not the ones that are behind', async () => {
+  it('shows one section behind and two ahead in the bottom row', async () => {
     const done = (id: string, track: string, title: string) => ({
       ...OPENINGS,
       id,
@@ -231,9 +231,11 @@ describe('the home screen', () => {
     );
     renderApp('/learn');
     await screen.findByRole('heading', { name: 'Миттельшпиль', level: 2 });
+    // One behind and two ahead: the Tactics, the Strategy and the Typical mates
+    expect(screen.getByText('Тактика')).toBeInTheDocument();
     expect(screen.getByText('Стратегия')).toBeInTheDocument();
     expect(screen.getByText('Типовые маты')).toBeInTheDocument();
-    expect(screen.getByText('Эндшпиль')).toBeInTheDocument();
+    expect(screen.queryByText('Эндшпиль')).not.toBeInTheDocument();
     expect(screen.queryByText('Практика')).not.toBeInTheDocument();
   });
 

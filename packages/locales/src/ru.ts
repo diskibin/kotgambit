@@ -1056,7 +1056,7 @@ export const ru = {
   nav: {
     label: 'Основная навигация',
     brand: 'Кот Гамбит',
-    path: 'Путь',
+    path: 'Мои курсы',
     tasks: 'Задачи',
     play: 'Играть',
     analysis: 'Анализ',

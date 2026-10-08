@@ -8,7 +8,7 @@ import { TabBar } from '../src/shared/ui/TabBar';
 import { HOME, SIGNED_IN } from '../src/test/fixtures';
 import { json, mockApi } from '../src/test/mockApi';
 
-const NAMES = ['Путь', 'Задачи', 'Играть', 'Анализ', 'Профиль'];
+const NAMES = ['Мои курсы', 'Задачи', 'Играть', 'Анализ', 'Профиль'];
 
 describe('TabBar', () => {
   const setup = (onSelect = jest.fn(), active: 'path' | 'play' = 'path') => {
@@ -59,7 +59,7 @@ describe('the bar in the app', () => {
       'GET /games/active': () => json({ game: null }),
     });
     render(<App store={makeStore()} />);
-    expect(await screen.findByRole('tab', { name: 'Путь', selected: true })).toBeOnTheScreen();
+    expect(await screen.findByRole('tab', { name: 'Мои курсы', selected: true })).toBeOnTheScreen();
     fireEvent.press(screen.getByRole('tab', { name: 'Играть' }));
     expect(await screen.findByRole('tab', { name: 'Играть', selected: true })).toBeOnTheScreen();
     expect(await screen.findByRole('header', { name: 'Играть' })).toBeOnTheScreen();
@@ -68,7 +68,7 @@ describe('the bar in the app', () => {
   it('is not on the path any more as text links: the header has only the cat and the day', async () => {
     mockApi({ ...SIGNED_IN, ...HOME });
     render(<App store={makeStore()} />);
-    await screen.findByRole('tab', { name: 'Путь' });
+    await screen.findByRole('tab', { name: 'Мои курсы' });
     for (const name of ['Задачи', 'Играть', 'Анализ позиции', 'Профиль', 'Премиум', 'Выйти']) {
       expect(screen.queryByRole('button', { name })).not.toBeOnTheScreen();
     }

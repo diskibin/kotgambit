@@ -249,7 +249,7 @@ describe('what became of the payment', () => {
     expect(await screen.findByText('Готово, у тебя Премиум!')).toBeOnTheScreen();
     expect(screen.getByText('Премиум активен')).toBeOnTheScreen();
     await press('Отлично!');
-    expect(await screen.findByRole('tab', { name: 'Путь', selected: true })).toBeOnTheScreen();
+    expect(await screen.findByRole('tab', { name: 'Мои курсы', selected: true })).toBeOnTheScreen();
   });
 
   it('says it kindly when the payment did not go through, and offers another try', async () => {

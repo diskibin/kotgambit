@@ -59,7 +59,7 @@ afterEach(() => {
   window.matchMedia = realMatchMedia;
 });
 
-const LINKS = ['Путь', 'Задачи', 'Играть', 'Анализ', 'Профиль'];
+const LINKS = ['Мои курсы', 'Задачи', 'Играть', 'Анализ', 'Профиль'];
 
 describe('on a wide screen', () => {
   it('has the sidebar with the five places, the lit one marked, and the title on top', async () => {
@@ -71,7 +71,9 @@ describe('on a wide screen', () => {
       'aria-current',
       'page',
     );
-    expect(within(nav).getByRole('link', { name: 'Путь' })).not.toHaveAttribute('aria-current');
+    expect(within(nav).getByRole('link', { name: 'Мои курсы' })).not.toHaveAttribute(
+      'aria-current',
+    );
     expect(within(nav).getByText('Кот Гамбит')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Задачи', level: 1 })).toBeInTheDocument();
   });

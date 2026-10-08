@@ -15,6 +15,7 @@ import { pieceUrl } from '../board/pieceAssets';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
 import { ChapterCard } from './ChapterCard';
+import { otherSections } from './otherSections';
 import { PositionBoard } from './PositionBoard';
 import { StreakToast } from './StreakToast';
 
@@ -173,14 +174,7 @@ export function PathPage() {
   const current = catalog.find((lesson) => lesson.status === 'available');
   // The section being learned is the one with the chapter to do now, the last one when everything is done
   const track: Track | undefined = current?.track ?? tracks[tracks.length - 1];
-  // The sections ahead of the current one come first, as the design has it, and only then those behind it.
-  // The ones that have chapters go before those that are only announced
-  const here = track ? TRACKS.indexOf(track) : -1;
-  const others = TRACKS.filter((item) => item !== track).sort(
-    (a, b) =>
-      Number(tracks.includes(b)) - Number(tracks.includes(a)) ||
-      Number(TRACKS.indexOf(a) < here) - Number(TRACKS.indexOf(b) < here),
-  );
+  const others = otherSections(tracks, track);
 
   let bubble = '';
   if (current) {

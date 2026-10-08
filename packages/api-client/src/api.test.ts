@@ -283,6 +283,21 @@ describe('token refresh', () => {
     expect(refreshCalls).toBe(1);
   });
 
+  it('takes the lock shared by the tabs of the browser while it refreshes', async () => {
+    server.use(meHandler(), refreshHandler());
+    const request = vi.fn(async (_name: string, work: () => Promise<unknown>) => work());
+    vi.stubGlobal('navigator', { locks: { request } });
+    try {
+      const { api, store } = setup();
+      const result = await store.dispatch(api.endpoints.me.initiate());
+      expect(result.data).toEqual(USER);
+      expect(request).toHaveBeenCalledTimes(1);
+      expect(refreshCalls).toBe(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('ends the session when the refresh fails', async () => {
     server.use(meHandler(), refreshHandler(401));
     const { api, store, session } = setup();

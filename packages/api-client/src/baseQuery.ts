@@ -10,6 +10,7 @@ import type { SessionAdapter } from './session.js';
 
 const UNAUTHORIZED = 401;
 const REFRESH_URL = '/auth/refresh';
+const REFRESH_LOCK = 'kotgambit-refresh';
 // A 401 from these means "wrong credentials", not "expired token", so refreshing would not help
 const NO_REFRESH_URLS = ['/auth/login', '/auth/register', REFRESH_URL];
 
@@ -21,6 +22,20 @@ export interface BaseQueryOptions {
   fetchFn?: typeof fetch;
   /** Sent with every request, for example the header that marks the mobile client. */
   headers?: Record<string, string>;
+}
+
+/**
+ * The mutex only covers one tab, yet all tabs of a browser share one refresh cookie. The Web Locks
+ * API orders their refreshes; where it is missing (mobile, old browsers) there is one client anyway.
+ */
+function withTabLock<T>(work: () => Promise<T>): Promise<T> {
+  // This package is built without the DOM lib, so the slice of the API that is used is typed here
+  const locks = (
+    globalThis as {
+      navigator?: { locks?: { request<R>(name: string, work: () => Promise<R>): Promise<R> } };
+    }
+  ).navigator?.locks;
+  return locks ? locks.request(REFRESH_LOCK, work) : work();
 }
 
 function urlOf(args: string | FetchArgs): string {
@@ -52,17 +67,20 @@ export function createBaseQuery({
     api: Parameters<KotGambitBaseQuery>[1],
     extra: Parameters<KotGambitBaseQuery>[2],
   ) {
-    const refreshToken = (await session.getRefreshToken?.()) ?? undefined;
-    const result = await rawQuery(
-      { url: REFRESH_URL, method: 'POST', ...(refreshToken ? { body: { refreshToken } } : {}) },
-      api,
-      extra,
-    );
-    const parsed = AuthResponseSchema.safeParse(result.data);
-    if (!parsed.success) return false;
-    session.setAccessToken(parsed.data.accessToken);
-    if (parsed.data.refreshToken) await session.setRefreshToken?.(parsed.data.refreshToken);
-    return true;
+    // Read inside the lock: a tab that waited reads the cookie or token the other tab just rotated
+    return withTabLock(async () => {
+      const refreshToken = (await session.getRefreshToken?.()) ?? undefined;
+      const result = await rawQuery(
+        { url: REFRESH_URL, method: 'POST', ...(refreshToken ? { body: { refreshToken } } : {}) },
+        api,
+        extra,
+      );
+      const parsed = AuthResponseSchema.safeParse(result.data);
+      if (!parsed.success) return false;
+      session.setAccessToken(parsed.data.accessToken);
+      if (parsed.data.refreshToken) await session.setRefreshToken?.(parsed.data.refreshToken);
+      return true;
+    });
   }
 
   return async (args, api, extra) => {

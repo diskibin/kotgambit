@@ -42,15 +42,19 @@ describe('loadLessons', () => {
   });
 
   it('refuses the private directory on its own, the numbering starts in the free one', () => {
-    writePremiumChapter(6);
+    writePremiumChapter(
+      loadLessons(FREE_DIR).filter((lesson) => lesson.track === 'endgame').length + 1,
+    );
     expect(() => loadLessons(root)).toThrow(/chapter numbers must go 1, 2, 3/);
   });
 
   it('refuses a gap in the numbering and a duplicate id across the directories', () => {
-    writePremiumChapter(9);
-    expect(() => loadLessons([FREE_DIR, root])).toThrow(/found 1, 2, 3, 4, 5, 9/);
+    const freeEndgame = loadLessons(FREE_DIR).filter((lesson) => lesson.track === 'endgame').length;
+    writePremiumChapter(freeEndgame + 4);
+    const found = [...Array.from({ length: freeEndgame }, (_, i) => i + 1), freeEndgame + 4];
+    expect(() => loadLessons([FREE_DIR, root])).toThrow(`found ${found.join(', ')}`);
     rmSync(join(root, 'endgame'), { recursive: true });
-    writePremiumChapter(6, 'endgame-extra-material');
+    writePremiumChapter(freeEndgame + 1, 'endgame-extra-material');
     expect(() => loadLessons([FREE_DIR, root])).toThrow(/duplicate lesson id/);
   });
 });

@@ -7,3 +7,5 @@ coverage
 .gradle
 Pods
 apps/api/src/generated
+# Must stay byte for byte as Google gave it
+apps/web/public/google*.html

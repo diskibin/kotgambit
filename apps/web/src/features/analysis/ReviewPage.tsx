@@ -327,7 +327,7 @@ export function ReviewPage() {
 
   return (
     <AppShell active="play" title={t('review.title')}>
-      <div className="grid gap-8 laptop:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
+      <div className="grid gap-8 laptop:grid-cols-[minmax(440px,1fr)_minmax(0,2fr)]">
         <section className="flex flex-col gap-3">
           {game.data && bot && (
             <div className="flex flex-col">

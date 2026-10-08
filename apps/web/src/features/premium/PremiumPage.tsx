@@ -290,7 +290,7 @@ export function PremiumPage() {
   const data = subscription.data;
   return (
     <AppShell title={t('premium.title')}>
-      <div className="max-w-[1200px]">
+      <div className="mx-auto w-full max-w-[1200px]">
         {subscription.isError && (
           <div className="flex flex-col gap-3">
             <Banner>{t('premium.loadError')}</Banner>

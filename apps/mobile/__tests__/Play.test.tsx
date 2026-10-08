@@ -210,6 +210,15 @@ describe('playing', () => {
     expect(screen.queryByRole('header', { name: 'Ходы партии' })).not.toBeOnTheScreen();
   });
 
+  it('says on the button that the hints are used up', async () => {
+    await openGame({
+      'POST /games': () => json(game({ hintsLeft: 0 }), 201),
+      [`GET /games/${GAME_ID}`]: () => json(game({ hintsLeft: 0 })),
+    });
+    expect(screen.getByRole('button', { name: 'Подсказок нет' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Подсказка' })).not.toBeOnTheScreen();
+  });
+
   it('shows a hint as a move in the cat’s card', async () => {
     await openGame();
     await press('Подсказка');

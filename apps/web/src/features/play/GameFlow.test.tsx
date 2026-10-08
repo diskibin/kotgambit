@@ -227,6 +227,28 @@ describe('playing', () => {
     expect(await screen.findByText(/Ход: e4\./)).toBeInTheDocument();
   });
 
+  it('says why the hint button does not work once the hints of the game are used up', async () => {
+    server.use(
+      http.post(`${API_URL}/games`, () =>
+        HttpResponse.json(game({ learning: true, hintsLeft: 0 }), { status: 201 }),
+      ),
+      http.get(`${API_URL}/games/${GAME_ID}`, () =>
+        HttpResponse.json(game({ learning: true, hintsLeft: 0 })),
+      ),
+    );
+    await openGame();
+    expect(screen.getByRole('button', { name: 'Подсказка' })).toBeDisabled();
+    expect(
+      screen.getByTitle('Подсказки в этой партии закончились. Ты справишься!'),
+    ).toBeInTheDocument();
+  });
+
+  it('has no tooltip on the hint button while there are hints left', async () => {
+    await openGame();
+    expect(screen.getByRole('button', { name: 'Подсказка' })).toBeEnabled();
+    expect(screen.queryByTitle(/Подсказки в этой партии закончились/)).not.toBeInTheDocument();
+  });
+
   it('has no hints and no undo in a game without the learning mode', async () => {
     server.use(
       http.get(`${API_URL}/games/${GAME_ID}`, () =>

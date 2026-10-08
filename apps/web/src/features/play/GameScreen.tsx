@@ -385,14 +385,20 @@ export function GameScreen({ bot }: GameScreenProps) {
             <div className="flex flex-wrap gap-3">
               {game.learning && (
                 <>
-                  <Button
-                    variant="secondary"
-                    disabled={!canHint(session)}
-                    onClick={() => void hint()}
+                  {/* A disabled button gets no mouse events in some browsers, so the tooltip is on the wrapper */}
+                  <span
+                    title={game.hintsLeft === 0 ? t('play.game.hintsOver') : undefined}
+                    className="inline-flex"
                   >
-                    <BulbIcon />
-                    {t('play.game.hint')}
-                  </Button>
+                    <Button
+                      variant="secondary"
+                      disabled={!canHint(session)}
+                      onClick={() => void hint()}
+                    >
+                      <BulbIcon />
+                      {t('play.game.hint')}
+                    </Button>
+                  </span>
                   <Button
                     variant="secondary"
                     disabled={!canUndo(session)}

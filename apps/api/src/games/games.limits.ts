@@ -13,7 +13,7 @@ export const GAME_LIMITS = {
 /** Games a learner may have open at once, so that abandoned games do not pile up. */
 export const MAX_ACTIVE_GAMES = 3;
 
-export const HINTS_PER_GAME = 3;
+export const HINTS_PER_GAME = 10;
 
 // Gentle on purpose: a loss still teaches something and the cat never punishes it (PLAN.md 14.2)
 export const GAME_XP = { win: 30, draw: 15, loss: 10 } as const;

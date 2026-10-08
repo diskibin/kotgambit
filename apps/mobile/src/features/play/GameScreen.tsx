@@ -504,7 +504,7 @@ function GamePlay({
                 <Button
                   variant="secondary"
                   icon={<BulbIcon color={colors.text} />}
-                  label={t('play.game.hint')}
+                  label={t(game.hintsLeft === 0 ? 'play.game.hintsOverShort' : 'play.game.hint')}
                   disabled={!canHint(session)}
                   onPress={() => void hint()}
                 />

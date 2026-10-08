@@ -1298,6 +1298,9 @@ export const ru = {
         over: 'Партия окончена',
       },
       hint: 'Подсказка',
+      // Said when the hints of the game are used up: on the web as the tooltip, in the app as the label
+      hintsOver: 'Подсказки в этой партии закончились. Ты справишься!',
+      hintsOverShort: 'Подсказок нет',
       undo: 'Отменить',
       resign: 'Сдаться',
       boardNote: 'Выбери фигуру и клетку или перетащи фигуру.',

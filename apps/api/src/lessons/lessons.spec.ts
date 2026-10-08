@@ -18,9 +18,13 @@ import { seedLessons } from '../seed/seed-lessons.js';
 
 const CONTENT_DIR = fileURLToPath(new URL('../../../../content/lessons', import.meta.url));
 const GOAL_SECONDS = 600;
-// basics-board: text, text, find-squares, quiz, quiz
-const BOARD_ALL_FIRST_TRY = [1, 1, 1, 1, 1];
-const BOARD_ONE_RETRY = [1, 1, 2, 1, 1];
+// basics-board has 12 steps, four of them are tasks: the steps 3 and 4, 11 and 12
+const BOARD_STEPS = 12;
+const BOARD_ALL_FIRST_TRY = Array.from({ length: BOARD_STEPS }, () => 1);
+// Two of the four tasks took a second try
+const BOARD_TWO_RETRIES = BOARD_ALL_FIRST_TRY.map((tries, index) =>
+  index === 2 || index === 3 ? 2 : tries,
+);
 // These tests are written for the first four chapters. The real content keeps growing, and a new
 // chapter must not change what they count or take the order numbers they use.
 const TESTED_LESSONS = ['basics-board', 'basics-rook', 'basics-knight', 'basics-check'];
@@ -210,12 +214,14 @@ describe('lessons and progress', () => {
       const res = await get('/lessons/basics-board');
       expect(res.statusCode).toBe(200);
       const lesson = LessonDetailSchema.parse(res.json());
-      expect(lesson.steps).toHaveLength(5);
+      expect(lesson.steps).toHaveLength(BOARD_STEPS);
       expect(lesson.steps.map((s) => s.type)).toEqual([
         'text',
         'text',
         'find-squares',
         'quiz',
+        ...Array.from({ length: 6 }, () => 'text'),
+        'find-squares',
         'quiz',
       ]);
     });
@@ -254,17 +260,17 @@ describe('lessons and progress', () => {
 
     it('works out accuracy from the tries, the client does not claim it', async () => {
       const result = CompleteLessonResponseSchema.parse(
-        (await complete('basics-board', BOARD_ONE_RETRY)).json(),
+        (await complete('basics-board', BOARD_TWO_RETRIES)).json(),
       );
-      // Three tasks, two solved at the first try
-      expect(result.accuracy).toBeCloseTo(2 / 3);
+      // Four tasks, two solved at the first try
+      expect(result.accuracy).toBeCloseTo(2 / 4);
       expect(result.stars).toBe(1);
     });
 
     it('gives less XP for a repeat and never lowers the best result', async () => {
       await complete('basics-board', BOARD_ALL_FIRST_TRY);
       const repeat = CompleteLessonResponseSchema.parse(
-        (await complete('basics-board', BOARD_ONE_RETRY)).json(),
+        (await complete('basics-board', BOARD_TWO_RETRIES)).json(),
       );
       expect(repeat).toMatchObject({ xp: 5, firstTime: false });
       expect((await catalog())[0]?.stars).toBe(3);
@@ -289,8 +295,8 @@ describe('lessons and progress', () => {
       const result = CompleteLessonResponseSchema.parse(
         (await complete('basics-board', BOARD_ALL_FIRST_TRY, { seconds: 3600 })).json(),
       );
-      // 5 minutes of lesson, at most 3 minutes per minute of lesson counted
-      expect(result.progress.todaySeconds).toBe(900);
+      // 8 minutes of lesson, at most 3 minutes per minute of lesson counted
+      expect(result.progress.todaySeconds).toBe(1440);
     });
 
     it('refuses a day far from the server day and accepts a neighbouring one', async () => {

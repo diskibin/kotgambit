@@ -11,6 +11,7 @@ import {
   usePuzzleMoveMutation,
 } from '../../app/api';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useNavLayout } from '../../shared/useNavLayout';
 import { useReducedMotion } from '../../shared/useReducedMotion';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
@@ -54,6 +55,8 @@ export function PuzzleSolver({ puzzle, onNext }: PuzzleSolverProps) {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const scheme = useScheme();
+  // On a phone the cat under the board is small (web/screens/layout.md) so that the hints fit beside it
+  const phone = useNavLayout() === 'bottom';
   const reduced = useReducedMotion();
   const session = useAppSelector((state) => state.puzzleSession);
   const coach = useMemo(() => createCoach(), []);
@@ -263,10 +266,10 @@ export function PuzzleSolver({ puzzle, onNext }: PuzzleSolverProps) {
           {message.text}
         </ReplyCard>
 
-        <div className="flex items-end gap-4 pl-4">
-          <Mascot mood={message.mascot} size={130} dark={scheme === 'dark'} animate />
-          <div className="flex flex-1 flex-col gap-2 rounded-card border-2 border-line bg-surface p-4">
-            <div className="flex items-center justify-between gap-3">
+        <div className="flex items-end gap-3 tablet:gap-4 tablet:pl-4">
+          <Mascot mood={message.mascot} size={phone ? 60 : 130} dark={scheme === 'dark'} animate />
+          <div className="flex min-w-0 flex-1 flex-col gap-2 rounded-card border-2 border-line bg-surface p-4">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <span className="text-[15px] font-extrabold">
                 {t('puzzles.solve.hintsOf', { n: hintLevel })}
               </span>

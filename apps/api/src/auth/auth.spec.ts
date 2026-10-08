@@ -195,9 +195,17 @@ describe('auth', () => {
       expect(next).not.toBe(refreshToken);
     });
 
-    it('treats a reused token as theft and revokes the whole family', async () => {
+    // Moves the rotation far enough back that it no longer counts as a recent one
+    const ageRevocations = () =>
+      prisma.refreshToken.updateMany({
+        where: { revokedAt: { not: null } },
+        data: { revokedAt: new Date(Date.now() - 60_000) },
+      });
+
+    it('treats a token reused long after its rotation as theft and revokes the family', async () => {
       const first = refreshCookie(await register())?.value ?? '';
       const rotated = refreshCookie(await refreshWithCookie(first))?.value ?? '';
+      await ageRevocations();
 
       const replay = await refreshWithCookie(first);
       expect(replay.statusCode).toBe(401);
@@ -207,10 +215,32 @@ describe('auth', () => {
       expect((await refreshWithCookie(rotated)).statusCode).toBe(401);
     });
 
-    it('lets only one of two parallel requests use the same token', async () => {
+    it('lets a token that was rotated seconds ago be used again without signing anyone out', async () => {
+      const first = refreshCookie(await register())?.value ?? '';
+      const rotated = refreshCookie(await refreshWithCookie(first))?.value ?? '';
+
+      const again = await refreshWithCookie(first);
+      expect(again.statusCode).toBe(200);
+      expect(refreshCookie(again)?.value).toBeTruthy();
+      expect((await refreshWithCookie(rotated)).statusCode).toBe(200);
+    });
+
+    it('does not extend the grace to a family that was ended by logout', async () => {
+      const first = refreshCookie(await register())?.value ?? '';
+      const rotated = refreshCookie(await refreshWithCookie(first))?.value ?? '';
+      await app.inject({
+        method: 'POST',
+        url: '/auth/logout',
+        cookies: { [REFRESH_COOKIE]: rotated },
+      });
+
+      expect((await refreshWithCookie(first)).statusCode).toBe(401);
+    });
+
+    it('answers both of two parallel requests with the same token', async () => {
       const first = refreshCookie(await register())?.value ?? '';
       const results = await Promise.all([refreshWithCookie(first), refreshWithCookie(first)]);
-      expect(results.filter((res) => res.statusCode === 200)).toHaveLength(1);
+      expect(results.map((res) => res.statusCode)).toEqual([200, 200]);
     });
 
     it('refuses an expired token', async () => {

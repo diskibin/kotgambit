@@ -16,6 +16,8 @@ import { TokenService } from './token.service.js';
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 const UNIQUE_VIOLATION = 'P2002';
+// Long enough for a second tab or a retry to arrive, short enough that a stolen token is of little use
+const REFRESH_REUSE_GRACE_MS = 30 * 1000;
 
 export interface Session {
   /** The response body, without the refresh token. */
@@ -86,6 +88,8 @@ export class AuthService {
   /**
    * Swaps a refresh token for a new pair. A token can be used once: presenting an already used one
    * means it was copied, so the whole family is revoked and the real owner has to sign in again.
+   * The exception is a token that was rotated a moment ago: two tabs (or a retry after a lost
+   * response) legitimately present the same cookie within seconds, and that must not sign them out.
    */
   async refresh(presented: string | undefined): Promise<Session> {
     const expired = new AppError('auth.session_expired', HttpStatus.UNAUTHORIZED);
@@ -96,19 +100,37 @@ export class AuthService {
       include: { user: true },
     });
     if (!stored) throw expired;
-
-    // Atomic: of two concurrent uses of the same token only one gets to revoke it
-    const claimed = await this.prisma.refreshToken.updateMany({
-      where: { id: stored.id, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
-    if (claimed.count === 0) {
-      await this.revokeFamily(stored.familyId);
-      throw expired;
-    }
     if (stored.expiresAt <= new Date()) throw expired;
 
-    return this.startSession(stored.user, stored.familyId);
+    // One transaction, so that anyone who loses the claim sees the successor as soon as the claim
+    // is visible, which the grace check below relies on
+    const rotated = await this.prisma.$transaction(async (tx) => {
+      // Atomic: of two concurrent uses of the same token only one gets to revoke it
+      const claimed = await tx.refreshToken.updateMany({
+        where: { id: stored.id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      return claimed.count === 0 ? null : this.startSession(stored.user, stored.familyId, tx);
+    });
+    if (rotated) return rotated;
+
+    if (await this.wasJustRotated(stored)) return this.startSession(stored.user, stored.familyId);
+    await this.revokeFamily(stored.familyId);
+    throw expired;
+  }
+
+  /**
+   * True when the token was used up by a normal rotation seconds ago. A token revoked by logout or
+   * by a theft verdict has no live successor in its family, so it never qualifies.
+   */
+  private async wasJustRotated(token: { id: string; familyId: string; createdAt: Date }) {
+    const current = await this.prisma.refreshToken.findUnique({ where: { id: token.id } });
+    if (!current?.revokedAt) return false;
+    if (Date.now() - current.revokedAt.getTime() > REFRESH_REUSE_GRACE_MS) return false;
+    const successor = await this.prisma.refreshToken.findFirst({
+      where: { familyId: token.familyId, revokedAt: null, createdAt: { gt: token.createdAt } },
+    });
+    return successor !== null;
   }
 
   async logout(presented: string | undefined): Promise<void> {
@@ -126,10 +148,14 @@ export class AuthService {
     });
   }
 
-  private async startSession(user: UserRecord, familyId: string): Promise<Session> {
+  private async startSession(
+    user: UserRecord,
+    familyId: string,
+    db: Prisma.TransactionClient | PrismaService = this.prisma,
+  ): Promise<Session> {
     const refreshToken = this.tokens.generateOpaqueToken();
     const refreshExpiresAt = new Date(Date.now() + this.config.refreshTokenTtlDays * MS_IN_DAY);
-    await this.prisma.refreshToken.create({
+    await db.refreshToken.create({
       data: {
         userId: user.id,
         familyId,

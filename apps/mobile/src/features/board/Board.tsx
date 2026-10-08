@@ -278,8 +278,8 @@ const Cell = memo(function Cell({
             bottom: SELECTION_INSET,
             borderRadius: cell,
             borderWidth: SELECTION_BORDER,
-            borderColor: boardHighlight.selectedRing,
-            backgroundColor: boardHighlight.selectedFill,
+            borderColor: palette.selectionRing,
+            backgroundColor: palette.selectionFill,
           }}
         />
       )}

@@ -199,11 +199,16 @@
   --board-check-glow: #ff8f6b;
   --board-hint-dashed: #38b6ff;
 }
+/* The dark squares of the dark theme are the brand color itself, so a brand ring on them is not seen */
 [data-theme='dark'] {
   --board-coord-on-light: #14111f;
+  --board-selected-ring: #f4f1ff;
+  --board-selected-fill: rgba(244, 241, 255, 0.18);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --board-coord-on-light: #14111f;
+    --board-selected-ring: #f4f1ff;
+    --board-selected-fill: rgba(244, 241, 255, 0.18);
   }
 }

@@ -96,6 +96,9 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
   if (authStatus === 'anonymous') return <Navigate to="/login" replace />;
 
   const leave = () => void navigate('/puzzles');
+  // The puzzle of the day is the same all day, so "next" after it moves on to the puzzles for the rating
+  const next = () =>
+    mode === 'daily' ? void navigate('/puzzles/solve?mode=rating', { replace: true }) : start();
 
   if (load === 'limit') {
     return (
@@ -134,7 +137,7 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
           </div>
         </header>
         <main className="flex-1">
-          <PuzzleSolver key={puzzle.attemptId} puzzle={puzzle} onNext={start} />
+          <PuzzleSolver key={puzzle.attemptId} puzzle={puzzle} onNext={next} />
         </main>
       </div>
     );

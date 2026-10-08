@@ -214,6 +214,8 @@ describe('solving', () => {
     nextBodies = [];
     await press('Следующая задача');
     await waitFor(() => expect(nextBodies).toHaveLength(1));
+    // The puzzle of the day is the same all day, so the next one is picked by the rating
+    expect(nextBodies[0]).toMatchObject({ mode: 'rating' });
     await screen.findByText('Найди лучший ход');
   });
 

@@ -52,11 +52,13 @@ export function PuzzleScreen({
   const [load, setLoad] = useState<Load>('loading');
   const [serverMessage, setServerMessage] = useState('');
   const requested = useRef(false);
+  // The puzzle of the day is the same all day, so after it the learner gets puzzles for the rating
+  const mode = useRef(request.mode);
 
   /** Asks for a puzzle and shows what came of it. The state changes only once the answer is in. */
   async function fetchPuzzle() {
     const result = await nextPuzzle({
-      mode: request.mode,
+      mode: mode.current,
       ...(request.theme ? { theme: request.theme } : {}),
       localDate: localDateKey(),
     });
@@ -83,6 +85,12 @@ export function PuzzleScreen({
   function start() {
     setLoad('loading');
     void fetchPuzzle();
+  }
+
+  /** "Next puzzle" after a solved one: the next puzzle of the same kind, or by rating after the one of the day. */
+  function next() {
+    if (mode.current === 'daily') mode.current = 'rating';
+    start();
   }
 
   // Once per screen: a second request would leave the first attempt behind as a skip
@@ -131,7 +139,7 @@ export function PuzzleScreen({
             </View>
           )}
         </View>
-        <PuzzleSolver key={puzzle.attemptId} puzzle={puzzle} onNext={start} />
+        <PuzzleSolver key={puzzle.attemptId} puzzle={puzzle} onNext={next} />
       </View>
     );
   }

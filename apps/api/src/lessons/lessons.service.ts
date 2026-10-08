@@ -96,11 +96,17 @@ export class LessonsService {
   private async load(
     userId: string,
   ): Promise<{ lessons: LessonRow[]; summaries: LessonSummary[] }> {
-    const [lessons, progress, premium] = await Promise.all([
+    const [rows, progress, premium] = await Promise.all([
       this.prisma.lesson.findMany({ orderBy: [{ track: 'asc' }, { order: 'asc' }] }),
       this.prisma.lessonProgress.findMany({ where: { userId } }),
       this.entitlements.isPremium(userId),
     ]);
+    // In the order of the sections on the path, not alphabetically: the screens take the first open chapter
+    // of the list as the one to do now. The order inside a section is kept
+    const sectionOf = (track: string) => TRACKS.indexOf(track as (typeof TRACKS)[number]);
+    const lessons = [...rows].sort(
+      (a, b) => sectionOf(a.track) - sectionOf(b.track) || a.order - b.order,
+    );
     const done = new Map(progress.map((p) => [p.lessonId, p]));
     return { lessons, summaries: this.summarize(lessons, done, premium) };
   }

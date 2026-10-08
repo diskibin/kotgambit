@@ -185,6 +185,36 @@ describe('lessons and progress', () => {
         });
       });
 
+      it('lists the sections in the order of the path, so that the first open chapter is of the next one', async () => {
+        await openings('openings-1', 1);
+        await prisma.lesson.create({
+          data: {
+            id: 'endgame-1',
+            track: 'endgame',
+            order: 1,
+            access: 'free',
+            piece: 'r',
+            title: 'Эндшпиль 1',
+            summary: 's',
+            minutes: 5,
+            steps: [{}, {}],
+            contentHash: 'x',
+          },
+        });
+        await finish(['basics-board', 'basics-rook', 'basics-knight', 'basics-check']);
+        const lessons = await catalog();
+        // Alphabetically the endgames would come first, on the path the openings do
+        expect(lessons.map((lesson) => lesson.track)).toEqual([
+          'basics',
+          'basics',
+          'basics',
+          'basics',
+          'openings',
+          'endgame',
+        ]);
+        expect(lessons.find((lesson) => lesson.status === 'available')?.id).toBe('openings-1');
+      });
+
       it('does not hold a free learner back for chapters that are only for Premium', async () => {
         await openings('openings-1', 1);
         await prisma.lesson.create({

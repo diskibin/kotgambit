@@ -155,12 +155,13 @@ describe('the chapters of a section', () => {
 
 describe('the home screen', () => {
   it('shows the puzzle of the day and the sections ahead', async () => {
-    server.use(...homeHandlers([...LESSONS, OPENINGS]));
+    // The server keeps the next section closed until the Basics are done
+    server.use(...homeHandlers([...LESSONS, { ...OPENINGS, status: 'locked' }]));
     renderApp('/learn');
     expect(await screen.findByText('Задача дня')).toBeInTheDocument();
     expect(screen.getByText('Мат в 1 ход')).toBeInTheDocument();
-    const next = screen.getByRole('button', { name: /Дебюты/ });
-    expect(within(next).getByText('1 глава · после «Основ»')).toBeInTheDocument();
+    expect(screen.getByText('Дебюты')).toBeInTheDocument();
+    expect(screen.getByText('1 глава · после «Основ»')).toBeInTheDocument();
   });
 
   it('marks a finished section and moves on to the next one', async () => {
@@ -175,6 +176,29 @@ describe('the home screen', () => {
     // The section being learned is the one with the chapter to do now
     expect(await screen.findByRole('heading', { name: 'Дебюты', level: 2 })).toBeInTheDocument();
     expect(screen.getByText('Раздел 2')).toBeInTheDocument();
+  });
+
+  it('does not say that an open section comes after another one', async () => {
+    server.use(
+      ...homeHandlers([
+        { ...LESSONS[0], status: 'completed', stars: 3 },
+        { ...LESSONS[1], status: 'completed', stars: 2 },
+        { ...OPENINGS, status: 'available' },
+        {
+          ...OPENINGS,
+          id: 'tactics-1',
+          track: 'tactics',
+          order: 1,
+          title: 'Тактика 1',
+          status: 'available',
+        },
+      ]),
+    );
+    renderApp('/learn');
+    await screen.findByRole('heading', { name: 'Дебюты', level: 2 });
+    const other = screen.getByRole('button', { name: /Тактика/ });
+    expect(within(other).getByText('1 глава')).toBeInTheDocument();
+    expect(screen.queryByText(/после «/)).not.toBeInTheDocument();
   });
 
   it('shows the section as passed when everything in it is done', async () => {

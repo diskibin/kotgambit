@@ -360,13 +360,17 @@ export function PathPage() {
             )}
             {others.slice(0, 3).map((item, index) => {
               const lessonsOf = catalog.filter((lesson) => lesson.track === item);
+              // A section that is still closed says what it waits for: the Basics, the first section
+              const opened = lessonsOf.some(
+                (lesson) => lesson.status === 'available' || lesson.status === 'completed',
+              );
               const note =
                 lessonsOf.length === 0
                   ? t('path.other.soon')
-                  : index === 0 && track
+                  : !opened && index === 0
                     ? t('path.other.chapters', {
                         count: lessonsOf.length,
-                        after: t(`path.afterTrack.${track}`),
+                        after: t(`path.afterTrack.${tracks[0] ?? 'basics'}`),
                       })
                     : t('path.other.count', { count: lessonsOf.length });
               return (

@@ -201,6 +201,42 @@ describe('the home screen', () => {
     expect(screen.queryByText(/после «/)).not.toBeInTheDocument();
   });
 
+  it('shows the sections that are ahead in the bottom row, not the ones that are behind', async () => {
+    const done = (id: string, track: string, title: string) => ({
+      ...OPENINGS,
+      id,
+      track,
+      title,
+      status: 'completed',
+      stars: 3,
+    });
+    const open = (id: string, track: string, title: string) => ({
+      ...OPENINGS,
+      id,
+      track,
+      title,
+      status: 'available',
+    });
+    server.use(
+      ...homeHandlers([
+        done('b-1', 'basics', 'Основа'),
+        done('p-1', 'practice', 'Практика'),
+        done('o-1', 'openings', 'Дебют'),
+        done('t-1', 'tactics', 'Приём'),
+        open('m-1', 'middlegame', 'Миттельшпиль глава'),
+        open('s-1', 'strategy', 'Стратегия глава'),
+        open('x-1', 'mates', 'Мат глава'),
+        open('e-1', 'endgame', 'Эндшпиль глава'),
+      ]),
+    );
+    renderApp('/learn');
+    await screen.findByRole('heading', { name: 'Миттельшпиль', level: 2 });
+    expect(screen.getByText('Стратегия')).toBeInTheDocument();
+    expect(screen.getByText('Типовые маты')).toBeInTheDocument();
+    expect(screen.getByText('Эндшпиль')).toBeInTheDocument();
+    expect(screen.queryByText('Практика')).not.toBeInTheDocument();
+  });
+
   it('shows the section as passed when everything in it is done', async () => {
     server.use(
       ...homeHandlers([

@@ -219,6 +219,21 @@ describe('the page the learner comes back to', () => {
     expect(screen.getByRole('button', { name: 'К урокам' })).toBeInTheDocument();
   });
 
+  it('lets the learner who left the payment page choose the plan again or go home', async () => {
+    sessionStorage.clear();
+    server.use(
+      http.get(`${API_URL}/billing/payments/${PAYMENT_ID}`, () =>
+        HttpResponse.json(payment('pending')),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp(route);
+    await screen.findByRole('heading', { name: 'Платёж обрабатывается' });
+    expect(screen.queryByRole('button', { name: 'Вернуться к оплате' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Выбрать тариф заново' }));
+    expect(await screen.findByRole('heading', { name: /Премиум/ })).toBeInTheDocument();
+  });
+
   it('says it kindly when the payment did not go through, and offers another try', async () => {
     server.use(
       http.get(`${API_URL}/billing/payments/${PAYMENT_ID}`, () =>

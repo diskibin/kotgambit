@@ -13,6 +13,7 @@ import {
 } from '../../app/api';
 import { useAppSelector } from '../../app/hooks';
 import { redirect } from '../../shared/redirect';
+import { rememberCheckout } from './pendingCheckout';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { CheckIcon } from '../../shared/ui/icons';
@@ -80,7 +81,10 @@ function Offer({ expired }: { expired: boolean }) {
   async function start() {
     track('checkout_start');
     const result = await checkout({ plan, client: 'web', autoRenew });
-    if ('data' in result && result.data) redirect(result.data.confirmationUrl);
+    if ('data' in result && result.data) {
+      rememberCheckout(result.data.paymentId, result.data.confirmationUrl);
+      redirect(result.data.confirmationUrl);
+    }
   }
 
   if (plans.data && !plans.data.available) return <Banner>{t('premium.unavailable')}</Banner>;

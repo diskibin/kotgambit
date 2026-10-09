@@ -6,8 +6,10 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { Confetti } from '../lessons/Confetti';
+import { redirect } from '../../shared/redirect';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
+import { rememberedCheckoutUrl } from './pendingCheckout';
 
 const POLL_MS = 2000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -31,6 +33,7 @@ export function BillingReturnPage() {
     skip: auth !== 'authenticated' || !valid,
     pollingInterval: interval,
   });
+  const payUrl = valid ? rememberedCheckoutUrl(paymentId) : null;
   const status = payment.data?.status;
   const final = status === 'succeeded' || status === 'canceled';
   // The server's answer is final once the payment went through or was refused: no need to ask again
@@ -137,9 +140,24 @@ export function BillingReturnPage() {
       </div>
       {payment.isError && <Banner>{t('billing.checkError')}</Banner>}
       {!final && (
-        <Button variant="secondary" onClick={() => void payment.refetch()}>
-          {t('billing.processing.refresh')}
-        </Button>
+        <div className="flex flex-wrap justify-center gap-3">
+          {payUrl && (
+            <Button onClick={() => redirect(payUrl)}>{t('billing.processing.resume')}</Button>
+          )}
+          <Button variant="secondary" onClick={() => void payment.refetch()}>
+            {t('billing.processing.refresh')}
+          </Button>
+        </div>
+      )}
+      {!final && (
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button variant="text" onClick={() => void navigate('/premium')}>
+            {t('billing.processing.plans')}
+          </Button>
+          <Button variant="text" onClick={() => void navigate('/learn')}>
+            {t('billing.processing.home')}
+          </Button>
+        </div>
       )}
     </Frame>
   );

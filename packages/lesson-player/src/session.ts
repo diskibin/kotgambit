@@ -41,6 +41,8 @@ export type LessonSessionAction =
   | { type: 'hint/requested' }
   /** "Continue" (or "Next" after a text or demo step); the last step finishes the lesson. */
   | { type: 'step/advanced'; now: number }
+  /** "Back" in the header: the previous step, to read or try again. */
+  | { type: 'step/back' }
   | { type: 'lesson/exited' };
 
 const MAX_HINT_LEVEL = 3;
@@ -95,6 +97,16 @@ export function lessonSessionReducer(
       return last
         ? { ...state, firstTryStreak, finishedAt: action.now }
         : { ...state, firstTryStreak, index: state.index + 1, phase: 'working', hintLevel: 0 };
+    }
+
+    case 'step/back': {
+      if (state.lessonId === null || state.index === 0 || state.finishedAt !== null) return state;
+      const index = state.index - 1;
+      // A clean answer is counted again as the first try when the learner redoes the step, so that
+      // looking back does not turn it into a second one. Real misses stay.
+      const attempts = state.attempts.map((count, i) => (i === index && count === 1 ? 0 : count));
+      // The streak of the steps passed in a row can no longer be told after a step is reopened
+      return { ...state, index, attempts, firstTryStreak: 0, phase: 'working', hintLevel: 0 };
     }
 
     case 'lesson/exited':

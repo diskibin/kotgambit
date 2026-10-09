@@ -285,6 +285,18 @@ describe('lesson', () => {
     expect(await screen.findByRole('heading', { name: 'Мои курсы' })).toBeInTheDocument();
   });
 
+  it('goes back to the previous step and has no way back from the first one', async () => {
+    const user = userEvent.setup();
+    await startLesson(user);
+    expect(screen.queryByRole('button', { name: 'Предыдущий шаг' })).toBeNull();
+
+    await click(user, 'Продолжить');
+    expect(await screen.findByRole('heading', { name: 'Смотри' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Предыдущий шаг' }));
+    expect(await screen.findByRole('heading', { name: 'Теория' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Предыдущий шаг' })).toBeNull();
+  });
+
   it('says so when the chapter cannot be opened', async () => {
     server.use(
       http.get(`${API_URL}/lessons/basics-board`, () =>

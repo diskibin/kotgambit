@@ -387,6 +387,7 @@ export const ru = {
     caption: '{{track}} · глава {{order}} · шаг {{step}} из {{total}}',
     progress: 'Прогресс урока',
     close: 'Выйти из урока',
+    back: 'Предыдущий шаг',
     exit: {
       title: 'Выйти из урока?',
       text: 'Прогресс этого урока не сохранится.',

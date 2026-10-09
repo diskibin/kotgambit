@@ -156,6 +156,27 @@ describe('lessonSessionReducer', () => {
     expect(reportedAttempts(state)).toEqual([1, 1, 1, 1, 1]);
   });
 
+  it('goes back one step and lets a clean answer count as the first try again', () => {
+    const state = run(start, next(), checked(true), next(), { type: 'step/back' });
+    expect(state).toMatchObject({
+      index: 1,
+      phase: 'working',
+      hintLevel: 0,
+      attempts: [0, 0, 0, 0, 0],
+    });
+    expect(
+      run(start, next(), checked(false), { type: 'step/retried' }, checked(true), next(), {
+        type: 'step/back',
+      }).attempts[1],
+    ).toBe(2);
+  });
+
+  it('cannot go back from the first step or after the lesson is finished', () => {
+    expect(run(start, { type: 'step/back' }).index).toBe(0);
+    const done = run(start, next(), next(), next(), next(), next());
+    expect(run(start, next(), next(), next(), next(), next(), { type: 'step/back' })).toEqual(done);
+  });
+
   it('forgets everything on exit', () => {
     expect(run(start, next(), { type: 'lesson/exited' })).toEqual(initialLessonSession);
   });

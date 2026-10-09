@@ -11,7 +11,7 @@ import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { Dialog } from '../../shared/ui/Dialog';
 import { IconButton } from '../../shared/ui/IconButton';
-import { CloseIcon } from '../../shared/ui/icons';
+import { ChevronLeftIcon, CloseIcon } from '../../shared/ui/icons';
 import { ProgressBar } from '../../shared/ui/ProgressBar';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
@@ -130,10 +130,19 @@ function LessonScreen({ id }: { id: string }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg text-text">
-      <header className="flex h-20 items-center gap-4 px-4 tablet:px-8">
+      <header className="flex h-14 items-center gap-2 px-2 tablet:h-20 tablet:gap-4 tablet:px-8">
         <IconButton quiet label={t('lesson.close')} onClick={() => setExiting(true)}>
           <CloseIcon />
         </IconButton>
+        {session.index > 0 && !finished && (
+          <IconButton
+            quiet
+            label={t('lesson.back')}
+            onClick={() => dispatch({ type: 'step/back' })}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+        )}
         <ProgressBar value={session.index} max={lesson.steps.length} label={t('lesson.progress')} />
       </header>
 

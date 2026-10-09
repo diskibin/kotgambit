@@ -86,10 +86,17 @@ export class BillingController {
    * asks the provider. A 200 stops the retries; the text is what the provider wants to hear ("OK5" for Robokassa).
    */
   @Post('webhook')
-  @Get('webhook')
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'text/plain; charset=utf-8')
   webhook(@Body() body: unknown, @Query() query: unknown): Promise<string> {
     return this.billing.handleNotification({ body, query });
+  }
+
+  // One method takes one route in Nest, so the call with the fields in the address has its own
+  @Get('webhook')
+  @HttpCode(HttpStatus.OK)
+  @Header('Content-Type', 'text/plain; charset=utf-8')
+  webhookByAddress(@Query() query: unknown): Promise<string> {
+    return this.billing.handleNotification({ body: undefined, query });
   }
 }

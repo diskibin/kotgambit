@@ -48,7 +48,9 @@ beforeEach(() => {
     ),
     http.get(`${API_URL}/progress/summary`, () => HttpResponse.json(PROGRESS)),
     http.get(`${API_URL}/billing/subscription`, () => HttpResponse.json(subscription)),
-    http.get(`${API_URL}/billing/plans`, () => HttpResponse.json({ available: false, plans: [] })),
+    http.get(`${API_URL}/billing/plans`, () =>
+      HttpResponse.json({ available: false, autoRenew: false, plans: [] }),
+    ),
     http.get(`${API_URL}/puzzles/daily`, () => failing.clone()),
     http.get(`${API_URL}/puzzles/stats`, () => failing.clone()),
     http.get(`${API_URL}/puzzles/themes`, () => failing.clone()),

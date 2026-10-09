@@ -13,6 +13,8 @@ describe('isPaymentPageUrl', () => {
       true,
     );
     expect(isPaymentPageUrl('https://pay.yookassa.ru/x')).toBe(true);
+    expect(isPaymentPageUrl('https://auth.robokassa.ru/Merchant/Index.aspx?InvId=1')).toBe(true);
+    expect(isPaymentPageUrl('https://robokassa.ru.evil.example/pay')).toBe(false);
   });
 
   it('refuses other hosts, look-alikes and anything but https', () => {

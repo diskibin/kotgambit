@@ -390,7 +390,7 @@ model Subscription {
   // The end of the period that is paid for
   currentPeriodEnd DateTime           @map("current_period_end")
   autoRenew        Boolean            @default(false) @map("auto_renew")
-  // The saved payment method of YooKassa, charged again at the end of the period
+  // The saved payment method of the provider (for Robokassa the number of the first invoice), charged again at the end of the period
   paymentMethodId  String?            @map("payment_method_id")
   cardLast4        String?            @map("card_last4") @db.Char(4)
   createdAt        DateTime           @default(now()) @map("created_at")
@@ -425,12 +425,14 @@ model Payment {
   purpose           PaymentPurpose
   status            PaymentStatus  @default(pending)
   amountKopecks     Int            @map("amount_kopecks")
-  // Set once YooKassa has created the payment
+  // Set once the provider has created the payment
   providerPaymentId String?        @unique @map("provider_payment_id")
   // The same key on a repeated request gives the same payment, never a second charge
   idempotencyKey    String         @unique @map("idempotency_key")
   // 'web' or 'mobile', which return page the learner comes back to
   client            String
+  // The learner ticked "Продлевать автоматически" for this payment
+  autoRenewConsent  Boolean        @default(false) @map("auto_renew_consent")
   // Set once this payment has moved the subscription, so that a repeated notification does nothing
   appliedAt         DateTime?      @map("applied_at")
   paidAt            DateTime?      @map("paid_at")

@@ -20,6 +20,7 @@ import {
   type PaymentProvider,
   type ProviderPayment,
 } from './payment-provider.js';
+import { notificationPaymentId } from './yookassa.provider.js';
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 
@@ -52,6 +53,11 @@ class FakeProvider implements PaymentProvider {
     const payment = this.payments.get(id);
     if (!payment) throw new PaymentProviderError('unknown', 404);
     return { ...payment };
+  }
+
+  notification({ body }: { body: unknown }) {
+    const providerPaymentId = notificationPaymentId(body);
+    return providerPaymentId ? { providerPaymentId, reply: '{}' } : null;
   }
 
   /** The learner paid; `saved` is whether they agreed to keep the card. */
@@ -162,6 +168,7 @@ describe('billing', () => {
     const plans = PlansResponseSchema.parse((await call('GET', '/billing/plans')).json());
     expect(plans).toEqual({
       available: true,
+      autoRenew: true,
       plans: [
         { key: 'year', priceRub: 1990 },
         { key: 'month', priceRub: 299 },

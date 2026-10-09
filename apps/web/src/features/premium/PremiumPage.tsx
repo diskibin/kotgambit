@@ -75,12 +75,13 @@ function Offer({ expired }: { expired: boolean }) {
   const [autoRenew, setAutoRenew] = useState(false);
 
   const list = plans.data?.plans ?? [];
+  const canAutoRenew = plans.data?.autoRenew === true;
   const monthly = list.find((item) => item.key === 'month');
   const yearly = list.find((item) => item.key === 'year');
 
   async function start() {
     track('checkout_start');
-    const result = await checkout({ plan, client: 'web', autoRenew });
+    const result = await checkout({ plan, client: 'web', autoRenew: canAutoRenew && autoRenew });
     if ('data' in result && result.data) {
       rememberCheckout(result.data.paymentId, result.data.confirmationUrl);
       redirect(result.data.confirmationUrl);
@@ -140,15 +141,17 @@ function Offer({ expired }: { expired: boolean }) {
           })}
         </div>
 
-        <label className="flex min-h-11 items-center gap-3 text-[16px] font-bold">
-          <input
-            type="checkbox"
-            className="size-5"
-            checked={autoRenew}
-            onChange={(event) => setAutoRenew(event.target.checked)}
-          />
-          {t('premium.offer.autoRenew')}
-        </label>
+        {canAutoRenew && (
+          <label className="flex min-h-11 items-center gap-3 text-[16px] font-bold">
+            <input
+              type="checkbox"
+              className="size-5"
+              checked={autoRenew}
+              onChange={(event) => setAutoRenew(event.target.checked)}
+            />
+            {t('premium.offer.autoRenew')}
+          </label>
+        )}
         <p className="m-0 text-[14px] font-semibold text-text-2">
           <Trans
             i18nKey="premium.offer.terms"

@@ -90,9 +90,11 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
 
   plans(): PlansResponse {
     const billing = this.config.billing;
-    if (!billing) return { available: false, plans: [] };
+    if (!billing) return { available: false, autoRenew: false, plans: [] };
+    const { provider } = billing;
     return {
       available: true,
+      autoRenew: provider.kind === 'yookassa' || provider.recurring,
       plans: [
         { key: 'year', priceRub: billing.prices.year },
         { key: 'month', priceRub: billing.prices.month },
@@ -127,6 +129,7 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
         amountKopecks,
         idempotencyKey: randomUUID(),
         client: request.client,
+        autoRenewConsent: request.autoRenew,
       },
     });
     try {
@@ -175,14 +178,14 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
    * A notification from the provider. Its body is not believed: only the payment id is taken from it,
    * and the state comes from asking the provider. A notification that is repeated or unknown changes nothing.
    */
-  async handleNotification(body: unknown): Promise<void> {
-    const providerId = notificationPaymentId(body);
-    if (!providerId) return;
+  async handleNotification(input: { body: unknown; query: unknown }): Promise<string> {
+    const notice = this.provider?.notification(input);
+    if (!notice) return '';
     const payment = await this.prisma.payment.findUnique({
-      where: { providerPaymentId: providerId },
+      where: { providerPaymentId: notice.providerPaymentId },
     });
-    if (!payment) return;
-    await this.sync(payment);
+    if (payment) await this.sync(payment);
+    return notice.reply;
   }
 
   async cancel(userId: string): Promise<SubscriptionView> {
@@ -330,8 +333,12 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
         : { status: 'expired', currentPeriodEnd: now, autoRenew: false };
       const next = transition(base, { type: 'payment-succeeded', periodEnd });
 
-      // The autopayment needs the learner's agreement and a method the provider really kept
-      const kept = remote.paymentMethod?.saved ? remote.paymentMethod : null;
+      // The autopayment needs the learner's agreement, given for this very payment, and a method the provider
+      // really kept. A renewal never replaces the method it was charged with.
+      const kept =
+        payment.purpose === 'initial' && payment.autoRenewConsent && remote.paymentMethod?.saved
+          ? remote.paymentMethod
+          : null;
       const method = kept
         ? { paymentMethodId: kept.id, cardLast4: kept.cardLast4, autoRenew: true }
         : payment.purpose === 'renewal'
@@ -417,20 +424,4 @@ export class BillingService implements OnApplicationBootstrap, OnModuleDestroy {
     if (!this.provider) throw new AppError('billing.unavailable', HttpStatus.SERVICE_UNAVAILABLE);
     return this.provider;
   }
-}
-
-const PAYMENT_EVENTS = new Set([
-  'payment.succeeded',
-  'payment.canceled',
-  'payment.waiting_for_capture',
-]);
-
-/** The id of the payment in a YooKassa notification, or `null` for any other event or an odd body. */
-function notificationPaymentId(body: unknown): string | null {
-  if (typeof body !== 'object' || body === null) return null;
-  const { event, object } = body as { event?: unknown; object?: unknown };
-  if (typeof event !== 'string' || !PAYMENT_EVENTS.has(event)) return null;
-  if (typeof object !== 'object' || object === null) return null;
-  const id = (object as { id?: unknown }).id;
-  return typeof id === 'string' && id.length > 0 ? id : null;
 }

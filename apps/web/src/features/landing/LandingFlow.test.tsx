@@ -17,6 +17,7 @@ beforeEach(() => {
     http.get(`${API_URL}/billing/plans`, () =>
       HttpResponse.json({
         available: true,
+        autoRenew: true,
         plans: [
           { key: 'month', priceRub: 299 },
           { key: 'year', priceRub: 2490 },

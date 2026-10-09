@@ -13,6 +13,8 @@ export type Plan = z.infer<typeof PlanSchema>;
 export const PlansResponseSchema = z.object({
   /** False when the shop is not set up: Premium cannot be bought, and the screen says so. */
   available: z.boolean(),
+  /** False when the provider cannot keep a card yet: the screens do not offer the automatic renewal. */
+  autoRenew: z.boolean(),
   plans: z.array(PlanSchema),
 });
 export type PlansResponse = z.infer<typeof PlansResponseSchema>;

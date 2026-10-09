@@ -905,6 +905,7 @@ describe('billing endpoints', () => {
       http.get(`${BASE_URL}/billing/plans`, () =>
         HttpResponse.json({
           available: true,
+          autoRenew: true,
           plans: [
             { key: 'year', priceRub: 1990 },
             { key: 'month', priceRub: 299 },

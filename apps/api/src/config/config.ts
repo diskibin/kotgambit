@@ -75,6 +75,17 @@ const EnvSchema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((value) => value === 'true'),
+  /** The Robokassa shop: the login and both passwords of its technical settings. Wins over YooKassa when all three are set. */
+  ROBOKASSA_LOGIN: z.string().min(1).optional(),
+  ROBOKASSA_PASSWORD1: z.string().min(1).optional(),
+  ROBOKASSA_PASSWORD2: z.string().min(1).optional(),
+  /** The algorithm of the signature, the same as in the technical settings of the shop. */
+  ROBOKASSA_HASH: z.enum(['md5', 'sha256', 'sha384', 'sha512']).default('md5'),
+  /** Turn on once Robokassa has agreed to periodic payments for the shop. Until then the card is not kept. */
+  ROBOKASSA_RECURRING: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   /** The YooKassa shop. Billing is on only when both of these and both prices are set. */
   YOOKASSA_SHOP_ID: z.string().min(1).optional(),
   YOOKASSA_SECRET_KEY: z.string().min(1).optional(),
@@ -142,14 +153,28 @@ export interface EngineConfig {
   cacheTtlSeconds: number;
 }
 
+export type BillingProviderConfig =
+  | {
+      kind: 'yookassa';
+      shopId: string;
+      secretKey: string;
+      /** `null` when payments go without a receipt. */
+      receipt: { vatCode: number; taxSystemCode: number | null } | null;
+    }
+  | {
+      kind: 'robokassa';
+      login: string;
+      password1: string;
+      password2: string;
+      hash: 'md5' | 'sha256' | 'sha384' | 'sha512';
+      recurring: boolean;
+    };
+
 export interface BillingConfig {
-  shopId: string;
-  secretKey: string;
+  provider: BillingProviderConfig;
   /** Whole rubles per plan. */
   prices: { month: number; year: number };
   renewalCheckMinutes: number;
-  /** `null` when payments go without a receipt. */
-  receipt: { vatCode: number; taxSystemCode: number | null } | null;
 }
 
 export interface OAuthConfig {
@@ -253,24 +278,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
           cacheTtlSeconds: values.ENGINE_CACHE_TTL_SECONDS,
         }
       : null,
-    billing:
-      values.YOOKASSA_SHOP_ID &&
-      values.YOOKASSA_SECRET_KEY &&
-      values.BILLING_PRICE_MONTH_RUB &&
-      values.BILLING_PRICE_YEAR_RUB
-        ? {
-            shopId: values.YOOKASSA_SHOP_ID,
-            secretKey: values.YOOKASSA_SECRET_KEY,
-            prices: { month: values.BILLING_PRICE_MONTH_RUB, year: values.BILLING_PRICE_YEAR_RUB },
-            renewalCheckMinutes: values.BILLING_RENEWAL_CHECK_MINUTES,
-            receipt: values.BILLING_RECEIPT
-              ? {
-                  vatCode: values.BILLING_VAT_CODE,
-                  taxSystemCode: values.BILLING_TAX_SYSTEM_CODE ?? null,
-                }
-              : null,
-          }
-        : null,
+    billing: billingOf(values),
     trustProxy: values.TRUST_PROXY,
     jwtAccessSecret: values.JWT_ACCESS_SECRET,
     accessTokenTtlSeconds: values.ACCESS_TOKEN_TTL_SECONDS,
@@ -280,4 +288,44 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     reminders: { checkMinutes: values.REMINDERS_CHECK_MINUTES, hourUtc: values.REMINDERS_HOUR_UTC },
     isProduction: values.NODE_ENV === 'production',
   };
+}
+
+/** Billing is on only when a provider is set up completely and both prices are given. */
+function billingOf(values: z.infer<typeof EnvSchema>): BillingConfig | null {
+  const { BILLING_PRICE_MONTH_RUB: month, BILLING_PRICE_YEAR_RUB: year } = values;
+  if (!month || !year) return null;
+  const common = {
+    prices: { month, year },
+    renewalCheckMinutes: values.BILLING_RENEWAL_CHECK_MINUTES,
+  };
+  if (values.ROBOKASSA_LOGIN && values.ROBOKASSA_PASSWORD1 && values.ROBOKASSA_PASSWORD2) {
+    return {
+      ...common,
+      provider: {
+        kind: 'robokassa',
+        login: values.ROBOKASSA_LOGIN,
+        password1: values.ROBOKASSA_PASSWORD1,
+        password2: values.ROBOKASSA_PASSWORD2,
+        hash: values.ROBOKASSA_HASH,
+        recurring: values.ROBOKASSA_RECURRING,
+      },
+    };
+  }
+  if (values.YOOKASSA_SHOP_ID && values.YOOKASSA_SECRET_KEY) {
+    return {
+      ...common,
+      provider: {
+        kind: 'yookassa',
+        shopId: values.YOOKASSA_SHOP_ID,
+        secretKey: values.YOOKASSA_SECRET_KEY,
+        receipt: values.BILLING_RECEIPT
+          ? {
+              vatCode: values.BILLING_VAT_CODE,
+              taxSystemCode: values.BILLING_TAX_SYSTEM_CODE ?? null,
+            }
+          : null,
+      },
+    };
+  }
+  return null;
 }

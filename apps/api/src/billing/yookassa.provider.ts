@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   PaymentProviderError,
   type CreatePaymentInput,
+  type ParsedNotification,
   type PaymentProvider,
   type ProviderPayment,
 } from './payment-provider.js';
@@ -123,6 +124,11 @@ export class YooKassaProvider implements PaymentProvider {
     return this.request(`${API_URL}/${encodeURIComponent(id)}`, { method: 'GET' });
   }
 
+  notification({ body }: { body: unknown }): ParsedNotification | null {
+    const providerPaymentId = notificationPaymentId(body);
+    return providerPaymentId ? { providerPaymentId, reply: '{}' } : null;
+  }
+
   private async request(url: string, init: RequestInit): Promise<ProviderPayment> {
     let response: Response;
     try {
@@ -143,4 +149,20 @@ export class YooKassaProvider implements PaymentProvider {
       throw new PaymentProviderError('YooKassa answered with an unknown shape', null);
     return toProviderPayment(parsed.data);
   }
+}
+
+const PAYMENT_EVENTS = new Set([
+  'payment.succeeded',
+  'payment.canceled',
+  'payment.waiting_for_capture',
+]);
+
+/** The id of the payment in a YooKassa notification, or `null` for any other event or an odd body. */
+export function notificationPaymentId(body: unknown): string | null {
+  if (typeof body !== 'object' || body === null) return null;
+  const { event, object } = body as { event?: unknown; object?: unknown };
+  if (typeof event !== 'string' || !PAYMENT_EVENTS.has(event)) return null;
+  if (typeof object !== 'object' || object === null) return null;
+  const id = (object as { id?: unknown }).id;
+  return typeof id === 'string' && id.length > 0 ? id : null;
 }

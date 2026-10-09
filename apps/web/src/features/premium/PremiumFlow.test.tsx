@@ -13,6 +13,7 @@ const PAYMENT_ID = '3f8b9c1e-8a56-4b52-9d6a-0c1c6e1f7a11';
 
 const PLANS = {
   available: true,
+  autoRenew: true,
   plans: [
     { key: 'year', priceRub: 1990 },
     { key: 'month', priceRub: 299 },
@@ -100,7 +101,7 @@ describe('the offer', () => {
     const user = userEvent.setup();
     renderApp('/premium');
     await screen.findByRole('heading', { name: 'Учись без ограничений' });
-    const renew = screen.getByRole('checkbox', { name: 'Продлевать автоматически' });
+    const renew = await screen.findByRole('checkbox', { name: 'Продлевать автоматически' });
     expect(renew).not.toBeChecked();
 
     await user.click(screen.getByRole('button', { name: 'Оформить Премиум' }));
@@ -114,10 +115,19 @@ describe('the offer', () => {
     expect(checkoutBodies[1]).toEqual({ plan: 'month', client: 'web', autoRenew: true });
   });
 
+  it('does not offer the automatic renewal while the provider cannot keep a card', async () => {
+    server.use(
+      http.get(`${API_URL}/billing/plans`, () => HttpResponse.json({ ...PLANS, autoRenew: false })),
+    );
+    renderApp('/premium');
+    await screen.findByRole('button', { name: 'Оформить Премиум' });
+    expect(screen.queryByRole('checkbox', { name: 'Продлевать автоматически' })).toBeNull();
+  });
+
   it('says so when the shop is not set up', async () => {
     server.use(
       http.get(`${API_URL}/billing/plans`, () =>
-        HttpResponse.json({ available: false, plans: [] }),
+        HttpResponse.json({ available: false, autoRenew: false, plans: [] }),
       ),
     );
     renderApp('/premium');

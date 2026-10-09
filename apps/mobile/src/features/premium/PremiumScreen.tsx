@@ -102,9 +102,10 @@ function Offer({
   const [autoRenew, setAutoRenew] = useState(false);
 
   const list = plans.data?.plans ?? [];
+  const canAutoRenew = plans.data?.autoRenew === true;
 
   async function start() {
-    const result = await checkout({ plan, client: 'mobile', autoRenew });
+    const result = await checkout({ plan, client: 'mobile', autoRenew: canAutoRenew && autoRenew });
     if ('data' in result && result.data) onCheckout(result.data);
   }
 
@@ -181,32 +182,34 @@ function Offer({
         })}
       </View>
 
-      <Pressable
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: autoRenew }}
-        accessibilityLabel={t('premium.offer.autoRenew')}
-        onPress={() => setAutoRenew(!autoRenew)}
-        style={{
-          minHeight: size.tapMin,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: space[3],
-        }}
-      >
-        <View
+      {canAutoRenew && (
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: autoRenew }}
+          accessibilityLabel={t('premium.offer.autoRenew')}
+          onPress={() => setAutoRenew(!autoRenew)}
           style={{
-            width: 24,
-            height: 24,
-            borderRadius: 6,
-            borderWidth: shashka.border,
-            borderColor: colors.edge,
-            backgroundColor: autoRenew ? colors.brand : colors.surface,
+            minHeight: size.tapMin,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space[3],
           }}
-        />
-        <Text style={[typography.button, { color: colors.text }]}>
-          {t('premium.offer.autoRenew')}
-        </Text>
-      </Pressable>
+        >
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 6,
+              borderWidth: shashka.border,
+              borderColor: colors.edge,
+              backgroundColor: autoRenew ? colors.brand : colors.surface,
+            }}
+          />
+          <Text style={[typography.button, { color: colors.text }]}>
+            {t('premium.offer.autoRenew')}
+          </Text>
+        </Pressable>
+      )}
       <TermsText i18nKey="premium.offer.terms" />
 
       {order.isError && <Banner>{t('premium.offer.startError')}</Banner>}

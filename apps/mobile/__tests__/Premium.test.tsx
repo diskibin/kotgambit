@@ -11,6 +11,7 @@ const RETURN_URL = `https://kotgambit.example/billing/return?paymentId=${PAYMENT
 
 const PLANS = {
   available: true,
+  autoRenew: true,
   plans: [
     { key: 'year', priceRub: 1990 },
     { key: 'month', priceRub: 299 },
@@ -140,7 +141,9 @@ describe('the offer', () => {
   });
 
   it('says so when the shop is not set up', async () => {
-    await openPremium({ 'GET /billing/plans': () => json({ available: false, plans: [] }) });
+    await openPremium({
+      'GET /billing/plans': () => json({ available: false, autoRenew: false, plans: [] }),
+    });
     expect(
       await screen.findByText('Оплата пока недоступна. Загляни чуть позже.'),
     ).toBeOnTheScreen();

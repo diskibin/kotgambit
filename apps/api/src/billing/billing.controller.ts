@@ -10,10 +10,12 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
@@ -79,13 +81,15 @@ export class BillingController {
   }
 
   /**
-   * The notifications of YooKassa. There is no sign-in here, the body is not believed: the service only
-   * takes the payment id and asks the provider. A 200 stops the retries, anything else makes them come again.
+   * The notifications of the provider (YooKassa posts JSON, Robokassa calls with the fields in a form or in the
+   * address). There is no sign-in here, the content is not believed: the service only takes the payment id and
+   * asks the provider. A 200 stops the retries; the text is what the provider wants to hear ("OK5" for Robokassa).
    */
   @Post('webhook')
+  @Get('webhook')
   @HttpCode(HttpStatus.OK)
-  async webhook(@Body() body: unknown): Promise<Record<string, never>> {
-    await this.billing.handleNotification(body);
-    return {};
+  @Header('Content-Type', 'text/plain; charset=utf-8')
+  webhook(@Body() body: unknown, @Query() query: unknown): Promise<string> {
+    return this.billing.handleNotification({ body, query });
   }
 }

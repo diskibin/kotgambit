@@ -150,6 +150,59 @@ describe('loadConfig', () => {
     ).toEqual({ clientId: 'v', serviceToken: 'svc' });
   });
 
+  describe('the provider of payments', () => {
+    const PRICES = { BILLING_PRICE_MONTH_RUB: '299', BILLING_PRICE_YEAR_RUB: '1990' };
+    const ROBOKASSA = {
+      ...VALID_ENV,
+      ...PRICES,
+      ROBOKASSA_LOGIN: 'shop',
+      ROBOKASSA_PASSWORD1: 'one',
+      ROBOKASSA_PASSWORD2: 'two',
+    };
+
+    it('is Robokassa when its login and both passwords are set, with the card not kept yet', () => {
+      expect(loadConfig(ROBOKASSA).billing?.provider).toEqual({
+        kind: 'robokassa',
+        login: 'shop',
+        password1: 'one',
+        password2: 'two',
+        hash: 'md5',
+        recurring: false,
+      });
+    });
+
+    it('takes the algorithm and the periodic payments that were set', () => {
+      const { provider } = loadConfig({
+        ...ROBOKASSA,
+        ROBOKASSA_HASH: 'sha256',
+        ROBOKASSA_RECURRING: 'true',
+      }).billing ?? { provider: null };
+      expect(provider).toMatchObject({ hash: 'sha256', recurring: true });
+    });
+
+    it('wins over YooKassa when both are set', () => {
+      const { provider } = loadConfig({
+        ...ROBOKASSA,
+        YOOKASSA_SHOP_ID: 'shop',
+        YOOKASSA_SECRET_KEY: 'key',
+      }).billing ?? { provider: null };
+      expect(provider?.kind).toBe('robokassa');
+    });
+
+    it('is off with one password missing, or without the prices', () => {
+      const partial: Record<string, string> = { ...ROBOKASSA };
+      delete partial['ROBOKASSA_PASSWORD2'];
+      expect(loadConfig(partial).billing).toBeNull();
+      const unpriced: Record<string, string> = { ...ROBOKASSA };
+      delete unpriced['BILLING_PRICE_YEAR_RUB'];
+      expect(loadConfig(unpriced).billing).toBeNull();
+    });
+
+    it('refuses an algorithm that Robokassa does not have', () => {
+      expect(() => loadConfig({ ...ROBOKASSA, ROBOKASSA_HASH: 'crc32' })).toThrow(/ROBOKASSA_HASH/);
+    });
+  });
+
   describe('the receipt of a payment', () => {
     const SHOP = {
       ...VALID_ENV,
@@ -160,11 +213,11 @@ describe('loadConfig', () => {
     };
 
     it('is off by default', () => {
-      expect(loadConfig(SHOP).billing?.receipt).toBeNull();
+      expect(yookassa(loadConfig(SHOP)).receipt).toBeNull();
     });
 
     it('is on with the VAT code "no VAT" when asked for', () => {
-      expect(loadConfig({ ...SHOP, BILLING_RECEIPT: 'true' }).billing?.receipt).toEqual({
+      expect(yookassa(loadConfig({ ...SHOP, BILLING_RECEIPT: 'true' })).receipt).toEqual({
         vatCode: 1,
         taxSystemCode: null,
       });
@@ -172,12 +225,14 @@ describe('loadConfig', () => {
 
     it('takes the VAT code and the tax system that were set', () => {
       expect(
-        loadConfig({
-          ...SHOP,
-          BILLING_RECEIPT: 'true',
-          BILLING_VAT_CODE: '2',
-          BILLING_TAX_SYSTEM_CODE: '3',
-        }).billing?.receipt,
+        yookassa(
+          loadConfig({
+            ...SHOP,
+            BILLING_RECEIPT: 'true',
+            BILLING_VAT_CODE: '2',
+            BILLING_TAX_SYSTEM_CODE: '3',
+          }),
+        ).receipt,
       ).toEqual({ vatCode: 2, taxSystemCode: 3 });
     });
 
@@ -197,3 +252,9 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ ...VALID_ENV, PORT: '99999' })).toThrow(/PORT/);
   });
 });
+
+function yookassa(config: ReturnType<typeof loadConfig>) {
+  const provider = config.billing?.provider;
+  if (provider?.kind !== 'yookassa') throw new Error('not YooKassa');
+  return provider;
+}

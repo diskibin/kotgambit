@@ -29,11 +29,22 @@ export interface CreatePaymentInput {
   metadata: Record<string, string>;
 }
 
+/** What a notification from the provider points at, and what to answer so that it stops asking. */
+export interface ParsedNotification {
+  providerPaymentId: string;
+  reply: string;
+}
+
 /** The part of a payment provider the billing needs, so that tests use a fake and no network. */
 export interface PaymentProvider {
   create(input: CreatePaymentInput): Promise<ProviderPayment>;
   /** The state of a payment as the provider has it now: the one source to believe (PLAN.md 6.8). */
   get(id: string): Promise<ProviderPayment>;
+  /**
+   * Reads a notification: only the payment it is about, since its content is never believed (the state is
+   * asked with `get`). `null` for anything that is not a notification of a payment or is not signed right.
+   */
+  notification(input: { body: unknown; query: unknown }): ParsedNotification | null;
 }
 
 export const PAYMENT_PROVIDER = Symbol('PAYMENT_PROVIDER');

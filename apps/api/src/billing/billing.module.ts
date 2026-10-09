@@ -4,6 +4,7 @@ import { CONFIG, type AppConfig } from '../config/config.module.js';
 import { BillingController } from './billing.controller.js';
 import { BillingService } from './billing.service.js';
 import { PAYMENT_PROVIDER } from './payment-provider.js';
+import { RobokassaProvider } from './robokassa.provider.js';
 import { YooKassaProvider } from './yookassa.provider.js';
 
 @Module({
@@ -13,15 +14,13 @@ import { YooKassaProvider } from './yookassa.provider.js';
     {
       provide: PAYMENT_PROVIDER,
       inject: [CONFIG],
-      useFactory: (config: AppConfig) =>
-        config.billing
-          ? new YooKassaProvider(
-              config.billing.shopId,
-              config.billing.secretKey,
-              fetch,
-              config.billing.receipt,
-            )
-          : null,
+      useFactory: (config: AppConfig) => {
+        const provider = config.billing?.provider;
+        if (!provider) return null;
+        return provider.kind === 'robokassa'
+          ? new RobokassaProvider(provider)
+          : new YooKassaProvider(provider.shopId, provider.secretKey, fetch, provider.receipt);
+      },
     },
     BillingService,
   ],

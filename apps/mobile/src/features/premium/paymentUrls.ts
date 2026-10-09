@@ -1,7 +1,7 @@
-// The hosts of the first payment page, from the example answer of the YooKassa reference
-// (confirmation_url on yoomoney.ru). The pages after it, such as the bank's 3-D Secure page, are on
+// The hosts of the first payment page: from the example answer of the YooKassa reference
+// (confirmation_url on yoomoney.ru) and the address of the payment form of Robokassa (auth.robokassa.ru). The pages after it, such as the bank's 3-D Secure page, are on
 // hosts nobody can list, so only the first load is held to this list (PLAN.md 6.8).
-const PAYMENT_HOSTS = ['yookassa.ru', 'yoomoney.ru'] as const;
+const PAYMENT_HOSTS = ['yookassa.ru', 'yoomoney.ru', 'robokassa.ru'] as const;
 
 function parse(url: string): URL | null {
   try {

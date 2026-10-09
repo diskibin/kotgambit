@@ -345,6 +345,20 @@ describe('billing', () => {
         payload: { hello: 'world' },
       });
       expect(odd.statusCode).toBe(200);
+
+      // Robokassa calls with a form, or with the fields in the address
+      const form = await app.inject({
+        method: 'POST',
+        url: '/billing/webhook',
+        payload: 'OutSum=299.00&InvId=1&SignatureValue=abc',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      });
+      expect(form.statusCode).toBe(200);
+      const query = await app.inject({
+        method: 'GET',
+        url: '/billing/webhook?OutSum=299.00&InvId=1&SignatureValue=abc',
+      });
+      expect(query.statusCode).toBe(200);
     });
   });
 

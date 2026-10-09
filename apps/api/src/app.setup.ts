@@ -11,15 +11,6 @@ export async function setupApp(app: NestFastifyApplication, config: AppConfig): 
   await app.register(cookie);
   // The refresh cookie needs `credentials`, which in turn forbids a wildcard origin
   await app.register(cors, { origin: config.corsOrigins, credentials: true });
-  // Robokassa reports a payment as a form
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .addContentTypeParser(
-      'application/x-www-form-urlencoded',
-      { parseAs: 'string' },
-      (_request, body, done) => done(null, Object.fromEntries(new URLSearchParams(body as string))),
-    );
   app.useGlobalFilters(new AllExceptionsFilter());
   app.enableShutdownHooks();
 }

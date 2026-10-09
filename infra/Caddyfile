@@ -16,7 +16,7 @@
 	}
 
 	# A single-page app: every route that is not a file gets index.html, which must not be cached
-	@page not path /assets/* /favicon.svg /og.png
+	@page not path /assets/* /favicon.svg /og.png /robots.txt /sitemap.xml
 	header @page Cache-Control "no-cache"
 	try_files {path} /index.html
 	file_server
@@ -24,5 +24,7 @@
 
 {$API_DOMAIN} {
 	encode zstd gzip
+	# The API is not a site to be found in a search
+	header X-Robots-Tag "noindex, nofollow"
 	reverse_proxy api:3000
 }

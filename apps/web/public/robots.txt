@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Disallow: /learn
+Disallow: /lesson/
+Disallow: /puzzles
+Disallow: /play
+Disallow: /analysis
+Disallow: /review/
+Disallow: /cards
+Disallow: /profile
+Disallow: /settings
+Disallow: /premium
+Disallow: /billing/
+Disallow: /admin
+Disallow: /sandbox
+Disallow: /onboarding
+Disallow: /login
+Disallow: /register
+Disallow: /reset
+Disallow: /verify
+Disallow: /unsubscribe
+
+Sitemap: https://kotgambit.ru/sitemap.xml

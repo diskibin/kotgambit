@@ -26,6 +26,7 @@ import { LandingPage } from './features/landing/LandingPage';
 import { OnboardingPage } from './features/onboarding/OnboardingPage';
 import { ApplyOnboarding } from './features/onboarding/ApplyOnboarding';
 import { NotFoundPage } from './features/system/NotFoundPage';
+import { RouteMeta } from './features/system/RouteMeta';
 import { OfflineBanner } from './features/system/OfflineBanner';
 import { ThemeSync } from './features/theme/ThemeSync';
 
@@ -35,6 +36,7 @@ export function App() {
 
   return (
     <>
+      <RouteMeta />
       <ThemeSync />
       <Analytics />
       <ApplyOnboarding />

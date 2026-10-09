@@ -129,8 +129,8 @@ function LessonScreen({ id }: { id: string }) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg text-text">
-      <header className="flex h-14 items-center gap-2 px-2 tablet:h-20 tablet:gap-4 tablet:px-8">
+    <div className="flex h-dvh flex-col bg-bg text-text tablet:h-auto tablet:min-h-screen">
+      <header className="flex h-14 shrink-0 items-center gap-2 px-2 tablet:h-20 tablet:gap-4 tablet:px-8">
         <IconButton quiet label={t('lesson.close')} onClick={() => setExiting(true)}>
           <CloseIcon />
         </IconButton>
@@ -153,9 +153,9 @@ function LessonScreen({ id }: { id: string }) {
         </div>
       )}
 
-      <main className="flex-1">
+      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto tablet:overflow-visible">
         {step && (
-          <div key={session.index}>
+          <div key={session.index} className="flex flex-1 flex-col">
             {step.type === 'text' && <TextStep step={step} context={context} />}
             {step.type === 'demo' && <DemoStep step={step} context={context} />}
             {step.type === 'move' && <MoveStep step={step} context={context} />}

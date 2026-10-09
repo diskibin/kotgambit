@@ -54,12 +54,18 @@ export function ReplyCard({ tone, title, children, actions, tail = 'down', note 
             {badge}
           </span>
         )}
-        <h2 className={`m-0 font-heading text-[18px] leading-6 font-bold ${styles.title}`}>
+        <h2
+          className={`m-0 font-heading text-[16px] leading-6 font-bold tablet:text-[18px] ${styles.title}`}
+        >
           {title}
         </h2>
         {note && <span className="ml-auto text-[14px] font-bold text-sky-text">{note}</span>}
       </div>
-      {children && <p className="m-0 text-[16px] leading-6 font-semibold text-text">{children}</p>}
+      {children && (
+        <p className="m-0 text-[14px] leading-5 font-semibold text-text tablet:text-[16px] tablet:leading-6">
+          {children}
+        </p>
+      )}
       {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
     </div>
   );

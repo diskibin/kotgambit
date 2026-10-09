@@ -30,18 +30,18 @@ export function TextStep({ step, context }: { step: TextStepData; context: StepC
       mood={step.remember ? 'hint' : 'idle'}
       board={
         step.board && boardState ? (
-          <>
-            <Board
-              state={boardState}
-              dispatch={() => undefined}
-              onSquarePress={() => undefined}
-              arrows={step.board.arrows}
-            />
-            {step.board.caption && (
-              <p className="m-0 text-[15px] font-bold text-text-2">{step.board.caption}</p>
-            )}
-          </>
+          <Board
+            state={boardState}
+            dispatch={() => undefined}
+            onSquarePress={() => undefined}
+            arrows={step.board.arrows}
+          />
         ) : undefined
+      }
+      underBoard={
+        step.board?.caption && (
+          <p className="m-0 text-[15px] font-bold text-text-2">{step.board.caption}</p>
+        )
       }
     >
       <p className="m-0 text-[18px] leading-7 font-semibold">{step.body}</p>

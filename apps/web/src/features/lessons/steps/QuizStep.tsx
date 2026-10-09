@@ -122,24 +122,24 @@ export function QuizStep({ step, context }: { step: QuizStepData; context: StepC
       mood={mood}
       board={
         step.board && boardState ? (
-          <>
-            <Board
-              state={boardState}
-              dispatch={() => undefined}
-              onSquarePress={() => undefined}
-              arrows={step.board.arrows}
-            />
-            {step.board.caption && (
-              <p className="m-0 text-[15px] font-bold text-text-2">{step.board.caption}</p>
-            )}
-          </>
+          <Board
+            state={boardState}
+            dispatch={() => undefined}
+            onSquarePress={() => undefined}
+            arrows={step.board.arrows}
+          />
         ) : undefined
+      }
+      underBoard={
+        step.board?.caption && (
+          <p className="m-0 text-[15px] font-bold text-text-2">{step.board.caption}</p>
+        )
       }
     >
       <div
         role="radiogroup"
         aria-label={step.question}
-        className="grid grid-cols-1 gap-3 pr-1 tablet:grid-cols-2"
+        className="grid grid-cols-2 gap-2 pr-1 tablet:gap-3"
       >
         {step.options.map((option, index) => {
           const isSelected = selected === index;
@@ -166,7 +166,7 @@ export function QuizStep({ step, context }: { step: QuizStepData; context: StepC
               aria-label={t('lesson.quiz.option', { key: optionKey(index), text: option.text })}
               disabled={phase !== 'working'}
               onClick={() => setSelected(index)}
-              className={`flex min-h-14 items-center gap-3 rounded-card border-2 px-3 py-2 text-left text-[16px] font-bold disabled:cursor-default ${look}`}
+              className={`flex min-h-12 items-center gap-2 rounded-card border-2 px-2 py-1.5 text-left text-[15px] tablet:min-h-14 tablet:gap-3 tablet:px-3 tablet:py-2 tablet:text-[16px] font-bold disabled:cursor-default ${look}`}
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-2 text-[14px] font-extrabold">
                 {verdict === 'correct' ? (

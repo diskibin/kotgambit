@@ -23,12 +23,14 @@ import {
   useGameResignMutation,
   useGameUndoMutation,
 } from '../../app/api';
+import { useNavLayout } from '../../shared/useNavLayout';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { IconButton } from '../../shared/ui/IconButton';
 import { BulbIcon, CloseIcon, RetryIcon, UndoIcon } from '../../shared/ui/icons';
 import { ReplyCard, type ReplyTone } from '../../shared/ui/ReplyCard';
+import { BoardSlot } from '../../shared/ui/BoardSlot';
 import { Board } from '../board';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
@@ -72,6 +74,7 @@ export function GameScreen({ bot }: GameScreenProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const scheme = useScheme();
+  const phone = useNavLayout() === 'bottom';
   const session = useAppSelector((state) => state.gameSession);
   const game = session.game as Game;
   const coach = useMemo(() => createCoach(), []);
@@ -267,12 +270,12 @@ export function GameScreen({ bot }: GameScreenProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg text-text">
-      <header className="flex min-h-20 flex-wrap items-center gap-3 px-4 tablet:px-8">
+    <div className="flex h-dvh flex-col bg-bg text-text tablet:h-auto tablet:min-h-screen">
+      <header className="flex min-h-14 flex-wrap items-center gap-2 px-2 tablet:min-h-20 tablet:gap-3 tablet:px-8">
         <IconButton quiet label={t('play.game.close')} onClick={() => void navigate('/play')}>
           <CloseIcon />
         </IconButton>
-        <h1 className="m-0 font-heading text-[20px] font-bold tablet:text-[24px]">
+        <h1 className="m-0 font-heading text-[18px] font-bold tablet:text-[24px]">
           {t('play.game.title', { name: bot.instrumental })}
         </h1>
         {game.learning && (
@@ -289,30 +292,32 @@ export function GameScreen({ bot }: GameScreenProps) {
         </Button>
       </header>
 
-      <main className="mx-auto grid w-full max-w-[1200px] gap-8 px-4 pr-6 pb-10 laptop:grid-cols-[minmax(0,600px)_minmax(0,460px)] laptop:justify-center">
+      <main className="mx-auto grid min-h-0 w-full max-w-[1200px] gap-3 overflow-y-auto px-4 pr-6 pb-4 max-tablet:flex max-tablet:flex-1 max-tablet:flex-col tablet:gap-8 tablet:overflow-visible tablet:pb-10 laptop:grid-cols-[minmax(0,600px)_minmax(0,460px)] laptop:justify-center">
         <div className="flex flex-col gap-3">
-          <Board
-            state={board}
-            dispatch={onBoardAction}
-            disabled={!playing}
-            arrows={arrows}
-            lastMove={lastShown}
-          />
-          <p className="m-0 text-[14px] font-semibold text-text-muted">
+          <BoardSlot>
+            <Board
+              state={board}
+              dispatch={onBoardAction}
+              disabled={!playing}
+              arrows={arrows}
+              lastMove={lastShown}
+            />
+          </BoardSlot>
+          <p className="m-0 hidden text-[14px] font-semibold text-text-muted tablet:block">
             {t('play.game.boardNote')}
           </p>
           {networkFailed && <Banner>{t('play.game.moveError')}</Banner>}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2 tablet:gap-4">
           <section
             aria-label={bot.name}
             className="flex items-center gap-3 rounded-card border-2 border-line bg-surface p-3"
           >
-            <BotAvatar kind={bot.kind} size={56} />
+            <BotAvatar kind={bot.kind} size={phone ? 40 : 56} />
             <div className="flex flex-1 flex-col">
-              <strong className="text-[18px]">{bot.name}</strong>
-              <span className="text-[14px] font-semibold text-text-2">
+              <strong className="text-[15px] tablet:text-[18px]">{bot.name}</strong>
+              <span className="hidden text-[14px] font-semibold text-text-2 tablet:inline">
                 {t('play.game.opponent', { level: bot.level, color: colorName(botColor) })}
               </span>
             </div>
@@ -327,7 +332,7 @@ export function GameScreen({ bot }: GameScreenProps) {
 
           <section
             aria-label={t('play.game.moves')}
-            className="flex flex-col gap-2 rounded-card border-2 border-line bg-surface p-3"
+            className="hidden flex-col gap-2 rounded-card border-2 border-line bg-surface p-3 tablet:flex"
           >
             <h2 className="m-0 text-[15px] font-extrabold">{t('play.game.moves')}</h2>
             {pairs.length === 0 ? (
@@ -359,7 +364,7 @@ export function GameScreen({ bot }: GameScreenProps) {
           </section>
 
           <div className="flex items-end gap-3">
-            <Mascot mood={message.mascot} size={88} dark={scheme === 'dark'} animate />
+            <Mascot mood={message.mascot} size={phone ? 48 : 88} dark={scheme === 'dark'} animate />
             <div className="flex-1">
               <ReplyCard
                 tone={phase === 'busy' ? 'oops' : TONES[message.tone]}
@@ -425,11 +430,11 @@ export function GameScreen({ bot }: GameScreenProps) {
           >
             <span
               aria-hidden="true"
-              className="flex size-14 items-center justify-center rounded-full border-2 border-edge bg-brand font-heading text-[20px] font-bold text-on-brand"
+              className="flex size-10 items-center justify-center rounded-full border-2 border-edge bg-brand font-heading text-[18px] tablet:size-14 tablet:text-[20px] font-bold text-on-brand"
             >
               {initial}
             </span>
-            <strong className="flex-1 text-[18px]">
+            <strong className="flex-1 text-[15px] tablet:text-[18px]">
               {t('play.game.you', { color: t(`play.game.colorCap.${game.userColor}`) })}
             </strong>
             {playerStatus && (

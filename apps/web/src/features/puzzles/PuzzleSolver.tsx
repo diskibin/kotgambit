@@ -18,6 +18,7 @@ import { Button } from '../../shared/ui/Button';
 import { IconButton } from '../../shared/ui/IconButton';
 import { BulbIcon } from '../../shared/ui/icons';
 import { ReplyCard, type ReplyTone } from '../../shared/ui/ReplyCard';
+import { BoardSlot } from '../../shared/ui/BoardSlot';
 import { Board } from '../board';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
@@ -230,29 +231,31 @@ export function PuzzleSolver({ puzzle, onNext }: PuzzleSolverProps) {
       : undefined;
 
   return (
-    <div className="mx-auto grid w-full max-w-[1100px] gap-8 px-4 pr-6 pb-10 laptop:grid-cols-[minmax(0,560px)_minmax(0,460px)] laptop:justify-center">
+    <div className="mx-auto grid w-full max-w-[1100px] gap-3 px-4 pr-6 pb-4 max-tablet:flex max-tablet:flex-1 max-tablet:flex-col tablet:gap-8 tablet:pb-10 laptop:grid-cols-[minmax(0,560px)_minmax(0,460px)] laptop:justify-center">
       <div className="flex flex-col gap-3">
-        <Board
-          state={board}
-          dispatch={onBoardAction}
-          disabled={frozen}
-          arrows={marks.arrows}
-          hintSquares={marks.squares}
-          lastMove={shown}
-        />
-        <p className="m-0 text-[14px] font-semibold text-text-muted">
+        <BoardSlot>
+          <Board
+            state={board}
+            dispatch={onBoardAction}
+            disabled={frozen}
+            arrows={marks.arrows}
+            hintSquares={marks.squares}
+            lastMove={shown}
+          />
+        </BoardSlot>
+        <p className="m-0 hidden text-[14px] font-semibold text-text-muted tablet:block">
           {t('puzzles.solve.boardNote')}
         </p>
         {networkFailed && <Banner>{t('puzzles.solve.moveError')}</Banner>}
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 tablet:gap-4">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
             className={`size-8 rounded-[8px] border-2 border-edge ${puzzle.solver === 'w' ? 'bg-white' : 'bg-ink'}`}
           />
-          <h1 className="m-0 font-heading text-[26px] leading-9 font-bold laptop:text-[31px] laptop:leading-10">
+          <h1 className="m-0 font-heading text-[18px] leading-6 font-bold tablet:text-[26px] tablet:leading-9 laptop:text-[31px] laptop:leading-10">
             {t(`puzzles.turn.${puzzle.solver}`)}
           </h1>
         </div>
@@ -282,7 +285,7 @@ export function PuzzleSolver({ puzzle, onNext }: PuzzleSolverProps) {
                 ))}
               </span>
             </div>
-            <span className="text-[13px] font-semibold text-text-muted">
+            <span className="hidden text-[13px] font-semibold text-text-muted tablet:inline">
               {t('puzzles.solve.hintsNote')}
             </span>
           </div>

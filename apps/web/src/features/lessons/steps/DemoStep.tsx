@@ -56,42 +56,42 @@ export function DemoStep({ step, context }: { step: DemoStepData; context: StepC
       title={step.title}
       mood="hint"
       board={
-        <>
-          <Board
-            state={state}
-            dispatch={() => undefined}
-            onSquarePress={() => undefined}
-            lastMove={frame?.from && frame.to ? { from: frame.from, to: frame.to } : null}
-          />
-          <div className="flex items-center gap-2">
-            <IconButton
-              quiet
-              label={t('lesson.demo.back')}
-              onClick={() => setIndex(Math.max(0, index - 1))}
-              disabled={index === 0}
-            >
-              <ChevronLeftIcon />
-            </IconButton>
-            <IconButton
-              quiet
-              label={t(playing ? 'lesson.demo.pause' : 'lesson.demo.play')}
-              onClick={() => setPlaying(!playing)}
-            >
-              {playing ? <PauseIcon /> : <PlayIcon />}
-            </IconButton>
-            <IconButton
-              quiet
-              label={t('lesson.demo.forward')}
-              onClick={() => setIndex(Math.min(last, index + 1))}
-              disabled={index === last}
-            >
-              <ChevronRightIcon />
-            </IconButton>
-            <span className="ml-2 text-[14px] font-bold text-text-2">
-              {t('lesson.demo.stepOf', { n: index, total: last })}
-            </span>
-          </div>
-        </>
+        <Board
+          state={state}
+          dispatch={() => undefined}
+          onSquarePress={() => undefined}
+          lastMove={frame?.from && frame.to ? { from: frame.from, to: frame.to } : null}
+        />
+      }
+      underBoard={
+        <div className="flex items-center gap-2">
+          <IconButton
+            quiet
+            label={t('lesson.demo.back')}
+            onClick={() => setIndex(Math.max(0, index - 1))}
+            disabled={index === 0}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <IconButton
+            quiet
+            label={t(playing ? 'lesson.demo.pause' : 'lesson.demo.play')}
+            onClick={() => setPlaying(!playing)}
+          >
+            {playing ? <PauseIcon /> : <PlayIcon />}
+          </IconButton>
+          <IconButton
+            quiet
+            label={t('lesson.demo.forward')}
+            onClick={() => setIndex(Math.min(last, index + 1))}
+            disabled={index === last}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+          <span className="ml-2 text-[14px] font-bold text-text-2">
+            {t('lesson.demo.stepOf', { n: index, total: last })}
+          </span>
+        </div>
       }
     >
       <span className="self-start rounded-pill bg-sky-tint px-3.5 py-1 text-[14px] font-bold text-sky-text">

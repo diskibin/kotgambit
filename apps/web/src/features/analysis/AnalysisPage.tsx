@@ -125,11 +125,11 @@ export function AnalysisPage() {
     <AppShell active="analysis" title={t('analysis.title')}>
       <div className="grid gap-8 laptop:grid-cols-[minmax(520px,1fr)_minmax(0,2fr)]">
         <section aria-label={t('analysis.title')} className="flex flex-col gap-4">
-          <div className="flex gap-3">
+          <div className="flex gap-3 max-tablet:flex-col">
             <div
               role="radiogroup"
               aria-label={t('analysis.editor.palette')}
-              className="grid shrink-0 grid-cols-2 gap-2"
+              className="grid shrink-0 grid-cols-2 gap-2 max-tablet:order-2 max-tablet:grid-cols-6"
             >
               {(['w', 'b'] as const).flatMap((color) =>
                 PIECE_ORDER.map((type) => {
@@ -148,9 +148,13 @@ export function AnalysisPage() {
                           tool: selected ? null : { kind: 'piece', piece },
                         })
                       }
-                      className={`flex size-[52px] items-center justify-center rounded-control border-2 ${selected ? 'border-brand bg-brand-tint' : 'border-line bg-surface hover:bg-surface-2'}`}
+                      className={`flex size-[52px] items-center justify-center rounded-control border-2 max-tablet:aspect-square max-tablet:size-auto ${selected ? 'border-brand bg-brand-tint' : 'border-line bg-surface hover:bg-surface-2'}`}
                     >
-                      <img src={pieceUrl(color, type, pieceSet)} alt="" className="size-10" />
+                      <img
+                        src={pieceUrl(color, type, pieceSet)}
+                        alt=""
+                        className="size-10 max-tablet:size-[75%]"
+                      />
                     </button>
                   );
                 }),
@@ -165,7 +169,7 @@ export function AnalysisPage() {
                     tool: editor.tool?.kind === 'eraser' ? null : { kind: 'eraser' },
                   })
                 }
-                className={`col-span-2 flex h-[52px] items-center justify-center rounded-control border-2 text-[15px] font-extrabold ${editor.tool?.kind === 'eraser' ? 'border-brand bg-brand-tint' : 'border-line bg-surface hover:bg-surface-2'}`}
+                className={`col-span-2 flex h-[52px] max-tablet:col-span-6 max-tablet:h-12 items-center justify-center rounded-control border-2 text-[15px] font-extrabold ${editor.tool?.kind === 'eraser' ? 'border-brand bg-brand-tint' : 'border-line bg-surface hover:bg-surface-2'}`}
               >
                 {t('analysis.editor.eraser')}
               </button>

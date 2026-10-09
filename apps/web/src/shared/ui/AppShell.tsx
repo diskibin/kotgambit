@@ -211,7 +211,7 @@ function TopBar({ title, layout }: { title: string; layout: NavLayout }) {
   const name = me.data?.displayName ?? me.data?.email ?? '';
   const initial = name.charAt(0).toUpperCase();
   return (
-    <header className="flex min-h-[88px] items-center gap-3 border-b-2 border-line bg-bg px-4 tablet:pr-8 tablet:pl-7 desktop:pl-10">
+    <header className="flex min-h-[64px] items-center gap-3 tablet:min-h-[88px] border-b-2 border-line bg-bg px-4 tablet:pr-8 tablet:pl-7 desktop:pl-10">
       <h1 className="m-0 min-w-0 flex-1 font-heading text-[20px] leading-8 font-bold [overflow-wrap:anywhere] tablet:text-[24px]">
         {title}
       </h1>
@@ -260,7 +260,7 @@ export function AppShell({
       )}
       <div className={`flex min-w-0 flex-1 flex-col ${layout === 'bottom' ? 'pb-[76px]' : ''}`}>
         <TopBar title={title} layout={layout} />
-        <main className="flex flex-1 flex-col gap-6 px-4 py-8 pr-6 tablet:px-7 desktop:px-10">
+        <main className="flex flex-1 flex-col gap-4 px-4 py-4 pr-6 tablet:gap-6 tablet:py-8 tablet:px-7 desktop:px-10">
           <VerifyEmailReminder />
           {children}
         </main>

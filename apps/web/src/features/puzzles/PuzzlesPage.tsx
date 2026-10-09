@@ -89,11 +89,14 @@ export function PuzzlesPage() {
               className="flex flex-wrap items-center gap-4 rounded-card border-2 border-sun-border bg-sun-tint p-4 tablet:gap-6 tablet:p-6"
             >
               {!phone && <Mascot mood="hint" size={120} dark={scheme === 'dark'} />}
-              <div className="flex min-w-[150px] flex-1 flex-col items-start gap-3 tablet:min-w-[220px]">
+              <div className="flex min-w-[150px] max-w-full flex-1 flex-col items-start gap-3 tablet:min-w-[220px]">
                 <span className="rounded-pill bg-sun px-3.5 py-1 text-[14px] font-extrabold text-on-accent">
                   {t('puzzles.daily.chip')}
                 </span>
-                <h2 id="daily-title" className="m-0 font-heading text-[26px] leading-9 font-bold">
+                <h2
+                  id="daily-title"
+                  className="m-0 font-heading text-[22px] leading-7 font-bold [overflow-wrap:anywhere] tablet:text-[26px] tablet:leading-9"
+                >
                   {daily.data.title}
                 </h2>
                 <p className="m-0 text-[16px] font-semibold text-text-2">

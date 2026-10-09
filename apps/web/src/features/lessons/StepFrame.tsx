@@ -1,6 +1,7 @@
 import type { Mood } from '@kotgambit/mascot';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BoardSlot } from '../../shared/ui/BoardSlot';
 import { Mascot } from '../mascot/Mascot';
 import { useScheme } from '../theme/useScheme';
 
@@ -9,8 +10,9 @@ interface StepFrameProps {
   caption: string;
   title: string;
   mood: Mood;
-  /** The board, with whatever sits under it. */
   board?: ReactNode;
+  /** A caption or controls under the board. */
+  underBoard?: ReactNode;
   /** The reply card and the cat's words, under the title. */
   children: ReactNode;
   /** The line of help under the board. */
@@ -26,30 +28,40 @@ export function StepFrame({
   title,
   mood,
   board,
+  underBoard,
   children,
   boardNote = false,
 }: StepFrameProps) {
   const { t } = useTranslation();
   const scheme = useScheme();
   return (
-    <div className="mx-auto grid w-full max-w-[1100px] gap-8 px-4 pr-6 pb-10 laptop:grid-cols-[minmax(0,560px)_minmax(0,460px)] laptop:justify-center">
+    <div className="mx-auto grid w-full max-tablet:flex max-tablet:flex-1 max-tablet:flex-col max-w-[1100px] gap-4 px-4 pr-6 pb-6 tablet:gap-8 tablet:pb-10 laptop:grid-cols-[minmax(0,560px)_minmax(0,460px)] laptop:justify-center">
       {board && (
-        <div className="flex flex-col gap-3">
-          {board}
+        <div className="flex flex-col gap-2 tablet:gap-3">
+          <BoardSlot>{board}</BoardSlot>
+          {underBoard}
           {boardNote && (
-            <p className="m-0 text-[14px] font-semibold text-text-muted">{t('lesson.boardHint')}</p>
+            <p className="m-0 hidden text-[14px] font-semibold text-text-muted laptop:block">
+              {t('lesson.boardHint')}
+            </p>
           )}
         </div>
       )}
       <div
-        className={`flex flex-col gap-4 ${board ? '' : 'laptop:col-span-2 laptop:mx-auto laptop:w-[620px]'}`}
+        className={`flex flex-col gap-3 tablet:gap-4 ${board ? '' : 'laptop:col-span-2 laptop:mx-auto laptop:w-[620px]'}`}
       >
-        <p className="m-0 text-[14px] font-bold text-text-2">{caption}</p>
-        <h1 className="m-0 font-heading text-[26px] leading-9 font-bold laptop:text-[31px] laptop:leading-10">
-          {title}
-        </h1>
+        <p className="m-0 text-[13px] font-bold text-text-2 tablet:text-[14px]">{caption}</p>
+        {/* On a phone the cat sits beside the title: below the card it would be one more screen to scroll */}
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="m-0 font-heading text-[19px] leading-6 font-bold tablet:text-[26px] tablet:leading-9 laptop:text-[31px] laptop:leading-10">
+            {title}
+          </h1>
+          <div className="shrink-0 tablet:hidden">
+            <Mascot mood={mood} size={64} dark={scheme === 'dark'} animate />
+          </div>
+        </div>
         {children}
-        <div className="flex justify-start pl-4">
+        <div className="hidden justify-start pl-4 tablet:flex">
           <Mascot mood={mood} size={110} dark={scheme === 'dark'} animate />
         </div>
       </div>

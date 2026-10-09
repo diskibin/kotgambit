@@ -113,8 +113,8 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
 
   if (load === 'ready' && puzzle) {
     return (
-      <div className="flex min-h-screen flex-col bg-bg text-text">
-        <header className="flex min-h-20 flex-wrap items-center gap-3 px-4 tablet:px-8">
+      <div className="flex h-dvh flex-col bg-bg text-text tablet:h-auto tablet:min-h-screen">
+        <header className="flex min-h-14 flex-wrap items-center gap-2 px-2 tablet:min-h-20 tablet:gap-3 tablet:px-8">
           <IconButton quiet label={t('puzzles.solve.close')} onClick={leave}>
             <CloseIcon />
           </IconButton>
@@ -136,7 +136,7 @@ function PuzzleScreen({ mode, theme }: { mode: PuzzleMode; theme: string | undef
             )}
           </div>
         </header>
-        <main className="flex-1">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto tablet:overflow-visible">
           <PuzzleSolver key={puzzle.attemptId} puzzle={puzzle} onNext={next} />
         </main>
       </div>
